@@ -112,7 +112,7 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
     (async () => {
       for (const imageRecord of imageRecords) {
         try {
-          const result = await generateImage(imageRecord.model, imageRecord.prompt);
+          const result = await generateImage(imageRecord.model, imageRecord.prompt, config.format);
           await prisma.generatedImage.update({
             where: { id: imageRecord.id },
             data: {
@@ -206,7 +206,8 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
           const result = await generateClip(
             clipRecord.model,
             selectedImage.imageUrl!,
-            clipRecord.animationPrompt
+            clipRecord.animationPrompt,
+            config.format
           );
           await prisma.generatedClip.update({
             where: { id: clipRecord.id },

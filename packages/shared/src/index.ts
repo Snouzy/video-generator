@@ -21,12 +21,15 @@ export type GenerationStatus = "pending" | "processing" | "completed" | "failed"
 
 export type ProjectStatus = "draft" | "splitting" | "scenes_ready" | "generating_images" | "images_ready" | "generating_clips" | "clips_ready" | "completed";
 
+export type VideoFormat = "16:9" | "9:16";
+
 export interface ProjectConfig {
   imagesPerScene: number;
   imageModels: string[];
   animationModels: string[];
   stylePromptPrefix: string;
   maxScenes: number | null;
+  format: VideoFormat;
 }
 
 export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
@@ -35,6 +38,7 @@ export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   animationModels: ["wan-i2v", "kling", "minimax"],
   stylePromptPrefix: "3D render, mannequin-style characters, cinematic dark lighting, minimalist scene",
   maxScenes: null,
+  format: "16:9",
 };
 
 export interface Project {

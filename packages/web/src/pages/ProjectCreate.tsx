@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { VideoFormat } from "@video-generator/shared";
 import { createProject } from "../api/client";
 
 export default function ProjectCreate() {
   const [title, setTitle] = useState("");
   const [scriptContent, setScriptContent] = useState("");
+  const [format, setFormat] = useState<VideoFormat>("16:9");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ export default function ProjectCreate() {
       const project = await createProject({
         title: title.trim(),
         scriptContent: scriptContent.trim(),
+        config: { format },
       });
       navigate(`/projects/${project.id}`);
     } catch (err) {
@@ -94,6 +97,38 @@ export default function ProjectCreate() {
               className="w-full bg-slate-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors resize-y font-mono text-sm leading-relaxed"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Video Format
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setFormat("16:9")}
+                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-colors border ${
+                  format === "16:9"
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                }`}
+              >
+                <span className="inline-block w-8 h-4.5 border border-current rounded-sm align-middle mr-2" />
+                16:9 YouTube
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormat("9:16")}
+                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-colors border ${
+                  format === "9:16"
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                }`}
+              >
+                <span className="inline-block w-3 h-5 border border-current rounded-sm align-middle mr-2" />
+                9:16 Short / TikTok
+              </button>
+            </div>
           </div>
 
           <button

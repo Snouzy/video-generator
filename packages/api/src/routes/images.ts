@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
-import type { ApiResponse } from "@video-generator/shared";
+import type { ApiResponse, ProjectConfig } from "@video-generator/shared";
 import { generateImage } from "../services/replicate";
 
 const router = Router();
@@ -70,11 +70,16 @@ router.post("/images/:id/regenerate", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
 
-    const image = await prisma.generatedImage.findUnique({ where: { id } });
+    const image = await prisma.generatedImage.findUnique({
+      where: { id },
+      include: { scene: { include: { project: true } } },
+    });
     if (!image) {
       res.status(404).json({ success: false, error: "Image not found" });
       return;
     }
+
+    const config = image.scene.project.config as unknown as ProjectConfig;
 
     // Reset status
     await prisma.generatedImage.update({
@@ -87,7 +92,7 @@ router.post("/images/:id/regenerate", async (req, res) => {
     // Background processing
     (async () => {
       try {
-        const result = await generateImage(image.model, image.prompt);
+        const result = await generateImage(image.model, image.prompt, config.format);
         await prisma.generatedImage.update({
           where: { id },
           data: {

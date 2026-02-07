@@ -76,14 +76,15 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
 
 export async function generateImage(
   model: string,
-  prompt: string
+  prompt: string,
+  aspectRatio: string = "16:9"
 ): Promise<{ predictionId: string; imageUrl?: string }> {
   const modelId = resolveModelId(model);
 
   return withRetry(async () => {
     const prediction = await getClient().predictions.create({
       model: modelId as `${string}/${string}`,
-      input: { prompt },
+      input: { prompt, aspect_ratio: aspectRatio },
     });
 
     const result = await getClient().wait(prediction);
@@ -103,7 +104,8 @@ export async function generateImage(
 export async function generateClip(
   model: string,
   imageUrl: string,
-  prompt: string
+  prompt: string,
+  aspectRatio: string = "16:9"
 ): Promise<{ predictionId: string; clipUrl?: string }> {
   const modelId = resolveModelId(model);
 
@@ -116,6 +118,7 @@ export async function generateClip(
       input: {
         [imageParam]: imageUrl,
         prompt,
+        aspect_ratio: aspectRatio,
       },
     });
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
-import type { ApiResponse } from "@video-generator/shared";
+import type { ApiResponse, ProjectConfig } from "@video-generator/shared";
 import { generateClip } from "../services/replicate";
 
 const router = Router();
@@ -72,7 +72,7 @@ router.post("/clips/:id/regenerate", async (req, res) => {
 
     const clip = await prisma.generatedClip.findUnique({
       where: { id },
-      include: { sourceImage: true },
+      include: { sourceImage: true, scene: { include: { project: true } } },
     });
     if (!clip) {
       res.status(404).json({ success: false, error: "Clip not found" });
@@ -83,6 +83,8 @@ router.post("/clips/:id/regenerate", async (req, res) => {
       res.status(400).json({ success: false, error: "Source image has no URL" });
       return;
     }
+
+    const config = clip.scene.project.config as unknown as ProjectConfig;
 
     // Reset status
     await prisma.generatedClip.update({
@@ -95,7 +97,7 @@ router.post("/clips/:id/regenerate", async (req, res) => {
     // Background processing
     (async () => {
       try {
-        const result = await generateClip(clip.model, clip.sourceImage.imageUrl!, clip.animationPrompt);
+        const result = await generateClip(clip.model, clip.sourceImage.imageUrl!, clip.animationPrompt, config.format);
         await prisma.generatedClip.update({
           where: { id },
           data: {
