@@ -1,4 +1,4 @@
-import type { GeneratedClip } from "@video-generator/shared";
+import type { GeneratedClip, VideoFormat } from "@video-generator/shared";
 import ClipCard from "./ClipCard";
 
 interface ClipGridProps {
@@ -6,6 +6,7 @@ interface ClipGridProps {
   onSelect: (id: number) => void;
   onRegenerate: (id: number) => void;
   sceneLabel: string;
+  format?: VideoFormat;
 }
 
 export default function ClipGrid({
@@ -13,6 +14,7 @@ export default function ClipGrid({
   onSelect,
   onRegenerate,
   sceneLabel,
+  format = "16:9",
 }: ClipGridProps) {
   if (clips.length === 0) {
     return (
@@ -23,7 +25,7 @@ export default function ClipGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className={`grid gap-4 ${format === "9:16" ? "grid-cols-4" : "grid-cols-2"}`}>
       {clips.map((clip, index) => (
         <ClipCard
           key={clip.id}
@@ -33,6 +35,7 @@ export default function ClipGrid({
           onSelect={onSelect}
           onRegenerate={onRegenerate}
           isSelected={clip.isSelected}
+          format={format}
         />
       ))}
     </div>

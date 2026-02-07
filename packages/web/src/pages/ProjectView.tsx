@@ -301,6 +301,7 @@ export default function ProjectView() {
   }
 
   const sceneLabel = `scene_${String(currentScene?.sceneNumber ?? 0).padStart(3, "0")}`;
+  const format = project.config?.format ?? "16:9";
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col">
@@ -377,6 +378,7 @@ export default function ProjectView() {
                   onSelect={handleSelectImage}
                   onRegenerate={handleRegenerateImage}
                   sceneLabel={sceneLabel}
+                  format={format}
                 />
               </>
             )}
@@ -419,6 +421,7 @@ export default function ProjectView() {
                     onSelect={handleSelectClip}
                     onRegenerate={handleRegenerateClip}
                     sceneLabel={sceneLabel}
+                    format={format}
                   />
                 )}
               </>

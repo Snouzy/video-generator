@@ -1,4 +1,4 @@
-import type { GeneratedClip } from "@video-generator/shared";
+import type { GeneratedClip, VideoFormat } from "@video-generator/shared";
 
 interface ClipCardProps {
   clip: GeneratedClip;
@@ -7,6 +7,7 @@ interface ClipCardProps {
   onSelect: (id: number) => void;
   onRegenerate: (id: number) => void;
   isSelected: boolean;
+  format?: VideoFormat;
 }
 
 export default function ClipCard({
@@ -16,10 +17,12 @@ export default function ClipCard({
   onSelect,
   onRegenerate,
   isSelected,
+  format = "16:9",
 }: ClipCardProps) {
+  const aspectClass = format === "9:16" ? "aspect-[9/16]" : "aspect-video";
   if (clip.status === "processing" || clip.status === "pending") {
     return (
-      <div className="relative rounded-lg overflow-hidden border border-gray-700 bg-gray-800 aspect-[4/3] flex items-center justify-center">
+      <div className={`relative rounded-lg overflow-hidden border border-gray-700 bg-gray-800 ${aspectClass} flex items-center justify-center`}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-400 rounded-full animate-spin" />
           <span className="text-gray-400 text-sm">Generating clip...</span>
@@ -36,7 +39,7 @@ export default function ClipCard({
 
   if (clip.status === "failed") {
     return (
-      <div className="relative rounded-lg overflow-hidden border border-red-700/50 bg-gray-800 aspect-[4/3] flex items-center justify-center">
+      <div className={`relative rounded-lg overflow-hidden border border-red-700/50 bg-gray-800 ${aspectClass} flex items-center justify-center`}>
         <div className="flex flex-col items-center gap-2 text-red-400">
           <svg
             className="w-8 h-8"
@@ -78,7 +81,7 @@ export default function ClipCard({
       }`}
       onClick={() => onSelect(clip.id)}
     >
-      <div className="aspect-[4/3] bg-gray-800">
+      <div className={`${aspectClass} bg-gray-800`}>
         {clip.clipUrl ? (
           <video
             src={clip.clipUrl}

@@ -1,4 +1,4 @@
-import type { GeneratedImage } from "@video-generator/shared";
+import type { GeneratedImage, VideoFormat } from "@video-generator/shared";
 import ImageCard from "./ImageCard";
 
 interface ImageGridProps {
@@ -6,6 +6,7 @@ interface ImageGridProps {
   onSelect: (id: number) => void;
   onRegenerate: (id: number) => void;
   sceneLabel: string;
+  format?: VideoFormat;
 }
 
 export default function ImageGrid({
@@ -13,6 +14,7 @@ export default function ImageGrid({
   onSelect,
   onRegenerate,
   sceneLabel,
+  format = "16:9",
 }: ImageGridProps) {
   if (images.length === 0) {
     return (
@@ -23,7 +25,7 @@ export default function ImageGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className={`grid gap-4 ${format === "9:16" ? "grid-cols-4" : "grid-cols-2"}`}>
       {images.map((image, index) => (
         <ImageCard
           key={image.id}
@@ -33,6 +35,7 @@ export default function ImageGrid({
           onSelect={onSelect}
           onRegenerate={onRegenerate}
           isSelected={image.isSelected}
+          format={format}
         />
       ))}
     </div>

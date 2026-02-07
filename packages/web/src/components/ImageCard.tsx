@@ -1,4 +1,4 @@
-import type { GeneratedImage } from "@video-generator/shared";
+import type { GeneratedImage, VideoFormat } from "@video-generator/shared";
 
 const TAG_COLORS = [
   "bg-green-500/20 text-green-400",
@@ -22,6 +22,7 @@ interface ImageCardProps {
   onSelect: (id: number) => void;
   onRegenerate: (id: number) => void;
   isSelected: boolean;
+  format?: VideoFormat;
 }
 
 export default function ImageCard({
@@ -31,10 +32,12 @@ export default function ImageCard({
   onSelect,
   onRegenerate,
   isSelected,
+  format = "16:9",
 }: ImageCardProps) {
+  const aspectClass = format === "9:16" ? "aspect-[9/16]" : "aspect-video";
   if (image.status === "processing" || image.status === "pending") {
     return (
-      <div className="relative rounded-lg overflow-hidden border border-gray-700 bg-gray-800 aspect-[4/3] flex items-center justify-center">
+      <div className={`relative rounded-lg overflow-hidden border border-gray-700 bg-gray-800 ${aspectClass} flex items-center justify-center`}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-gray-600 border-t-green-400 rounded-full animate-spin" />
           <span className="text-gray-400 text-sm">Generating...</span>
@@ -51,7 +54,7 @@ export default function ImageCard({
 
   if (image.status === "failed") {
     return (
-      <div className="relative rounded-lg overflow-hidden border border-red-700/50 bg-gray-800 aspect-[4/3] flex items-center justify-center">
+      <div className={`relative rounded-lg overflow-hidden border border-red-700/50 bg-gray-800 ${aspectClass} flex items-center justify-center`}>
         <div className="flex flex-col items-center gap-2 text-red-400">
           <svg
             className="w-8 h-8"
@@ -93,7 +96,7 @@ export default function ImageCard({
       }`}
       onClick={() => onSelect(image.id)}
     >
-      <div className="aspect-[4/3] bg-gray-800">
+      <div className={`${aspectClass} bg-gray-800`}>
         {image.imageUrl ? (
           <img
             src={image.imageUrl}
