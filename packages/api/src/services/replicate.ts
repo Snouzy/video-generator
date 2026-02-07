@@ -34,71 +34,82 @@ function resolveModelId(model: string): string {
   return IMAGE_MODEL_MAP[model] || ANIMATION_MODEL_MAP[model] || model;
 }
 
-// --- Rate-limiting queue ---
-// Sends requests one at a time with a delay between each to avoid 429s.
+// --- Fire a prediction (non-blocking) ---
+// Creates the prediction on Replicate and returns the prediction ID immediately.
+// Does NOT wait for the result.
 
-const DELAY_BETWEEN_REQUESTS_MS = 12_000; // 12s between requests (safe for 6/min limit)
-let lastRequestTime = 0;
-
-async function waitForRateLimit(): Promise<void> {
-  const now = Date.now();
-  const elapsed = now - lastRequestTime;
-  if (elapsed < DELAY_BETWEEN_REQUESTS_MS) {
-    const waitMs = DELAY_BETWEEN_REQUESTS_MS - elapsed;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
-  }
-  lastRequestTime = Date.now();
+export async function fireImagePrediction(
+  model: string,
+  prompt: string,
+  aspectRatio: string = "16:9"
+): Promise<string> {
+  const modelId = resolveModelId(model);
+  const prediction = await getClient().predictions.create({
+    model: modelId as `${string}/${string}`,
+    input: { prompt, aspect_ratio: aspectRatio },
+  });
+  return prediction.id;
 }
 
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      await waitForRateLimit();
-      return await fn();
-    } catch (error: any) {
-      const retryAfter = error?.response?.headers?.get?.("retry-after");
-      if (error?.response?.status === 429 && attempt < maxRetries) {
-        const waitSec = parseInt(retryAfter || "15", 10);
-        console.log(
-          `Rate limited, waiting ${waitSec}s before retry (${attempt + 1}/${maxRetries})...`
-        );
-        await new Promise((resolve) =>
-          setTimeout(resolve, waitSec * 1000)
-        );
-        lastRequestTime = Date.now();
-        continue;
-      }
-      throw error;
+export async function fireClipPrediction(
+  model: string,
+  imageUrl: string,
+  prompt: string,
+  aspectRatio: string = "16:9"
+): Promise<string> {
+  const modelId = resolveModelId(model);
+  const imageParam = ANIMATION_IMAGE_PARAM[modelId] || "image";
+  const prediction = await getClient().predictions.create({
+    model: modelId as `${string}/${string}`,
+    input: {
+      [imageParam]: imageUrl,
+      prompt,
+      aspect_ratio: aspectRatio,
+    },
+  });
+  return prediction.id;
+}
+
+// --- Poll a prediction until it completes ---
+
+const POLL_INTERVAL_MS = 3_000;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes max
+
+export async function waitForPrediction(
+  predictionId: string
+): Promise<{ status: string; output?: string }> {
+  const start = Date.now();
+
+  while (Date.now() - start < POLL_TIMEOUT_MS) {
+    const prediction = await getClient().predictions.get(predictionId);
+
+    if (prediction.status === "succeeded" || prediction.status === "failed" || prediction.status === "canceled") {
+      const output = prediction.output;
+      const outputStr = Array.isArray(output)
+        ? output[0]
+        : ((output as string) ?? undefined);
+      return { status: prediction.status, output: outputStr };
     }
+
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
-  throw new Error("Max retries exceeded");
+
+  return { status: "failed", output: undefined };
 }
+
+// --- Legacy sync functions (used by single regenerate endpoints) ---
 
 export async function generateImage(
   model: string,
   prompt: string,
   aspectRatio: string = "16:9"
 ): Promise<{ predictionId: string; imageUrl?: string }> {
-  const modelId = resolveModelId(model);
-
-  return withRetry(async () => {
-    const prediction = await getClient().predictions.create({
-      model: modelId as `${string}/${string}`,
-      input: { prompt, aspect_ratio: aspectRatio },
-    });
-
-    const result = await getClient().wait(prediction);
-
-    const output = result.output;
-    const imageUrl = Array.isArray(output)
-      ? output[0]
-      : ((output as string) ?? undefined);
-
-    return {
-      predictionId: prediction.id,
-      imageUrl: imageUrl || undefined,
-    };
-  });
+  const predictionId = await fireImagePrediction(model, prompt, aspectRatio);
+  const result = await waitForPrediction(predictionId);
+  return {
+    predictionId,
+    imageUrl: result.output || undefined,
+  };
 }
 
 export async function generateClip(
@@ -107,33 +118,12 @@ export async function generateClip(
   prompt: string,
   aspectRatio: string = "16:9"
 ): Promise<{ predictionId: string; clipUrl?: string }> {
-  const modelId = resolveModelId(model);
-
-  // Build model-specific input: each animation model uses a different param name for the source image
-  const imageParam = ANIMATION_IMAGE_PARAM[modelId] || "image";
-
-  return withRetry(async () => {
-    const prediction = await getClient().predictions.create({
-      model: modelId as `${string}/${string}`,
-      input: {
-        [imageParam]: imageUrl,
-        prompt,
-        aspect_ratio: aspectRatio,
-      },
-    });
-
-    const result = await getClient().wait(prediction);
-
-    const output = result.output;
-    const clipUrl = Array.isArray(output)
-      ? output[0]
-      : ((output as string) ?? undefined);
-
-    return {
-      predictionId: prediction.id,
-      clipUrl: clipUrl || undefined,
-    };
-  });
+  const predictionId = await fireClipPrediction(model, imageUrl, prompt, aspectRatio);
+  const result = await waitForPrediction(predictionId);
+  return {
+    predictionId,
+    clipUrl: result.output || undefined,
+  };
 }
 
 export async function getPredictionStatus(
