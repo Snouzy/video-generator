@@ -1,12 +1,12 @@
 # Video Generator
 
-Monorepo fullstack : **Express + MySQL + React (Vite)**
+Monorepo fullstack : **Express + PostgreSQL + React (Vite)**
 
 ## Stack
 
 | Package | Tech |
 |---|---|
-| `packages/api` | Express 5, Prisma, MySQL |
+| `packages/api` | Express 5, Prisma, PostgreSQL |
 | `packages/web` | React 19, Vite, TypeScript |
 | `packages/shared` | Types partagés API ↔ Web |
 
@@ -14,19 +14,19 @@ Monorepo fullstack : **Express + MySQL + React (Vite)**
 
 - Node.js 20+
 - pnpm 9+
-- Docker (pour MySQL)
+- PostgreSQL (via PostgreSQL Workbench ou autre)
 
 ## Setup
 
 ```bash
-# 1. Cloner et installer
+# 1. Installer les dépendances
 pnpm install
 
-# 2. Lancer MySQL
-docker compose up -d
-
-# 3. Configurer la DB
+# 2. Configurer la connexion PostgreSQL
 cp .env.example packages/api/.env
+# Éditer packages/api/.env avec tes identifiants PostgreSQL
+
+# 3. Créer les tables
 pnpm db:push
 pnpm db:generate
 
@@ -42,7 +42,7 @@ L'API tourne sur `http://localhost:3001` et le front sur `http://localhost:5173`
 |---|---|
 | `pnpm dev` | Lance API + Web en parallèle |
 | `pnpm build` | Build tous les packages |
-| `pnpm db:push` | Sync le schema Prisma → MySQL |
+| `pnpm db:push` | Sync le schema Prisma → PostgreSQL |
 | `pnpm db:studio` | UI Prisma pour explorer la DB |
 | `pnpm db:generate` | Regénère le client Prisma |
 
@@ -58,7 +58,6 @@ video-generator/
 │   │   └── src/
 │   └── shared/          # Types partagés
 │       └── src/
-├── docker-compose.yml   # MySQL
 ├── turbo.json           # Turborepo config
 └── pnpm-workspace.yaml
 ```
