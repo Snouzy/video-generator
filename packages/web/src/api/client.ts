@@ -107,3 +107,10 @@ export function generateAllClips(projectId: number): Promise<void> {
     method: "POST",
   });
 }
+
+export function renderProject(projectId: number): Promise<{ message: string; clipCount: number }> {
+  return fetchApi<{ message: string; clipCount: number }>(
+    `/api/projects/${projectId}/render`,
+    { method: "POST" }
+  );
+}

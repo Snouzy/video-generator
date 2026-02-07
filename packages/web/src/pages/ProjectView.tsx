@@ -15,6 +15,7 @@ import {
   selectClip,
   regenerateImage,
   regenerateClip,
+  renderProject,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
@@ -110,7 +111,8 @@ export default function ProjectView() {
     if (
       project?.status === "splitting" ||
       project?.status === "generating_images" ||
-      project?.status === "generating_clips"
+      project?.status === "generating_clips" ||
+      project?.status === "rendering"
     ) {
       const interval = setInterval(() => {
         loadProject();
@@ -231,6 +233,18 @@ export default function ProjectView() {
       await loadSceneMedia();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to regenerate clip");
+    }
+  }
+
+  async function handleRenderVideo() {
+    setActionLoading("render");
+    try {
+      await renderProject(projectId);
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to start render");
+    } finally {
+      setActionLoading(null);
     }
   }
 
@@ -406,6 +420,15 @@ export default function ProjectView() {
                     {actionLoading === "generate-all-clips"
                       ? "Generating..."
                       : "Generate All Clips"}
+                  </button>
+                  <button
+                    onClick={handleRenderVideo}
+                    disabled={actionLoading === "render" || project.status === "rendering"}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {actionLoading === "render" || project.status === "rendering"
+                      ? "Rendering..."
+                      : "Export Video"}
                   </button>
                 </div>
 

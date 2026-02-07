@@ -7,6 +7,7 @@ import projectsRouter from "./routes/projects";
 import scenesRouter from "./routes/scenes";
 import imagesRouter from "./routes/images";
 import clipsRouter from "./routes/clips";
+import renderRouter from "./routes/render";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -35,6 +36,7 @@ app.use("/api/projects", projectsRouter);
 app.use("/api", scenesRouter);
 app.use("/api", imagesRouter);
 app.use("/api", clipsRouter);
+app.use("/api/projects", renderRouter);
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);

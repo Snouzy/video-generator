@@ -19,7 +19,7 @@ export interface ApiResponse<T> {
 
 export type GenerationStatus = "pending" | "processing" | "completed" | "failed";
 
-export type ProjectStatus = "draft" | "splitting" | "scenes_ready" | "generating_images" | "images_ready" | "generating_clips" | "clips_ready" | "completed";
+export type ProjectStatus = "draft" | "splitting" | "scenes_ready" | "generating_images" | "images_ready" | "generating_clips" | "clips_ready" | "rendering" | "rendered" | "completed";
 
 export type VideoFormat = "16:9" | "9:16";
 
