@@ -47,16 +47,18 @@ export async function splitScript(
 
   const response = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 16384,
     messages: [
       {
         role: "user",
         content: `You are a script analyst. Analyze the following narrative script and split it into coherent visual scenes.
 
 Rules:
+- Each scene MUST correspond to a single visual shot lasting 5-8 seconds.
+- The narrative text per scene MUST NOT exceed 20 words (~8 seconds of spoken narration at 150 words/minute). This is critical.
+- If a paragraph describes multiple visual moments or actions, split it into separate scenes. For example, "He writes a script to hack a platform. He downloads everything in 24 hours." should be 2 scenes.
 - Split based on changes in location, action, mood, or character focus — NOT mechanically by paragraph.
-- Each scene should represent a distinct visual moment that could be illustrated as a single image.
-- Use the timestamps from the script (e.g., [00:10], [01:19]) to assign start and end timestamps.
+- Use the timestamps from the script (e.g., [00:10], [01:19]) to assign start and end timestamps. Interpolate timestamps for scenes within the same paragraph.
 - Generate a short descriptive title for each scene.
 - Generate relevant descriptive tags (e.g., "hacking", "tension", "office", "arrest").
 - ${maxScenesInstruction}
