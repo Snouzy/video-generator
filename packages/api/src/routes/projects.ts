@@ -367,4 +367,30 @@ router.post("/:id/generate-all-clips", async (req, res) => {
   }
 });
 
+// PATCH /api/projects/:id/config - Update project config
+router.patch("/:id/config", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const project = await prisma.project.findUnique({ where: { id } });
+
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" });
+      return;
+    }
+
+    const currentConfig = project.config as unknown as ProjectConfig;
+    const updatedConfig = { ...currentConfig, ...req.body };
+
+    const updated = await prisma.project.update({
+      where: { id },
+      data: { config: updatedConfig as any },
+    });
+
+    res.json({ success: true, data: updated } as ApiResponse<any>);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
 export default router;

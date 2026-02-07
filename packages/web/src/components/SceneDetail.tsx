@@ -72,6 +72,18 @@ export default function SceneDetail({ scene }: SceneDetailProps) {
           )}
         </div>
       )}
+
+      {scene.audioUrl && (
+        <div className="mt-3 flex items-center gap-3">
+          <span className="text-xs text-gray-500">Narration</span>
+          <audio
+            controls
+            src={`http://localhost:3001${scene.audioUrl}`}
+            className="h-8"
+            style={{ filter: "invert(1) hue-rotate(180deg)", opacity: 0.7 }}
+          />
+        </div>
+      )}
     </div>
   );
 }

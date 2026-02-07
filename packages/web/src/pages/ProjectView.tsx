@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
-import type { Project, Scene, GeneratedImage, GeneratedClip } from "@video-generator/shared";
+import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice } from "@video-generator/shared";
 import {
   getProject,
   getScenes,
@@ -16,6 +16,9 @@ import {
   regenerateImage,
   regenerateClip,
   renderProject,
+  generateNarration,
+  getVoices,
+  updateProjectConfig,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
@@ -36,6 +39,8 @@ export default function ProjectView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [voices, setVoices] = useState<ElevenLabsVoice[]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -62,6 +67,18 @@ export default function ProjectView() {
   useEffect(() => {
     loadProject();
   }, [loadProject]);
+
+  // Load voices
+  useEffect(() => {
+    getVoices().then(setVoices).catch(() => {});
+  }, []);
+
+  // Sync selected voice from project config
+  useEffect(() => {
+    if (project?.config?.voiceId) {
+      setSelectedVoiceId(project.config.voiceId);
+    }
+  }, [project?.config?.voiceId]);
 
   // Load images/clips when current scene changes
   const loadSceneMedia = useCallback(async () => {
@@ -112,6 +129,7 @@ export default function ProjectView() {
       project?.status === "splitting" ||
       project?.status === "generating_images" ||
       project?.status === "generating_clips" ||
+      project?.status === "generating_narration" ||
       project?.status === "rendering"
     ) {
       const interval = setInterval(() => {
@@ -243,6 +261,25 @@ export default function ProjectView() {
       await loadProject();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to start render");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleGenerateNarration() {
+    if (!selectedVoiceId) {
+      setError("Please select a voice first");
+      return;
+    }
+    setActionLoading("generate-narration");
+    try {
+      await updateProjectConfig(projectId, { voiceId: selectedVoiceId });
+      await generateNarration(projectId);
+      await loadProject();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Failed to generate narration"
+      );
     } finally {
       setActionLoading(null);
     }
@@ -430,6 +467,34 @@ export default function ProjectView() {
                       ? "Rendering..."
                       : "Export Video"}
                   </button>
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={selectedVoiceId}
+                      onChange={(e) => setSelectedVoiceId(e.target.value)}
+                      className="px-3 py-2 bg-slate-800 border border-gray-700 text-white rounded-l-lg text-sm focus:outline-none focus:border-orange-500"
+                    >
+                      <option value="">Select voice...</option>
+                      {voices.map((v) => (
+                        <option key={v.voice_id} value={v.voice_id}>
+                          {v.name}{v.category ? ` (${v.category})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleGenerateNarration}
+                      disabled={
+                        !selectedVoiceId ||
+                        actionLoading === "generate-narration" ||
+                        project.status === "generating_narration"
+                      }
+                      className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-gray-700 text-white rounded-r-lg text-sm font-medium transition-colors"
+                    >
+                      {actionLoading === "generate-narration" ||
+                      project.status === "generating_narration"
+                        ? "Generating..."
+                        : "Generate Narration"}
+                    </button>
+                  </div>
                 </div>
 
                 {!currentScene?.selectedImageId && (

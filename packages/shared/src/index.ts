@@ -19,7 +19,7 @@ export interface ApiResponse<T> {
 
 export type GenerationStatus = "pending" | "processing" | "completed" | "failed";
 
-export type ProjectStatus = "draft" | "splitting" | "scenes_ready" | "generating_images" | "images_ready" | "generating_clips" | "clips_ready" | "rendering" | "rendered" | "completed";
+export type ProjectStatus = "draft" | "splitting" | "scenes_ready" | "generating_narration" | "narration_ready" | "generating_images" | "images_ready" | "generating_clips" | "clips_ready" | "rendering" | "rendered" | "completed";
 
 export type VideoFormat = "16:9" | "9:16";
 
@@ -30,6 +30,8 @@ export interface ProjectConfig {
   stylePromptPrefix: string;
   maxScenes: number | null;
   format: VideoFormat;
+  voiceId: string;
+  ttsModel: string;
 }
 
 export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
@@ -39,7 +41,16 @@ export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   stylePromptPrefix: "3D render, mannequin-style characters, cinematic dark lighting, minimalist scene",
   maxScenes: null,
   format: "16:9",
+  voiceId: "",
+  ttsModel: "eleven_multilingual_v2",
 };
+
+export interface ElevenLabsVoice {
+  voice_id: string;
+  name: string;
+  category?: string;
+  preview_url?: string;
+}
 
 export interface Project {
   id: number;
@@ -63,6 +74,7 @@ export interface Scene {
   tags: string[];
   imagePrompt: string | null;
   animationPrompt: string | null;
+  audioUrl: string | null;
   status: GenerationStatus;
   selectedImageId: number | null;
   selectedClipId: number | null;

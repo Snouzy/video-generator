@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { VideoFormat } from "@video-generator/shared";
-import { createProject } from "../api/client";
+import type { VideoFormat, ElevenLabsVoice } from "@video-generator/shared";
+import { createProject, getVoices } from "../api/client";
 
 export default function ProjectCreate() {
   const [title, setTitle] = useState("");
@@ -9,11 +9,32 @@ export default function ProjectCreate() {
   const [format, setFormat] = useState<VideoFormat>("16:9");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voices, setVoices] = useState<ElevenLabsVoice[]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState("");
+  const [loadingVoices, setLoadingVoices] = useState(true);
+  const [playingPreview, setPlayingPreview] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchVoices() {
+      try {
+        const voiceList = await getVoices();
+        setVoices(voiceList);
+        if (voiceList.length > 0) {
+          setSelectedVoiceId(voiceList[0].voice_id);
+        }
+      } catch (err) {
+        console.error("Failed to load voices:", err);
+      } finally {
+        setLoadingVoices(false);
+      }
+    }
+    fetchVoices();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !scriptContent.trim()) return;
+    if (!title.trim() || !scriptContent.trim() || !selectedVoiceId) return;
 
     setSubmitting(true);
     setError(null);
@@ -21,13 +42,26 @@ export default function ProjectCreate() {
       const project = await createProject({
         title: title.trim(),
         scriptContent: scriptContent.trim(),
-        config: { format },
+        config: { format, voiceId: selectedVoiceId },
       });
       navigate(`/projects/${project.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create project");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function handlePlayPreview() {
+    const selectedVoice = voices.find((v) => v.voice_id === selectedVoiceId);
+    if (selectedVoice?.preview_url) {
+      setPlayingPreview(true);
+      const audio = new Audio(selectedVoice.preview_url);
+      audio.onended = () => setPlayingPreview(false);
+      audio.play().catch((err) => {
+        console.error("Failed to play preview:", err);
+        setPlayingPreview(false);
+      });
     }
   }
 
@@ -127,6 +161,51 @@ export default function ProjectCreate() {
               >
                 <span className="inline-block w-3 h-5 border border-current rounded-sm align-middle mr-2" />
                 9:16 Short / TikTok
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="voice"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
+              Narrator Voice (ElevenLabs)
+            </label>
+            <div className="flex gap-3">
+              <select
+                id="voice"
+                value={selectedVoiceId}
+                onChange={(e) => setSelectedVoiceId(e.target.value)}
+                disabled={loadingVoices}
+                className="flex-1 bg-slate-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors disabled:bg-slate-800 disabled:text-gray-500"
+              >
+                {loadingVoices ? (
+                  <option>Loading voices...</option>
+                ) : voices.length === 0 ? (
+                  <option>No voices available</option>
+                ) : (
+                  voices.map((voice) => (
+                    <option key={voice.voice_id} value={voice.voice_id}>
+                      {voice.name}
+                      {voice.category ? ` (${voice.category})` : ""}
+                    </option>
+                  ))
+                )}
+              </select>
+              <button
+                type="button"
+                onClick={handlePlayPreview}
+                disabled={
+                  loadingVoices ||
+                  !selectedVoiceId ||
+                  !voices.find((v) => v.voice_id === selectedVoiceId)
+                    ?.preview_url ||
+                  playingPreview
+                }
+                className="px-4 py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:text-gray-500 text-white rounded-lg font-medium transition-colors text-sm border border-gray-700"
+              >
+                {playingPreview ? "Playing..." : "Preview"}
               </button>
             </div>
           </div>

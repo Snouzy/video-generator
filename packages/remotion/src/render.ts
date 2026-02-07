@@ -11,10 +11,11 @@ export interface RenderInput {
   format: VideoFormat;
   outputPath: string;
   onProgress?: (progress: number) => void;
+  audioUrls?: string[]; // audio URLs per clip
 }
 
 export async function renderVideo(input: RenderInput): Promise<string> {
-  const { clips, format, outputPath, onProgress } = input;
+  const { clips, format, outputPath, onProgress, audioUrls = [] } = input;
 
   // Entry point is the source file (not compiled) — Remotion bundles it with webpack
   const entryPoint = path.resolve(__dirname, "..", "src", "index.ts");
@@ -30,6 +31,7 @@ export async function renderVideo(input: RenderInput): Promise<string> {
     clips,
     clipDurations: [] as number[],
     format,
+    audioUrls,
   };
 
   console.log(`[Remotion] Selecting composition with ${clips.length} clips...`);

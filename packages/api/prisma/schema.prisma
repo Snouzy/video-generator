@@ -43,6 +43,7 @@ model Scene {
   tags            Json     @default("[]")
   imagePrompt     String?
   animationPrompt String?
+  audioUrl        String?
   status          String   @default("pending")
   selectedImageId Int?
   selectedClipId  Int?

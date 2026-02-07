@@ -5,6 +5,7 @@ import type {
   GeneratedClip,
   CreateProjectRequest,
   UpdateSceneRequest,
+  ElevenLabsVoice,
 } from "@video-generator/shared";
 
 const API_BASE = "http://localhost:3001";
@@ -113,4 +114,23 @@ export function renderProject(projectId: number): Promise<{ message: string; cli
     `/api/projects/${projectId}/render`,
     { method: "POST" }
   );
+}
+
+import type { ProjectConfig } from "@video-generator/shared";
+
+export function updateProjectConfig(projectId: number, config: Partial<ProjectConfig>): Promise<Project> {
+  return fetchApi<Project>(`/api/projects/${projectId}/config`, {
+    method: "PATCH",
+    body: JSON.stringify(config),
+  });
+}
+
+export function getVoices(): Promise<ElevenLabsVoice[]> {
+  return fetchApi<ElevenLabsVoice[]>("/api/voices");
+}
+
+export function generateNarration(projectId: number): Promise<void> {
+  return fetchApi<void>(`/api/projects/${projectId}/generate-narration`, {
+    method: "POST",
+  });
 }

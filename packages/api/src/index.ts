@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import path from "path";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, Video } from "@video-generator/shared";
 import projectsRouter from "./routes/projects";
@@ -8,6 +9,7 @@ import scenesRouter from "./routes/scenes";
 import imagesRouter from "./routes/images";
 import clipsRouter from "./routes/clips";
 import renderRouter from "./routes/render";
+import narrationRouter from "./routes/narration";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -15,6 +17,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+app.use("/audio", express.static(path.join(process.cwd(), "public", "audio")));
 
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, data: { status: "ok" } } satisfies ApiResponse<{ status: string }>);
@@ -37,6 +40,7 @@ app.use("/api", scenesRouter);
 app.use("/api", imagesRouter);
 app.use("/api", clipsRouter);
 app.use("/api/projects", renderRouter);
+app.use("/api", narrationRouter);
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
