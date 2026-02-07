@@ -1,0 +1,26 @@
+{
+  "name": "@video-generator/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6",
+    "@video-generator/shared": "workspace:*",
+    "cors": "^2.8",
+    "express": "^5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8",
+    "@types/express": "^5",
+    "prisma": "^6",
+    "tsx": "^4",
+    "typescript": "^5.7"
+  }
+}
