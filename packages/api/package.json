@@ -11,10 +11,13 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@prisma/client": "^6",
     "@video-generator/shared": "workspace:*",
     "cors": "^2.8",
-    "express": "^5"
+    "dotenv": "^17.2.4",
+    "express": "^5",
+    "replicate": "^1.4.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8",

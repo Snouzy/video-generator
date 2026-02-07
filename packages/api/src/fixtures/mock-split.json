@@ -1,0 +1,82 @@
+[
+  {
+    "sceneNumber": 1,
+    "title": "La bourse et les traders",
+    "narrativeText": "La bourse, pour un néophyte, c'est de l'aléatoire. Il y a des actions d'entreprise qui montent et qui descendent, et il y a des professionnels de la finance, des traders, qui essaient d'en tirer profit en faisant des paris. Ils scrutent les courbes 24h sur 24 et dès qu'ils pensent que le cours va monter, ils achètent tout ce qu'ils peuvent pour ensuite pouvoir revendre plus cher.",
+    "startTimestamp": "00:00",
+    "endTimestamp": "00:10",
+    "tags": ["bourse", "traders", "introduction", "finance"]
+  },
+  {
+    "sceneNumber": 2,
+    "title": "Le pouvoir de prédire l'avenir",
+    "narrativeText": "Maintenant, qu'est-ce qui se passerait si quelqu'un avait la capacité de prédire l'avenir ? Il pourrait savoir ce qui va se passer avant tout le monde, il aurait un pouvoir immense. Et bien, c'est exactement ce qui s'est passé avec un jeune analyste anglais du nom de Robert Westbrook. D'après une plainte déposée aux États-Unis, Westbrook aurait utilisé le hacking pour prédire les cours de Wall Street et gagner des millions.",
+    "startTimestamp": "00:10",
+    "endTimestamp": "00:36",
+    "tags": ["hacking", "prédiction", "Wall Street", "mystère"]
+  },
+  {
+    "sceneNumber": 3,
+    "title": "Un analyste de Cambridge",
+    "narrativeText": "Tout aurait commencé à Londres dans les années 2010. Robert Westbrook travaille déjà dans la finance. Diplômé de Cambridge, il a trouvé sa place dans un fonds d'investissement réservé à l'élite : un hedge fund. Son job, c'est de faire de la spéculation.",
+    "startTimestamp": "01:19",
+    "endTimestamp": "01:54",
+    "tags": ["Londres", "hedge fund", "élite", "Cambridge"]
+  },
+  {
+    "sceneNumber": 4,
+    "title": "Le premier piratage",
+    "narrativeText": "Pour trouver des idées d'investissement, il s'appuie sur de gigantesques bases de données, mais il est frustré car il n'a pas accès à toutes les informations qu'il voudrait. Westbrook, qui a développé un goût secret pour le piratage, décide de bidouiller. Il rédige un script pour pirater une plateforme, probablement via une injection SQL. En 24 heures, il télécharge tout le contenu. Mais il est négligent, laisse des traces, et se fait prendre par son entreprise. Il avoue tout et perd son job à six chiffres.",
+    "startTimestamp": "01:54",
+    "endTimestamp": "02:54",
+    "tags": ["piratage", "SQL injection", "base de données", "licenciement"]
+  },
+  {
+    "sceneNumber": 5,
+    "title": "Battre le marché par la triche",
+    "narrativeText": "Au lieu de retenir la leçon, il réalise le potentiel du hacking. Son objectif : battre le marché. En finance, la théorie de l'efficience des marchés dit que tout le monde a accès aux mêmes informations, donc personne ne peut réellement battre la bourse sur le long terme... à moins de détenir des informations que les autres n'ont pas. Westbrook décide de viser les états financiers des entreprises.",
+    "startTimestamp": "04:49",
+    "endTimestamp": "07:31",
+    "tags": ["stratégie", "délit d'initié", "marché", "plan"]
+  },
+  {
+    "sceneNumber": 6,
+    "title": "Le piratage de Tupperware",
+    "narrativeText": "Sa première cible est Tupperware. Au lieu d'utiliser des techniques complexes, il découvre une faille de sécurité majeure : Tupperware utilise Microsoft 365 avec une option de réinitialisation de mot de passe en libre-service protégée par une simple question de sécurité. Westbrook se transforme en détective privé sur internet pour trouver la réponse à la question du directeur financier. Le 26 janvier 2019, il réussit à entrer dans la boîte mail du directeur financier de Tupperware.",
+    "startTimestamp": "11:44",
+    "endTimestamp": "15:54",
+    "tags": ["Tupperware", "hacking", "Microsoft 365", "social engineering"]
+  },
+  {
+    "sceneNumber": 7,
+    "title": "Le premier gros coup",
+    "narrativeText": "Il trouve un brouillon de communiqué de presse. Alors que les analystes sont optimistes, Westbrook voit la réalité : les chiffres sont catastrophiques et les dividendes vont être coupés de 60 %. Il utilise des options de vente (Puts) et investit environ 130 000 dollars. Quand les résultats tombent, l'action chute de 27 %. En quelques heures, il empoche plus de 322 000 dollars de profit.",
+    "startTimestamp": "19:30",
+    "endTimestamp": "23:26",
+    "tags": ["trading", "options", "profit", "Tupperware", "tension"]
+  },
+  {
+    "sceneNumber": 8,
+    "title": "L'industrialisation du système",
+    "narrativeText": "Fort de ce succès, il réitère l'opération avec d'autres entreprises. Pour être plus discret et efficace, il met en place des règles de transfert automatique dans les boîtes mail piratées. Dès qu'un mail contient des mots-clés comme 'script' ou le code boursier, il est transféré vers son adresse anonyme. Son plus gros coup survient avec Murphy USA : il réalise un bénéfice de 1,4 million de dollars en une seule journée. Au total, il amasse 3,7 millions de dollars.",
+    "startTimestamp": "27:21",
+    "endTimestamp": "33:01",
+    "tags": ["industrialisation", "Murphy USA", "millions", "automatisation"]
+  },
+  {
+    "sceneNumber": 9,
+    "title": "La chute",
+    "narrativeText": "L'enquête commence probablement quand les entreprises découvrent les règles de transfert automatique suspectes. La SEC et le FBI font le lien entre les différentes entreprises piratées : même mode opératoire, mêmes adresses IP de VPN, et mêmes adresses de récupération. Bien que Westbrook ait utilisé du Bitcoin, les enquêteurs remontent la trace du paiement du VPN. Le 27 septembre 2024, Robert Westbrook est arrêté à Londres. Il risque jusqu'à 25 ans de prison.",
+    "startTimestamp": "36:27",
+    "endTimestamp": "42:01",
+    "tags": ["FBI", "SEC", "arrestation", "Bitcoin", "enquête"]
+  },
+  {
+    "sceneNumber": 10,
+    "title": "La réalité du délit d'initié",
+    "narrativeText": "L'histoire finit sur une note amère : si Westbrook a été pris, une étude suggère que 25 % des transactions liées à des fusions-acquisitions seraient en réalité des délits d'initiés, et la grande majorité de ces fraudeurs ne sont jamais inquiétés.",
+    "startTimestamp": "42:01",
+    "endTimestamp": "44:06",
+    "tags": ["conclusion", "délit d'initié", "statistiques", "impunité"]
+  }
+]
