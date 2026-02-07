@@ -6,6 +6,7 @@ import {
   getScenes,
   splitProject,
   generateAllImages,
+  generateAllClips,
   generateSceneImages,
   generateSceneClips,
   getSceneImages,
@@ -17,6 +18,7 @@ import {
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
+import SceneOverview from "../components/SceneOverview";
 import ImageGrid from "../components/ImageGrid";
 import ClipGrid from "../components/ClipGrid";
 
@@ -199,6 +201,21 @@ export default function ProjectView() {
     }
   }
 
+  async function handleGenerateAllClips() {
+    setActionLoading("generate-all-clips");
+    try {
+      await generateAllClips(projectId);
+      await loadProject();
+      await loadSceneMedia();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Failed to generate all clips"
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   async function handleRegenerateImage(imageId: number) {
     try {
       await regenerateImage(imageId);
@@ -299,9 +316,6 @@ export default function ProjectView() {
         onTabChange={setActiveTab}
       />
 
-      {/* Scene detail */}
-      {currentScene && <SceneDetail scene={currentScene} />}
-
       {/* Error banner */}
       {error && (
         <div className="mx-6 mt-4 bg-red-900/30 border border-red-700 rounded-lg p-3 text-red-400 text-sm flex items-center justify-between">
@@ -315,76 +329,102 @@ export default function ProjectView() {
         </div>
       )}
 
-      {/* Main content area */}
-      <div className="flex-1 px-6 py-6">
-        {activeTab === "images" && (
-          <>
-            {/* Action buttons */}
-            <div className="flex gap-3 mb-6">
-              {images.length === 0 && (
-                <button
-                  onClick={handleGenerateSceneImages}
-                  disabled={actionLoading === "generate-scene"}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  {actionLoading === "generate-scene"
-                    ? "Generating..."
-                    : "Generate Images for This Scene"}
-                </button>
-              )}
-              <button
-                onClick={handleGenerateAll}
-                disabled={actionLoading === "generate-all"}
-                className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                {actionLoading === "generate-all"
-                  ? "Generating..."
-                  : "Generate All Images"}
-              </button>
-            </div>
+      {/* Layout: sidebar + main content */}
+      <div className="flex-1 flex">
+        {/* Sidebar: Scene overview */}
+        <div className="w-80 shrink-0 p-4 border-r border-gray-800">
+          <SceneOverview
+            scenes={scenes}
+            currentIndex={currentIndex}
+            onNavigate={setCurrentIndex}
+          />
+        </div>
 
-            <ImageGrid
-              images={images}
-              onSelect={handleSelectImage}
-              onRegenerate={handleRegenerateImage}
-              sceneLabel={sceneLabel}
-            />
-          </>
-        )}
+        {/* Main content area */}
+        <div className="flex-1 px-6 py-4 overflow-y-auto">
+          {/* Scene detail */}
+          {currentScene && <SceneDetail scene={currentScene} />}
 
-        {activeTab === "clips" && (
-          <>
-            {/* Generate clips button */}
-            {currentScene?.selectedImageId && clips.length === 0 && (
-              <div className="mb-6">
-                <button
-                  onClick={handleGenerateSceneClips}
-                  disabled={actionLoading === "generate-clips"}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  {actionLoading === "generate-clips"
-                    ? "Generating..."
-                    : "Generate Clips for This Scene"}
-                </button>
-              </div>
+          <div className="mt-6">
+            {activeTab === "images" && (
+              <>
+                {/* Action buttons */}
+                <div className="flex gap-3 mb-6">
+                  {images.length === 0 && (
+                    <button
+                      onClick={handleGenerateSceneImages}
+                      disabled={actionLoading === "generate-scene"}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      {actionLoading === "generate-scene"
+                        ? "Generating..."
+                        : "Generate Images for This Scene"}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleGenerateAll}
+                    disabled={actionLoading === "generate-all"}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {actionLoading === "generate-all"
+                      ? "Generating..."
+                      : "Generate All Images"}
+                  </button>
+                </div>
+
+                <ImageGrid
+                  images={images}
+                  onSelect={handleSelectImage}
+                  onRegenerate={handleRegenerateImage}
+                  sceneLabel={sceneLabel}
+                />
+              </>
             )}
 
-            {!currentScene?.selectedImageId && (
-              <div className="flex items-center justify-center py-20 text-gray-500">
-                Select an image first before generating clips.
-              </div>
-            )}
+            {activeTab === "clips" && (
+              <>
+                {/* Clip action buttons */}
+                <div className="flex gap-3 mb-6">
+                  {currentScene?.selectedImageId && clips.length === 0 && (
+                    <button
+                      onClick={handleGenerateSceneClips}
+                      disabled={actionLoading === "generate-clips"}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      {actionLoading === "generate-clips"
+                        ? "Generating..."
+                        : "Generate Clips for This Scene"}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleGenerateAllClips}
+                    disabled={actionLoading === "generate-all-clips"}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {actionLoading === "generate-all-clips"
+                      ? "Generating..."
+                      : "Generate All Clips"}
+                  </button>
+                </div>
 
-            {currentScene?.selectedImageId && (
-              <ClipGrid
-                clips={clips}
-                onSelect={handleSelectClip}
-                onRegenerate={handleRegenerateClip}
-                sceneLabel={sceneLabel}
-              />
+                {!currentScene?.selectedImageId && (
+                  <div className="flex items-center justify-center py-20 text-gray-500">
+                    Select an image first before generating clips.
+                  </div>
+                )}
+
+                {currentScene?.selectedImageId && (
+                  <ClipGrid
+                    clips={clips}
+                    onSelect={handleSelectClip}
+                    onRegenerate={handleRegenerateClip}
+                    sceneLabel={sceneLabel}
+                  />
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );

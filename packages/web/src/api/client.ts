@@ -101,3 +101,9 @@ export function regenerateClip(clipId: number): Promise<void> {
     method: "POST",
   });
 }
+
+export function generateAllClips(projectId: number): Promise<void> {
+  return fetchApi<void>(`/api/projects/${projectId}/generate-all-clips`, {
+    method: "POST",
+  });
+}

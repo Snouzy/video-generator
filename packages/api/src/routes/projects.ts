@@ -5,8 +5,8 @@ import type {
   CreateProjectRequest,
   ProjectConfig,
 } from "@video-generator/shared";
-import { splitScript, generateImagePrompt } from "../services/llm";
-import { generateImage } from "../services/replicate";
+import { splitScript, generateImagePrompt, generateAnimationPrompt } from "../services/llm";
+import { generateImage, generateClip } from "../services/replicate";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -241,6 +241,125 @@ router.post("/:id/generate-all-images", async (req, res) => {
         data: { status: "images_ready" },
       });
       console.log(`All images for project ${id} done.`);
+    })();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
+// POST /api/projects/:id/generate-all-clips - Generate clips for ALL scenes with a selected image
+router.post("/:id/generate-all-clips", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        scenes: {
+          orderBy: { sceneNumber: "asc" },
+          include: {
+            images: { where: { isSelected: true } },
+            clips: true,
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" });
+      return;
+    }
+
+    const config = project.config as unknown as ProjectConfig;
+
+    // Filter scenes that have a selected image but no clips yet
+    const eligibleScenes = project.scenes.filter(
+      (s) => s.images.length > 0 && s.images[0].imageUrl && s.clips.length === 0
+    );
+
+    if (eligibleScenes.length === 0) {
+      res.status(400).json({
+        success: false,
+        error: "No eligible scenes found. Scenes need a selected image and no existing clips.",
+      });
+      return;
+    }
+
+    await prisma.project.update({
+      where: { id },
+      data: { status: "generating_clips" },
+    });
+
+    // Create all clip records
+    const allClipRecords: { clipId: number; model: string; imageUrl: string; animationPrompt: string }[] = [];
+
+    for (const scene of eligibleScenes) {
+      const selectedImage = scene.images[0];
+
+      // Generate animation prompt if not already set
+      let animPrompt = scene.animationPrompt;
+      if (!animPrompt) {
+        animPrompt = await generateAnimationPrompt(scene.narrativeText, scene.title);
+        await prisma.scene.update({
+          where: { id: scene.id },
+          data: { animationPrompt: animPrompt },
+        });
+      }
+
+      for (const model of config.animationModels) {
+        const clipRecord = await prisma.generatedClip.create({
+          data: {
+            sceneId: scene.id,
+            sourceImageId: selectedImage.id,
+            model,
+            animationPrompt: animPrompt,
+            status: "processing",
+          },
+        });
+        allClipRecords.push({
+          clipId: clipRecord.id,
+          model,
+          imageUrl: selectedImage.imageUrl!,
+          animationPrompt: animPrompt,
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        message: `Started generating ${allClipRecords.length} clips across ${eligibleScenes.length} scenes`,
+        clipCount: allClipRecords.length,
+      },
+    } as ApiResponse<any>);
+
+    // Sequential background processing
+    (async () => {
+      for (const record of allClipRecords) {
+        try {
+          const result = await generateClip(record.model, record.imageUrl, record.animationPrompt);
+          await prisma.generatedClip.update({
+            where: { id: record.clipId },
+            data: {
+              replicatePredictionId: result.predictionId,
+              clipUrl: result.clipUrl,
+              status: result.clipUrl ? "completed" : "failed",
+            },
+          });
+          console.log(`Clip ${record.clipId} completed: ${result.clipUrl ? "success" : "no url"}`);
+        } catch (err) {
+          await prisma.generatedClip.update({
+            where: { id: record.clipId },
+            data: { status: "failed" },
+          });
+          console.error(`Clip generation failed for clip ${record.clipId}:`, err);
+        }
+      }
+      await prisma.project.update({
+        where: { id },
+        data: { status: "clips_ready" },
+      });
+      console.log(`All clips for project ${id} done.`);
     })();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
