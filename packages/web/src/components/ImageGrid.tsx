@@ -4,12 +4,14 @@ import ImageCard from "./ImageCard";
 interface ImageGridProps {
   images: GeneratedImage[];
   onSelect: (id: number) => void;
+  onRegenerate: (id: number) => void;
   sceneLabel: string;
 }
 
 export default function ImageGrid({
   images,
   onSelect,
+  onRegenerate,
   sceneLabel,
 }: ImageGridProps) {
   if (images.length === 0) {
@@ -29,6 +31,7 @@ export default function ImageGrid({
           index={index}
           sceneLabel={sceneLabel}
           onSelect={onSelect}
+          onRegenerate={onRegenerate}
           isSelected={image.isSelected}
         />
       ))}

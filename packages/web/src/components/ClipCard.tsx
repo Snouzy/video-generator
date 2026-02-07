@@ -5,6 +5,7 @@ interface ClipCardProps {
   index: number;
   sceneLabel: string;
   onSelect: (id: number) => void;
+  onRegenerate: (id: number) => void;
   isSelected: boolean;
 }
 
@@ -13,6 +14,7 @@ export default function ClipCard({
   index,
   sceneLabel,
   onSelect,
+  onRegenerate,
   isSelected,
 }: ClipCardProps) {
   if (clip.status === "processing" || clip.status === "pending") {
@@ -50,6 +52,12 @@ export default function ClipCard({
             />
           </svg>
           <span className="text-sm">Clip generation failed</span>
+          <button
+            onClick={() => onRegenerate(clip.id)}
+            className="mt-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs rounded-md transition-colors cursor-pointer"
+          >
+            Retry
+          </button>
         </div>
         <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center px-3 py-2 bg-gradient-to-t from-black/80 to-transparent">
           <span className="text-xs text-gray-300">

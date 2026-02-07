@@ -20,6 +20,7 @@ interface ImageCardProps {
   index: number;
   sceneLabel: string;
   onSelect: (id: number) => void;
+  onRegenerate: (id: number) => void;
   isSelected: boolean;
 }
 
@@ -28,6 +29,7 @@ export default function ImageCard({
   index,
   sceneLabel,
   onSelect,
+  onRegenerate,
   isSelected,
 }: ImageCardProps) {
   if (image.status === "processing" || image.status === "pending") {
@@ -65,6 +67,12 @@ export default function ImageCard({
             />
           </svg>
           <span className="text-sm">Generation failed</span>
+          <button
+            onClick={() => onRegenerate(image.id)}
+            className="mt-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs rounded-md transition-colors cursor-pointer"
+          >
+            Retry
+          </button>
         </div>
         <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center px-3 py-2 bg-gradient-to-t from-black/80 to-transparent">
           <span className="text-xs text-gray-300">

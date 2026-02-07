@@ -89,3 +89,15 @@ export function selectClip(clipId: number): Promise<GeneratedClip> {
     method: "PATCH",
   });
 }
+
+export function regenerateImage(imageId: number): Promise<void> {
+  return fetchApi<void>(`/api/images/${imageId}/regenerate`, {
+    method: "POST",
+  });
+}
+
+export function regenerateClip(clipId: number): Promise<void> {
+  return fetchApi<void>(`/api/clips/${clipId}/regenerate`, {
+    method: "POST",
+  });
+}

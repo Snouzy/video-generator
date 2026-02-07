@@ -12,6 +12,8 @@ import {
   getSceneClips,
   selectImage,
   selectClip,
+  regenerateImage,
+  regenerateClip,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
@@ -197,6 +199,24 @@ export default function ProjectView() {
     }
   }
 
+  async function handleRegenerateImage(imageId: number) {
+    try {
+      await regenerateImage(imageId);
+      await loadSceneMedia();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to regenerate image");
+    }
+  }
+
+  async function handleRegenerateClip(clipId: number) {
+    try {
+      await regenerateClip(clipId);
+      await loadSceneMedia();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to regenerate clip");
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -326,6 +346,7 @@ export default function ProjectView() {
             <ImageGrid
               images={images}
               onSelect={handleSelectImage}
+              onRegenerate={handleRegenerateImage}
               sceneLabel={sceneLabel}
             />
           </>
@@ -358,6 +379,7 @@ export default function ProjectView() {
               <ClipGrid
                 clips={clips}
                 onSelect={handleSelectClip}
+                onRegenerate={handleRegenerateClip}
                 sceneLabel={sceneLabel}
               />
             )}

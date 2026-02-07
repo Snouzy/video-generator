@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse } from "@video-generator/shared";
+import { generateImage } from "../services/replicate";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -58,6 +59,52 @@ router.patch("/images/:id/select", async (req, res) => {
     });
 
     res.json({ success: true, data: updated } as ApiResponse<any>);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
+// POST /api/images/:id/regenerate - Regenerate a single image
+router.post("/images/:id/regenerate", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+
+    const image = await prisma.generatedImage.findUnique({ where: { id } });
+    if (!image) {
+      res.status(404).json({ success: false, error: "Image not found" });
+      return;
+    }
+
+    // Reset status
+    await prisma.generatedImage.update({
+      where: { id },
+      data: { status: "processing", imageUrl: null, replicatePredictionId: null },
+    });
+
+    res.json({ success: true, data: { message: "Regeneration started" } } as ApiResponse<any>);
+
+    // Background processing
+    (async () => {
+      try {
+        const result = await generateImage(image.model, image.prompt);
+        await prisma.generatedImage.update({
+          where: { id },
+          data: {
+            replicatePredictionId: result.predictionId,
+            imageUrl: result.imageUrl,
+            status: result.imageUrl ? "completed" : "failed",
+          },
+        });
+        console.log(`Image ${id} regenerated: ${result.imageUrl ? "success" : "no url"}`);
+      } catch (err) {
+        await prisma.generatedImage.update({
+          where: { id },
+          data: { status: "failed" },
+        });
+        console.error(`Image regeneration failed for image ${id}:`, err);
+      }
+    })();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message } as ApiResponse<never>);

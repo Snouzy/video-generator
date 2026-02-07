@@ -4,12 +4,14 @@ import ClipCard from "./ClipCard";
 interface ClipGridProps {
   clips: GeneratedClip[];
   onSelect: (id: number) => void;
+  onRegenerate: (id: number) => void;
   sceneLabel: string;
 }
 
 export default function ClipGrid({
   clips,
   onSelect,
+  onRegenerate,
   sceneLabel,
 }: ClipGridProps) {
   if (clips.length === 0) {
@@ -29,6 +31,7 @@ export default function ClipGrid({
           index={index}
           sceneLabel={sceneLabel}
           onSelect={onSelect}
+          onRegenerate={onRegenerate}
           isSelected={clip.isSelected}
         />
       ))}
