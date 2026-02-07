@@ -120,6 +120,7 @@ Style prefix to prepend: "${stylePrefix}"
 Rules:
 - Describe the visual scene in vivid detail: characters, setting, lighting, camera angle, composition.
 - Include mood and atmosphere descriptions.
+- Add realistic contextual details to make the scene feel alive: real-world objects relevant to the scene (branded logos, recognizable software interfaces, specific devices, documents, newspapers, real company names, stock tickers, etc.). Be subtle — these details should enrich the scene, not dominate it.
 - The prompt should work well with AI image generation models (Flux, SDXL, etc.).
 - Prepend the style prefix at the beginning.
 - Return ONLY the prompt text, nothing else. No quotes, no explanation.`,
