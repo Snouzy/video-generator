@@ -63,7 +63,7 @@ model GeneratedImage {
   model                  String
   prompt                 String
   imageUrl               String?
-  replicatePredictionId  String?
+  falRequestId           String?
   status                 String   @default("pending")
   isSelected             Boolean  @default(false)
   createdAt              DateTime @default(now())
@@ -82,7 +82,7 @@ model GeneratedClip {
   model                  String
   animationPrompt        String
   clipUrl                String?
-  replicatePredictionId  String?
+  falRequestId           String?
   status                 String   @default("pending")
   isSelected             Boolean  @default(false)
   createdAt              DateTime @default(now())

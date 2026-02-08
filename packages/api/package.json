@@ -18,7 +18,7 @@
     "cors": "^2.8",
     "dotenv": "^17.2.4",
     "express": "^5",
-    "replicate": "^1.4.0"
+    "@fal-ai/client": "^1"
   },
   "devDependencies": {
     "@types/cors": "^2.8",

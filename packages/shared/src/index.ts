@@ -90,7 +90,7 @@ export interface GeneratedImage {
   model: string;
   prompt: string;
   imageUrl: string | null;
-  replicatePredictionId: string | null;
+  falRequestId: string | null;
   status: GenerationStatus;
   isSelected: boolean;
   createdAt: Date;
@@ -104,7 +104,7 @@ export interface GeneratedClip {
   model: string;
   animationPrompt: string;
   clipUrl: string | null;
-  replicatePredictionId: string | null;
+  falRequestId: string | null;
   status: GenerationStatus;
   isSelected: boolean;
   createdAt: Date;

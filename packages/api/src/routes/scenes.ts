@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, UpdateSceneRequest, ProjectConfig } from "@video-generator/shared";
-import { generateImage, generateClip, downloadToLocal } from "../services/replicate";
+import { generateImage, generateClip, downloadToLocal } from "../services/fal";
 import { generateAnimationPrompt } from "../services/llm";
 
 const router = Router();
@@ -120,7 +120,7 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
           await prisma.generatedImage.update({
             where: { id: imageRecord.id },
             data: {
-              replicatePredictionId: result.predictionId,
+              falRequestId: result.requestId,
               imageUrl: localUrl,
               status: localUrl ? "completed" : "failed",
             },
@@ -220,7 +220,7 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
           await prisma.generatedClip.update({
             where: { id: clipRecord.id },
             data: {
-              replicatePredictionId: result.predictionId,
+              falRequestId: result.requestId,
               clipUrl: localUrl,
               status: localUrl ? "completed" : "failed",
             },

@@ -6,7 +6,7 @@ import type {
   ProjectConfig,
 } from "@video-generator/shared";
 import { splitScript, generateImagePrompt, generateAnimationPrompt } from "../services/llm";
-import { fireImagePrediction, fireClipPrediction, waitForPrediction, downloadToLocal } from "../services/replicate";
+import { generateImage, generateClip, downloadToLocal } from "../services/fal";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -185,7 +185,7 @@ router.post("/:id/generate-all-images", async (req, res) => {
       data: { status: "generating_images" },
     });
 
-    // Create all image records first, then process sequentially in background
+    // Create all image records first
     const allImageRecords = [];
     for (const scene of project.scenes) {
       if (!scene.imagePrompt) continue;
@@ -214,55 +214,31 @@ router.post("/:id/generate-all-images", async (req, res) => {
       },
     } as ApiResponse<any>);
 
-    // Parallel background processing: fire all predictions, then poll all
+    // Parallel background processing — fal.subscribe is blocking, so a single step
     (async () => {
-      // Step 1: Fire all predictions in parallel
-      const tasks = await Promise.all(
+      await Promise.all(
         allImageRecords.map(async (imageRecord) => {
           try {
-            const predictionId = await fireImagePrediction(imageRecord.model, imageRecord.prompt, config.format);
-            await prisma.generatedImage.update({
-              where: { id: imageRecord.id },
-              data: { replicatePredictionId: predictionId },
-            });
-            return { imageRecord, predictionId };
-          } catch (err) {
-            await prisma.generatedImage.update({
-              where: { id: imageRecord.id },
-              data: { status: "failed" },
-            });
-            console.error(`Image ${imageRecord.id} fire failed:`, err);
-            return null;
-          }
-        })
-      );
-
-      console.log(`[Images] Fired ${tasks.filter(Boolean).length}/${allImageRecords.length} predictions for project ${id}`);
-
-      // Step 2: Poll all predictions in parallel
-      await Promise.all(
-        tasks.filter(Boolean).map(async (task) => {
-          if (!task) return;
-          try {
-            const result = await waitForPrediction(task.predictionId);
+            const result = await generateImage(imageRecord.model, imageRecord.prompt, config.format);
             let localUrl: string | null = null;
-            if (result.output) {
-              localUrl = await downloadToLocal(result.output, "images", `img-${task.imageRecord.id}`);
+            if (result.imageUrl) {
+              localUrl = await downloadToLocal(result.imageUrl, "images", `img-${imageRecord.id}`);
             }
             await prisma.generatedImage.update({
-              where: { id: task.imageRecord.id },
+              where: { id: imageRecord.id },
               data: {
+                falRequestId: result.requestId,
                 imageUrl: localUrl,
                 status: localUrl ? "completed" : "failed",
               },
             });
-            console.log(`Image ${task.imageRecord.id} completed: ${localUrl ? "success" : "no url"}`);
+            console.log(`Image ${imageRecord.id} completed: ${localUrl ? "success" : "no url"}`);
           } catch (err) {
             await prisma.generatedImage.update({
-              where: { id: task.imageRecord.id },
+              where: { id: imageRecord.id },
               data: { status: "failed" },
             });
-            console.error(`Image ${task.imageRecord.id} poll failed:`, err);
+            console.error(`Image ${imageRecord.id} failed:`, err);
           }
         })
       );
@@ -364,55 +340,31 @@ router.post("/:id/generate-all-clips", async (req, res) => {
       },
     } as ApiResponse<any>);
 
-    // Parallel background processing: fire all, then poll all
+    // Parallel background processing — fal.subscribe is blocking, so a single step
     (async () => {
-      // Step 1: Fire all clip predictions in parallel
-      const tasks = await Promise.all(
+      await Promise.all(
         allClipRecords.map(async (record) => {
           try {
-            const predictionId = await fireClipPrediction(record.model, record.imageUrl, record.animationPrompt, config.format);
-            await prisma.generatedClip.update({
-              where: { id: record.clipId },
-              data: { replicatePredictionId: predictionId },
-            });
-            return { record, predictionId };
-          } catch (err) {
-            await prisma.generatedClip.update({
-              where: { id: record.clipId },
-              data: { status: "failed" },
-            });
-            console.error(`Clip ${record.clipId} fire failed:`, err);
-            return null;
-          }
-        })
-      );
-
-      console.log(`[Clips] Fired ${tasks.filter(Boolean).length}/${allClipRecords.length} predictions for project ${id}`);
-
-      // Step 2: Poll all predictions in parallel
-      await Promise.all(
-        tasks.filter(Boolean).map(async (task) => {
-          if (!task) return;
-          try {
-            const result = await waitForPrediction(task.predictionId);
+            const result = await generateClip(record.model, record.imageUrl, record.animationPrompt, config.format);
             let localUrl: string | null = null;
-            if (result.output) {
-              localUrl = await downloadToLocal(result.output, "clips", `clip-${task.record.clipId}`);
+            if (result.clipUrl) {
+              localUrl = await downloadToLocal(result.clipUrl, "clips", `clip-${record.clipId}`);
             }
             await prisma.generatedClip.update({
-              where: { id: task.record.clipId },
+              where: { id: record.clipId },
               data: {
+                falRequestId: result.requestId,
                 clipUrl: localUrl,
                 status: localUrl ? "completed" : "failed",
               },
             });
-            console.log(`Clip ${task.record.clipId} completed: ${localUrl ? "success" : "no url"}`);
+            console.log(`Clip ${record.clipId} completed: ${localUrl ? "success" : "no url"}`);
           } catch (err) {
             await prisma.generatedClip.update({
-              where: { id: task.record.clipId },
+              where: { id: record.clipId },
               data: { status: "failed" },
             });
-            console.error(`Clip ${task.record.clipId} poll failed:`, err);
+            console.error(`Clip ${record.clipId} failed:`, err);
           }
         })
       );

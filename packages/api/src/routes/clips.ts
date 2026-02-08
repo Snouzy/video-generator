@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, ProjectConfig } from "@video-generator/shared";
-import { generateClip, downloadToLocal } from "../services/replicate";
+import { generateClip, downloadToLocal } from "../services/fal";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -89,7 +89,7 @@ router.post("/clips/:id/regenerate", async (req, res) => {
     // Reset status
     await prisma.generatedClip.update({
       where: { id },
-      data: { status: "processing", clipUrl: null, replicatePredictionId: null },
+      data: { status: "processing", clipUrl: null, falRequestId: null },
     });
 
     res.json({ success: true, data: { message: "Clip regeneration started" } } as ApiResponse<any>);
@@ -105,7 +105,7 @@ router.post("/clips/:id/regenerate", async (req, res) => {
         await prisma.generatedClip.update({
           where: { id },
           data: {
-            replicatePredictionId: result.predictionId,
+            falRequestId: result.requestId,
             clipUrl: localUrl,
             status: localUrl ? "completed" : "failed",
           },
