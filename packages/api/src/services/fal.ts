@@ -59,6 +59,25 @@ export async function downloadToLocal(
 }
 
 // ---------------------------------------------------------------------------
+// Upload local file to fal.ai CDN (returns a public URL)
+// ---------------------------------------------------------------------------
+
+export async function uploadToFal(localPath: string): Promise<string> {
+  const absolutePath = localPath.startsWith("/")
+    ? path.join(PUBLIC_DIR, localPath.slice(1))
+    : path.resolve(localPath);
+  const fileBuffer = await fs.readFile(absolutePath);
+  const ext = path.extname(absolutePath).slice(1);
+  const mimeTypes: Record<string, string> = {
+    png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp",
+    mp3: "audio/mpeg", wav: "audio/wav", mp4: "video/mp4",
+  };
+  const blob = new Blob([fileBuffer], { type: mimeTypes[ext] || "application/octet-stream" });
+  const url = await fal.storage.upload(new File([blob], path.basename(absolutePath), { type: blob.type }));
+  return url;
+}
+
+// ---------------------------------------------------------------------------
 // Image generation (blocking — fal.subscribe waits for result)
 // ---------------------------------------------------------------------------
 
@@ -113,25 +132,28 @@ export async function generateClip(
   const modelId = CLIP_MODEL_IDS[model];
   if (!modelId) throw new Error(`Unknown clip model: ${model}`);
 
+  // Upload local images to fal.ai CDN — fal can't access localhost
+  const resolvedImageUrl = imageUrl.startsWith("http") ? imageUrl : await uploadToFal(imageUrl);
+
   let input: Record<string, unknown>;
 
   if (model === "wan-i2v") {
     input = {
-      image_url: imageUrl,
+      image_url: resolvedImageUrl,
       prompt,
       aspect_ratio: aspectRatio,
       resolution: "480p",
     };
   } else if (model === "kling") {
     input = {
-      image_url: imageUrl,
+      image_url: resolvedImageUrl,
       prompt,
       aspect_ratio: aspectRatio,
     };
   } else {
     // minimax — no aspect_ratio support
     input = {
-      image_url: imageUrl,
+      image_url: resolvedImageUrl,
       prompt,
     };
   }

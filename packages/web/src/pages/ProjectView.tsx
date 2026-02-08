@@ -90,6 +90,12 @@ export default function ProjectView() {
       ]);
       setImages(imgs);
       setClips(clps);
+      // Sync sidebar badges for the current scene
+      setScenes((prev) =>
+        prev.map((s) =>
+          s.id === currentScene.id ? { ...s, images: imgs, clips: clps } : s
+        )
+      );
     } catch {
       // Silently handle - individual errors caught above
     }
