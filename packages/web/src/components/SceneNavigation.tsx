@@ -10,6 +10,14 @@ interface SceneNavigationProps {
   onTabChange: (tab: "images" | "clips") => void;
 }
 
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 text-[10px] font-mono font-medium rounded border border-gray-600 bg-gray-800 text-gray-400">
+      {children}
+    </kbd>
+  );
+}
+
 export default function SceneNavigation({
   scenes,
   currentIndex,
@@ -51,7 +59,7 @@ export default function SceneNavigation({
       {/* Tabs */}
       <div className="flex border border-gray-700 rounded-lg overflow-hidden">
         <button
-          className={`px-4 py-1.5 text-sm font-medium transition-colors ${
+          className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center ${
             activeTab === "images"
               ? "bg-gray-700 text-white"
               : "text-gray-400 hover:text-white"
@@ -59,9 +67,10 @@ export default function SceneNavigation({
           onClick={() => onTabChange("images")}
         >
           Images
+          <Kbd>1</Kbd>
         </button>
         <button
-          className={`px-4 py-1.5 text-sm font-medium transition-colors ${
+          className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center ${
             activeTab === "clips"
               ? "bg-gray-700 text-white"
               : "text-gray-400 hover:text-white"
@@ -69,6 +78,7 @@ export default function SceneNavigation({
           onClick={() => onTabChange("clips")}
         >
           Clips
+          <Kbd>2</Kbd>
         </button>
       </div>
 
@@ -96,16 +106,18 @@ export default function SceneNavigation({
         <button
           onClick={onPrev}
           disabled={currentIndex === 0}
-          className="px-3 py-1.5 text-sm border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="px-3 py-1.5 text-sm border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center"
         >
-          &larr; Prev
+          <Kbd>&larr;</Kbd>
+          <span className="ml-1.5">Prev</span>
         </button>
         <button
           onClick={onNext}
           disabled={currentIndex === total - 1}
-          className="px-3 py-1.5 text-sm border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="px-3 py-1.5 text-sm border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center"
         >
-          Next &rarr;
+          <span className="mr-1.5">Next</span>
+          <Kbd>&rarr;</Kbd>
         </button>
       </div>
     </div>

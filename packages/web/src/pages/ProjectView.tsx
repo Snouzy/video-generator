@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useParams } from "react-router-dom";
 import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice } from "@video-generator/shared";
 import {
@@ -43,6 +44,12 @@ export default function ProjectView() {
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Keyboard shortcuts: 1 = images, 2 = clips, left/right = prev/next scene
+  useHotkeys("1", () => setActiveTab("images"));
+  useHotkeys("2", () => setActiveTab("clips"));
+  useHotkeys("left", () => setCurrentIndex((i) => Math.max(0, i - 1)));
+  useHotkeys("right", () => setCurrentIndex((i) => Math.min(scenes.length - 1, i + 1)));
 
   const currentScene = scenes[currentIndex] ?? null;
 
@@ -361,7 +368,7 @@ export default function ProjectView() {
   const format = project.config?.format ?? "16:9";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="h-screen bg-slate-950 text-white flex flex-col overflow-hidden">
       {/* Top navigation bar */}
       <SceneNavigation
         scenes={scenes}
@@ -388,9 +395,9 @@ export default function ProjectView() {
       )}
 
       {/* Layout: sidebar + main content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         {/* Sidebar: Scene overview */}
-        <div className="w-80 shrink-0 p-4 border-r border-gray-800">
+        <div className="w-80 shrink-0 p-4 border-r border-gray-800 overflow-y-auto">
           <SceneOverview
             scenes={scenes}
             currentIndex={currentIndex}
