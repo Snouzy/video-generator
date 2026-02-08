@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, UpdateSceneRequest, ProjectConfig } from "@video-generator/shared";
-import { generateImage, generateClip } from "../services/replicate";
+import { generateImage, generateClip, downloadToLocal } from "../services/replicate";
 import { generateAnimationPrompt } from "../services/llm";
 
 const router = Router();
@@ -113,12 +113,16 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
       for (const imageRecord of imageRecords) {
         try {
           const result = await generateImage(imageRecord.model, imageRecord.prompt, config.format);
+          let localUrl: string | null = null;
+          if (result.imageUrl) {
+            localUrl = await downloadToLocal(result.imageUrl, "images", `img-${imageRecord.id}`);
+          }
           await prisma.generatedImage.update({
             where: { id: imageRecord.id },
             data: {
               replicatePredictionId: result.predictionId,
-              imageUrl: result.imageUrl,
-              status: result.imageUrl ? "completed" : "failed",
+              imageUrl: localUrl,
+              status: localUrl ? "completed" : "failed",
             },
           });
           console.log(`Image ${imageRecord.id} completed`);
@@ -209,12 +213,16 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
             clipRecord.animationPrompt,
             config.format
           );
+          let localUrl: string | null = null;
+          if (result.clipUrl) {
+            localUrl = await downloadToLocal(result.clipUrl, "clips", `clip-${clipRecord.id}`);
+          }
           await prisma.generatedClip.update({
             where: { id: clipRecord.id },
             data: {
               replicatePredictionId: result.predictionId,
-              clipUrl: result.clipUrl,
-              status: result.clipUrl ? "completed" : "failed",
+              clipUrl: localUrl,
+              status: localUrl ? "completed" : "failed",
             },
           });
           console.log(`Clip ${clipRecord.id} completed`);

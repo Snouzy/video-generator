@@ -18,6 +18,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use("/audio", express.static(path.join(process.cwd(), "public", "audio")));
+app.use("/images", express.static(path.join(process.cwd(), "public", "images")));
+app.use("/clips", express.static(path.join(process.cwd(), "public", "clips")));
 
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, data: { status: "ok" } } satisfies ApiResponse<{ status: string }>);

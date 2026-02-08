@@ -6,7 +6,7 @@ import type {
   ProjectConfig,
 } from "@video-generator/shared";
 import { splitScript, generateImagePrompt, generateAnimationPrompt } from "../services/llm";
-import { fireImagePrediction, fireClipPrediction, waitForPrediction } from "../services/replicate";
+import { fireImagePrediction, fireClipPrediction, waitForPrediction, downloadToLocal } from "../services/replicate";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -245,14 +245,18 @@ router.post("/:id/generate-all-images", async (req, res) => {
           if (!task) return;
           try {
             const result = await waitForPrediction(task.predictionId);
+            let localUrl: string | null = null;
+            if (result.output) {
+              localUrl = await downloadToLocal(result.output, "images", `img-${task.imageRecord.id}`);
+            }
             await prisma.generatedImage.update({
               where: { id: task.imageRecord.id },
               data: {
-                imageUrl: result.output || null,
-                status: result.output ? "completed" : "failed",
+                imageUrl: localUrl,
+                status: localUrl ? "completed" : "failed",
               },
             });
-            console.log(`Image ${task.imageRecord.id} completed: ${result.output ? "success" : "no url"}`);
+            console.log(`Image ${task.imageRecord.id} completed: ${localUrl ? "success" : "no url"}`);
           } catch (err) {
             await prisma.generatedImage.update({
               where: { id: task.imageRecord.id },
@@ -299,9 +303,9 @@ router.post("/:id/generate-all-clips", async (req, res) => {
 
     const config = project.config as unknown as ProjectConfig;
 
-    // Filter scenes that have a selected image but no clips yet
+    // Filter scenes that have a selected image
     const eligibleScenes = project.scenes.filter(
-      (s) => s.images.length > 0 && s.images[0].imageUrl && s.clips.length === 0
+      (s) => s.images.length > 0 && s.images[0].imageUrl
     );
 
     if (eligibleScenes.length === 0) {
@@ -391,14 +395,18 @@ router.post("/:id/generate-all-clips", async (req, res) => {
           if (!task) return;
           try {
             const result = await waitForPrediction(task.predictionId);
+            let localUrl: string | null = null;
+            if (result.output) {
+              localUrl = await downloadToLocal(result.output, "clips", `clip-${task.record.clipId}`);
+            }
             await prisma.generatedClip.update({
               where: { id: task.record.clipId },
               data: {
-                clipUrl: result.output || null,
-                status: result.output ? "completed" : "failed",
+                clipUrl: localUrl,
+                status: localUrl ? "completed" : "failed",
               },
             });
-            console.log(`Clip ${task.record.clipId} completed: ${result.output ? "success" : "no url"}`);
+            console.log(`Clip ${task.record.clipId} completed: ${localUrl ? "success" : "no url"}`);
           } catch (err) {
             await prisma.generatedClip.update({
               where: { id: task.record.clipId },

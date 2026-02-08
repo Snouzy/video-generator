@@ -438,7 +438,7 @@ export default function ProjectView() {
               <>
                 {/* Clip action buttons */}
                 <div className="flex gap-3 mb-6">
-                  {currentScene?.selectedImageId && clips.length === 0 && (
+                  {currentScene?.selectedImageId && (
                     <button
                       onClick={handleGenerateSceneClips}
                       disabled={actionLoading === "generate-clips"}
@@ -446,7 +446,9 @@ export default function ProjectView() {
                     >
                       {actionLoading === "generate-clips"
                         ? "Generating..."
-                        : "Generate Clips for This Scene"}
+                        : clips.length > 0
+                          ? "Regenerate Clips for This Scene"
+                          : "Generate Clips for This Scene"}
                     </button>
                   )}
                   <button

@@ -1,4 +1,5 @@
 import type { GeneratedClip, VideoFormat } from "@video-generator/shared";
+import { mediaUrl } from "../api/client";
 
 interface ClipCardProps {
   clip: GeneratedClip;
@@ -84,7 +85,7 @@ export default function ClipCard({
       <div className={`${aspectClass} bg-gray-800`}>
         {clip.clipUrl ? (
           <video
-            src={clip.clipUrl}
+            src={mediaUrl(clip.clipUrl)}
             className="w-full h-full object-cover"
             controls
             muted

@@ -10,6 +10,13 @@ import type {
 
 const API_BASE = "http://localhost:3001";
 
+/** Resolve a media URL — local paths get prefixed with API_BASE */
+export function mediaUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${API_BASE}${url}`;
+}
+
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json", ...options?.headers },

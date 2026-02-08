@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Scene } from "@video-generator/shared";
 import { getTagColor } from "./ImageCard";
+import { mediaUrl } from "../api/client";
 
 interface SceneDetailProps {
   scene: Scene;
@@ -78,7 +79,7 @@ export default function SceneDetail({ scene }: SceneDetailProps) {
           <span className="text-xs text-gray-500">Narration</span>
           <audio
             controls
-            src={`http://localhost:3001${scene.audioUrl}`}
+            src={mediaUrl(scene.audioUrl)}
             className="h-8"
             style={{ filter: "invert(1) hue-rotate(180deg)", opacity: 0.7 }}
           />

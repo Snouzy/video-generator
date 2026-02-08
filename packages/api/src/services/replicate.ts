@@ -1,4 +1,36 @@
 import Replicate from "replicate";
+import { promises as fs } from "fs";
+import path from "path";
+
+const PUBLIC_DIR = path.join(process.cwd(), "public");
+
+async function ensureDir(dir: string): Promise<void> {
+  await fs.mkdir(dir, { recursive: true });
+}
+
+/**
+ * Download a remote URL to local public/ directory.
+ * Returns the local URL path (e.g. /images/img-123.webp)
+ */
+export async function downloadToLocal(
+  remoteUrl: string,
+  subDir: "images" | "clips",
+  filename: string
+): Promise<string> {
+  const dir = path.join(PUBLIC_DIR, subDir);
+  await ensureDir(dir);
+
+  const ext = remoteUrl.split("?")[0].split(".").pop() || (subDir === "images" ? "webp" : "mp4");
+  const localFilename = `${filename}.${ext}`;
+  const localPath = path.join(dir, localFilename);
+
+  const response = await fetch(remoteUrl);
+  if (!response.ok) throw new Error(`Failed to download: ${response.status}`);
+  const buffer = Buffer.from(await response.arrayBuffer());
+  await fs.writeFile(localPath, buffer);
+
+  return `/${subDir}/${localFilename}`;
+}
 
 let _replicate: Replicate | null = null;
 function getClient(): Replicate {
