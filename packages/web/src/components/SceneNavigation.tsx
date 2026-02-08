@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 interface SceneNavigationProps {
   scenes: Scene[];
   currentIndex: number;
+  projectId: number;
   onPrev: () => void;
   onNext: () => void;
   activeTab: "images" | "clips";
@@ -21,6 +22,7 @@ function Kbd({ children }: { children: React.ReactNode }) {
 export default function SceneNavigation({
   scenes,
   currentIndex,
+  projectId,
   onPrev,
   onNext,
   activeTab,
@@ -100,6 +102,17 @@ export default function SceneNavigation({
         </div>
         <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
       </div>
+
+      {/* Export selected clips */}
+      <a
+        href={`http://localhost:3001/api/projects/${projectId}/export-clips`}
+        className="px-3 py-1.5 text-sm border border-cyan-700 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-600 transition-colors flex items-center gap-1.5"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Export Clips
+      </a>
 
       {/* Prev / Next */}
       <div className="flex gap-2">

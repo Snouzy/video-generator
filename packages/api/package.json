@@ -12,15 +12,17 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
+    "@fal-ai/client": "^1",
     "@prisma/client": "^6",
     "@video-generator/remotion": "workspace:*",
     "@video-generator/shared": "workspace:*",
+    "archiver": "^7.0.1",
     "cors": "^2.8",
     "dotenv": "^17.2.4",
-    "express": "^5",
-    "@fal-ai/client": "^1"
+    "express": "^5"
   },
   "devDependencies": {
+    "@types/archiver": "^7.0.0",
     "@types/cors": "^2.8",
     "@types/express": "^5",
     "prisma": "^6",

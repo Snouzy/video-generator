@@ -2,6 +2,8 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, ProjectConfig } from "@video-generator/shared";
 import { generateClip, downloadToLocal } from "../services/fal";
+import archiver from "archiver";
+import path from "path";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -122,6 +124,55 @@ router.post("/clips/:id/regenerate", async (req, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
+// GET /api/projects/:id/export-clips - Download all selected clips as a zip
+router.get("/projects/:id/export-clips", async (req, res) => {
+  try {
+    const projectId = parseInt(req.params.id, 10);
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" });
+      return;
+    }
+
+    const selectedClips = await prisma.generatedClip.findMany({
+      where: {
+        scene: { projectId },
+        isSelected: true,
+        clipUrl: { not: null },
+      },
+      include: { scene: true },
+      orderBy: { scene: { sceneNumber: "asc" } },
+    });
+
+    if (selectedClips.length === 0) {
+      res.status(400).json({ success: false, error: "No selected clips to export" });
+      return;
+    }
+
+    const slug = project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${slug}-clips.zip"`);
+
+    const archive = archiver("zip", { zlib: { level: 0 } }); // no compression for video
+    archive.pipe(res);
+
+    for (const clip of selectedClips) {
+      const localPath = path.join(process.cwd(), "public", clip.clipUrl!.slice(1));
+      const sceneNum = String(clip.scene.sceneNumber).padStart(3, "0");
+      const ext = path.extname(localPath) || ".mp4";
+      archive.file(localPath, { name: `scene_${sceneNum}_${clip.model}${ext}` });
+    }
+
+    await archive.finalize();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+    }
   }
 });
 

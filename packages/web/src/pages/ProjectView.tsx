@@ -373,6 +373,7 @@ export default function ProjectView() {
       <SceneNavigation
         scenes={scenes}
         currentIndex={currentIndex}
+        projectId={projectId}
         onPrev={() => setCurrentIndex((i) => Math.max(0, i - 1))}
         onNext={() =>
           setCurrentIndex((i) => Math.min(scenes.length - 1, i + 1))
