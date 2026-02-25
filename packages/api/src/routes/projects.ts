@@ -148,7 +148,6 @@ router.post("/:id/split", async (req, res) => {
       const imagePrompt = await generateImagePrompt(
         split.narrativeText,
         split.title,
-        style.stylePromptPrefix,
         style.llmSystemInstructions
       );
 
@@ -212,7 +211,6 @@ router.post("/:id/regenerate-prompts", async (req, res) => {
       const imagePrompt = await generateImagePrompt(
         scene.narrativeText,
         scene.title,
-        style.stylePromptPrefix,
         style.llmSystemInstructions
       );
       await prisma.scene.update({
@@ -261,13 +259,16 @@ router.post("/:id/generate-all-images", async (req, res) => {
     for (const scene of project.scenes) {
       if (!scene.imagePrompt) continue;
 
+      const style = getEffectiveStyle(config, scene);
+      const effectivePrompt = `${style.stylePromptPrefix}, ${scene.imagePrompt}`;
+
       for (const model of config.imageModels) {
         for (let i = 0; i < config.imagesPerScene; i++) {
           const imageRecord = await prisma.generatedImage.create({
             data: {
               sceneId: scene.id,
               model,
-              prompt: scene.imagePrompt,
+              prompt: effectivePrompt,
               status: "processing",
             },
           });

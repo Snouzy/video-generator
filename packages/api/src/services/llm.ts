@@ -97,12 +97,11 @@ ${scriptContent}`,
 export async function generateImagePrompt(
   narrativeText: string,
   sceneTitle: string,
-  stylePrefix: string,
   llmSystemInstructions?: string
 ): Promise<string> {
   if (process.env.USE_MOCK_LLM === "true") {
     console.log(`[MOCK] Generating image prompt for: ${sceneTitle}`);
-    return `${stylePrefix}, ${sceneTitle}, dramatic scene depicting: ${narrativeText.slice(0, 100)}...`;
+    return `${sceneTitle}, dramatic scene depicting: ${narrativeText.slice(0, 100)}...`;
   }
 
   const response = await getClient().messages.create({
@@ -116,14 +115,12 @@ export async function generateImagePrompt(
 Scene title: ${sceneTitle}
 Narrative text: ${narrativeText}
 
-Style prefix to prepend: "${stylePrefix}"
-
 Rules:
 - Describe the visual scene in vivid detail: characters, setting, lighting, camera angle, composition.
 - Include mood and atmosphere descriptions.
-${llmSystemInstructions || "- Describe characters and environment in a way that matches the style prefix. Be vivid and specific about visual details, clothing, objects, and setting."}
+${llmSystemInstructions || "- Be vivid and specific about visual details, clothing, objects, and setting."}
 - The prompt should work well with AI image generation models (Flux, SDXL, etc.).
-- Prepend the style prefix at the beginning.
+- Do NOT include any style prefix — only describe the scene content.
 - Return ONLY the prompt text, nothing else. No quotes, no explanation.`,
       },
     ],

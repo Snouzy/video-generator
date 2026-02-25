@@ -549,17 +549,17 @@ export default function ProjectView() {
               <>
                 {/* Action buttons */}
                 <div className="flex gap-3 mb-6">
-                  {images.length === 0 && (
-                    <button
-                      onClick={handleGenerateSceneImages}
-                      disabled={actionLoading === "generate-scene"}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
-                    >
-                      {actionLoading === "generate-scene"
-                        ? "Generating..."
+                  <button
+                    onClick={handleGenerateSceneImages}
+                    disabled={actionLoading === "generate-scene"}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {actionLoading === "generate-scene"
+                      ? "Generating..."
+                      : images.length > 0
+                        ? "Regenerate Images for This Scene"
                         : "Generate Images for This Scene"}
-                    </button>
-                  )}
+                  </button>
                   <button
                     onClick={handleGenerateAll}
                     disabled={actionLoading === "generate-all"}

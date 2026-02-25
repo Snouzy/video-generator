@@ -226,14 +226,14 @@ export default function StyleTemplateSelector({
               disabled={loading}
               className="px-3 py-1.5 text-xs border border-gray-600 rounded-lg text-gray-300 hover:text-white hover:border-gray-400 disabled:opacity-30 transition-colors"
             >
-              Save
+              {loading ? "Saving..." : "Save"}
             </button>
             <button
               onClick={onSaveAndRegenerate}
               disabled={loading}
-              className="px-3 py-1.5 text-xs bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+              className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-lg font-medium transition-colors"
             >
-              {loading ? "Regenerating..." : "Save & Regenerate Prompts"}
+              {loading ? "Regenerating..." : "Save & Regenerate"}
             </button>
           </div>
         </>

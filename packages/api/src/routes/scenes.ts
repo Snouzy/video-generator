@@ -107,6 +107,8 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
     }
 
     const config = scene.project.config as unknown as ProjectConfig;
+    const style = getEffectiveStyle(config, scene);
+    const effectivePrompt = `${style.stylePromptPrefix}, ${scene.imagePrompt}`;
 
     const imageRecords = [];
     for (const model of config.imageModels) {
@@ -115,7 +117,7 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
           data: {
             sceneId: scene.id,
             model,
-            prompt: scene.imagePrompt,
+            prompt: effectivePrompt,
             status: "processing",
           },
         });
@@ -285,7 +287,6 @@ router.post("/scenes/:id/regenerate-prompt", async (req, res) => {
     const imagePrompt = await generateImagePrompt(
       scene.narrativeText,
       scene.title,
-      style.stylePromptPrefix,
       style.llmSystemInstructions
     );
 
