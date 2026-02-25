@@ -490,6 +490,11 @@ export default function ProjectView() {
         onTabChange={setActiveTab}
         showSettings={showSettings}
         onToggleSettings={() => setShowSettings((v) => !v)}
+        onGenerateAllImages={handleGenerateAll}
+        onGenerateAllClips={handleGenerateAllClips}
+        onRenderVideo={handleRenderVideo}
+        actionLoading={actionLoading}
+        projectStatus={project.status}
       />
 
       {/* Error banner */}
@@ -560,15 +565,6 @@ export default function ProjectView() {
                         ? "Regenerate Images for This Scene"
                         : "Generate Images for This Scene"}
                   </button>
-                  <button
-                    onClick={handleGenerateAll}
-                    disabled={actionLoading === "generate-all"}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    {actionLoading === "generate-all"
-                      ? "Generating..."
-                      : "Generate All Images"}
-                  </button>
                 </div>
 
                 <ImageGrid
@@ -598,24 +594,6 @@ export default function ProjectView() {
                           : "Generate Clips for This Scene"}
                     </button>
                   )}
-                  <button
-                    onClick={handleGenerateAllClips}
-                    disabled={actionLoading === "generate-all-clips"}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    {actionLoading === "generate-all-clips"
-                      ? "Generating..."
-                      : "Generate All Clips"}
-                  </button>
-                  <button
-                    onClick={handleRenderVideo}
-                    disabled={actionLoading === "render" || project.status === "rendering"}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    {actionLoading === "render" || project.status === "rendering"
-                      ? "Rendering..."
-                      : "Export Video"}
-                  </button>
                   <div className="flex items-center gap-1">
                     <select
                       value={selectedVoiceId}

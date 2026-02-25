@@ -11,6 +11,11 @@ interface SceneNavigationProps {
   onTabChange: (tab: "images" | "clips") => void;
   showSettings: boolean;
   onToggleSettings: () => void;
+  onGenerateAllImages: () => void;
+  onGenerateAllClips: () => void;
+  onRenderVideo: () => void;
+  actionLoading: string | null;
+  projectStatus: string;
 }
 
 function Kbd({ children }: { children: React.ReactNode }) {
@@ -31,6 +36,11 @@ export default function SceneNavigation({
   onTabChange,
   showSettings,
   onToggleSettings,
+  onGenerateAllImages,
+  onGenerateAllClips,
+  onRenderVideo,
+  actionLoading,
+  projectStatus,
 }: SceneNavigationProps) {
   const navigate = useNavigate();
   const total = scenes.length;
@@ -107,7 +117,28 @@ export default function SceneNavigation({
         <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
       </div>
 
-      {/* Export selected clips */}
+      {/* Bulk actions */}
+      <button
+        onClick={onGenerateAllImages}
+        disabled={actionLoading === "generate-all"}
+        className="px-3 py-1.5 text-sm border border-green-700 rounded-lg text-green-400 hover:text-white hover:bg-green-600 disabled:opacity-30 transition-colors"
+      >
+        {actionLoading === "generate-all" ? "Generating..." : "All Images"}
+      </button>
+      <button
+        onClick={onGenerateAllClips}
+        disabled={actionLoading === "generate-all-clips"}
+        className="px-3 py-1.5 text-sm border border-green-700 rounded-lg text-green-400 hover:text-white hover:bg-green-600 disabled:opacity-30 transition-colors"
+      >
+        {actionLoading === "generate-all-clips" ? "Generating..." : "All Clips"}
+      </button>
+      <button
+        onClick={onRenderVideo}
+        disabled={actionLoading === "render" || projectStatus === "rendering"}
+        className="px-3 py-1.5 text-sm border border-purple-700 rounded-lg text-purple-400 hover:text-white hover:bg-purple-600 disabled:opacity-30 transition-colors"
+      >
+        {actionLoading === "render" || projectStatus === "rendering" ? "Rendering..." : "Export Video"}
+      </button>
       <a
         href={`http://localhost:3001/api/projects/${projectId}/export-clips`}
         className="px-3 py-1.5 text-sm border border-cyan-700 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-600 transition-colors flex items-center gap-1.5"
