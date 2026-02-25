@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useParams } from "react-router-dom";
-import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice } from "@video-generator/shared";
+import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue } from "@video-generator/shared";
 import {
   getProject,
   getScenes,
@@ -21,12 +21,15 @@ import {
   getVoices,
   updateProjectConfig,
   regeneratePrompts,
+  updateSceneStyleOverride,
+  regenerateScenePrompt,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
 import SceneOverview from "../components/SceneOverview";
 import ImageGrid from "../components/ImageGrid";
 import ClipGrid from "../components/ClipGrid";
+import StyleTemplateSelector from "../components/StyleTemplateSelector";
 
 export default function ProjectView() {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +47,7 @@ export default function ProjectView() {
   const [voices, setVoices] = useState<ElevenLabsVoice[]>([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
   const [showSettings, setShowSettings] = useState(false);
-  const [stylePrefix, setStylePrefix] = useState("");
+  const [projectStyle, setProjectStyle] = useState<StyleTemplateValue | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -87,7 +90,13 @@ export default function ProjectView() {
   useEffect(() => {
     if (project?.config) {
       if (project.config.voiceId) setSelectedVoiceId(project.config.voiceId);
-      setStylePrefix(project.config.stylePromptPrefix ?? "");
+      setProjectStyle(
+        project.config.styleTemplate ?? {
+          sourceId: "builtin:mannequin",
+          stylePromptPrefix: project.config.stylePromptPrefix ?? "",
+          llmSystemInstructions: "",
+        }
+      );
     }
   }, [project?.config]);
 
@@ -302,26 +311,96 @@ export default function ProjectView() {
     }
   }
 
-  async function handleSaveStylePrefix() {
+  async function handleSaveProjectStyle() {
+    if (!projectStyle) return;
     setActionLoading("save-style");
     try {
-      await updateProjectConfig(projectId, { stylePromptPrefix: stylePrefix });
+      await updateProjectConfig(projectId, {
+        styleTemplate: projectStyle,
+        stylePromptPrefix: projectStyle.stylePromptPrefix,
+      });
       await loadProject();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save style prefix");
+      setError(e instanceof Error ? e.message : "Failed to save style");
     } finally {
       setActionLoading(null);
     }
   }
 
   async function handleRegeneratePrompts() {
+    if (!projectStyle) return;
     setActionLoading("regen-prompts");
     try {
-      await updateProjectConfig(projectId, { stylePromptPrefix: stylePrefix });
+      await updateProjectConfig(projectId, {
+        styleTemplate: projectStyle,
+        stylePromptPrefix: projectStyle.stylePromptPrefix,
+      });
       await regeneratePrompts(projectId);
       await loadProject();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to regenerate prompts");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleSaveSceneStyle() {
+    if (!currentScene) return;
+    // Scene style is saved via the updateSceneStyleOverride call in handleSetSceneStyle
+  }
+
+  async function handleSetSceneStyle(style: StyleTemplateValue) {
+    if (!currentScene) return;
+    // Update scenes locally for instant feedback
+    setScenes((prev) =>
+      prev.map((s) =>
+        s.id === currentScene.id ? { ...s, styleOverride: style } : s
+      )
+    );
+  }
+
+  async function handleSaveSceneStyleOverride() {
+    if (!currentScene) return;
+    setActionLoading("save-scene-style");
+    try {
+      const scene = scenes.find((s) => s.id === currentScene.id);
+      await updateSceneStyleOverride(currentScene.id, scene?.styleOverride ?? null);
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save scene style");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleRegenerateScenePrompt() {
+    if (!currentScene) return;
+    setActionLoading("regen-scene-prompt");
+    try {
+      const scene = scenes.find((s) => s.id === currentScene.id);
+      await updateSceneStyleOverride(currentScene.id, scene?.styleOverride ?? null);
+      await regenerateScenePrompt(currentScene.id);
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to regenerate scene prompt");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleClearSceneStyleOverride() {
+    if (!currentScene) return;
+    setActionLoading("save-scene-style");
+    try {
+      await updateSceneStyleOverride(currentScene.id, null);
+      setScenes((prev) =>
+        prev.map((s) =>
+          s.id === currentScene.id ? { ...s, styleOverride: null } : s
+        )
+      );
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to clear scene style");
     } finally {
       setActionLoading(null);
     }
@@ -428,36 +507,15 @@ export default function ProjectView() {
 
       {/* Settings panel */}
       {showSettings && (
-        <div className="mx-6 mt-4 bg-gray-900/80 border border-gray-700 rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-300">Style Prompt Prefix</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveStylePrefix}
-                disabled={actionLoading === "save-style" || stylePrefix === project?.config?.stylePromptPrefix}
-                className="px-3 py-1 text-xs border border-gray-600 rounded-lg text-gray-300 hover:text-white hover:border-gray-400 disabled:opacity-30 transition-colors"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleRegeneratePrompts}
-                disabled={actionLoading === "regen-prompts"}
-                className="px-3 py-1 text-xs bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-              >
-                {actionLoading === "regen-prompts" ? "Regenerating..." : "Save & Regenerate All Prompts"}
-              </button>
-            </div>
-          </div>
-          <textarea
-            value={stylePrefix}
-            onChange={(e) => setStylePrefix(e.target.value)}
-            rows={2}
-            className="w-full bg-slate-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-yellow-500 resize-y"
-            placeholder="e.g. 3D render, mannequin-style characters, cinematic dark lighting..."
+        <div className="mx-6 mt-4 bg-gray-900/80 border border-gray-700 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-gray-300 mb-3">Project Style</h3>
+          <StyleTemplateSelector
+            value={projectStyle}
+            onChange={setProjectStyle}
+            onSave={handleSaveProjectStyle}
+            onSaveAndRegenerate={handleRegeneratePrompts}
+            loading={actionLoading === "save-style" || actionLoading === "regen-prompts"}
           />
-          <p className="text-[11px] text-gray-500">
-            This prefix is prepended to every image prompt. Click "Save & Regenerate All Prompts" to re-generate prompts for all scenes with the new style.
-          </p>
         </div>
       )}
 
@@ -475,7 +533,16 @@ export default function ProjectView() {
         {/* Main content area */}
         <div className="flex-1 px-6 py-4 overflow-y-auto">
           {/* Scene detail */}
-          {currentScene && <SceneDetail scene={currentScene} />}
+          {currentScene && (
+            <SceneDetail
+              scene={currentScene}
+              onSetStyleOverride={handleSetSceneStyle}
+              onSaveStyleOverride={handleSaveSceneStyleOverride}
+              onRegeneratePrompt={handleRegenerateScenePrompt}
+              onClearStyleOverride={handleClearSceneStyleOverride}
+              styleLoading={actionLoading === "save-scene-style" || actionLoading === "regen-scene-prompt"}
+            />
+          )}
 
           <div className="mt-6">
             {activeTab === "images" && (

@@ -6,6 +6,8 @@ import type {
   CreateProjectRequest,
   UpdateSceneRequest,
   ElevenLabsVoice,
+  StyleTemplate,
+  StyleTemplateValue,
 } from "@video-generator/shared";
 
 const API_BASE = "http://localhost:3001";
@@ -145,5 +147,53 @@ export function generateNarration(projectId: number): Promise<void> {
 export function regeneratePrompts(projectId: number): Promise<void> {
   return fetchApi<void>(`/api/projects/${projectId}/regenerate-prompts`, {
     method: "POST",
+  });
+}
+
+// --- Style Templates ---
+
+export function getStyleTemplates(): Promise<StyleTemplate[]> {
+  return fetchApi<StyleTemplate[]>("/api/style-templates");
+}
+
+export function createStyleTemplate(data: {
+  name: string;
+  description?: string;
+  stylePromptPrefix: string;
+  llmSystemInstructions: string;
+}): Promise<StyleTemplate> {
+  return fetchApi<StyleTemplate>("/api/style-templates", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateStyleTemplate(
+  id: number,
+  data: Partial<{ name: string; description: string; stylePromptPrefix: string; llmSystemInstructions: string }>
+): Promise<StyleTemplate> {
+  return fetchApi<StyleTemplate>(`/api/style-templates/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteStyleTemplate(id: number): Promise<void> {
+  return fetchApi<void>(`/api/style-templates/${id}`, { method: "DELETE" });
+}
+
+export function regenerateScenePrompt(sceneId: number): Promise<Scene> {
+  return fetchApi<Scene>(`/api/scenes/${sceneId}/regenerate-prompt`, {
+    method: "POST",
+  });
+}
+
+export function updateSceneStyleOverride(
+  sceneId: number,
+  styleOverride: StyleTemplateValue | null
+): Promise<Scene> {
+  return fetchApi<Scene>(`/api/scenes/${sceneId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ styleOverride }),
   });
 }

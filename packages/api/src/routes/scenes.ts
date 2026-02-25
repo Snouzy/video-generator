@@ -1,11 +1,34 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import { BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
 import type { ApiResponse, UpdateSceneRequest, ProjectConfig } from "@video-generator/shared";
 import { generateImage, generateClip, downloadToLocal } from "../services/fal";
-import { generateAnimationPrompt } from "../services/llm";
+import { generateAnimationPrompt, generateImagePrompt } from "../services/llm";
 
 const router = Router();
 const prisma = new PrismaClient();
+
+function getEffectiveStyle(
+  projectConfig: ProjectConfig,
+  scene: { styleOverride?: any }
+): { stylePromptPrefix: string; llmSystemInstructions: string } {
+  if (scene.styleOverride) {
+    return {
+      stylePromptPrefix: scene.styleOverride.stylePromptPrefix,
+      llmSystemInstructions: scene.styleOverride.llmSystemInstructions,
+    };
+  }
+  if (projectConfig.styleTemplate) {
+    return {
+      stylePromptPrefix: projectConfig.styleTemplate.stylePromptPrefix,
+      llmSystemInstructions: projectConfig.styleTemplate.llmSystemInstructions,
+    };
+  }
+  return {
+    stylePromptPrefix: projectConfig.stylePromptPrefix,
+    llmSystemInstructions: BUILTIN_STYLE_TEMPLATES[0].llmSystemInstructions,
+  };
+}
 
 // GET /api/projects/:id/scenes - Get all scenes for a project
 router.get("/projects/:id/scenes", async (req, res) => {
@@ -38,7 +61,7 @@ router.get("/projects/:id/scenes", async (req, res) => {
 router.patch("/scenes/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { imagePrompt, animationPrompt } = req.body as UpdateSceneRequest;
+    const { imagePrompt, animationPrompt, styleOverride } = req.body as UpdateSceneRequest;
 
     const scene = await prisma.scene.findUnique({ where: { id } });
     if (!scene) {
@@ -46,9 +69,10 @@ router.patch("/scenes/:id", async (req, res) => {
       return;
     }
 
-    const updateData: Record<string, string> = {};
+    const updateData: Record<string, any> = {};
     if (imagePrompt !== undefined) updateData.imagePrompt = imagePrompt;
     if (animationPrompt !== undefined) updateData.animationPrompt = animationPrompt;
+    if (styleOverride !== undefined) updateData.styleOverride = styleOverride;
 
     const updated = await prisma.scene.update({
       where: { id },
@@ -235,6 +259,42 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
         }
       }
     })();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
+// POST /api/scenes/:id/regenerate-prompt - Regenerate image prompt for one scene
+router.post("/scenes/:id/regenerate-prompt", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const scene = await prisma.scene.findUnique({
+      where: { id },
+      include: { project: true },
+    });
+
+    if (!scene) {
+      res.status(404).json({ success: false, error: "Scene not found" });
+      return;
+    }
+
+    const config = scene.project.config as unknown as ProjectConfig;
+    const style = getEffectiveStyle(config, scene);
+
+    const imagePrompt = await generateImagePrompt(
+      scene.narrativeText,
+      scene.title,
+      style.stylePromptPrefix,
+      style.llmSystemInstructions
+    );
+
+    const updated = await prisma.scene.update({
+      where: { id },
+      data: { imagePrompt },
+    });
+
+    res.json({ success: true, data: updated } as ApiResponse<any>);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message } as ApiResponse<never>);

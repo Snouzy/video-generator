@@ -10,6 +10,7 @@ import imagesRouter from "./routes/images";
 import clipsRouter from "./routes/clips";
 import renderRouter from "./routes/render";
 import narrationRouter from "./routes/narration";
+import styleTemplatesRouter from "./routes/styleTemplates";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -43,6 +44,7 @@ app.use("/api", imagesRouter);
 app.use("/api", clipsRouter);
 app.use("/api/projects", renderRouter);
 app.use("/api", narrationRouter);
+app.use("/api", styleTemplatesRouter);
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);

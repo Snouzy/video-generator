@@ -1,15 +1,29 @@
 import { useState } from "react";
-import type { Scene } from "@video-generator/shared";
+import type { Scene, StyleTemplateValue } from "@video-generator/shared";
 import { getTagColor } from "./ImageCard";
 import { mediaUrl } from "../api/client";
+import StyleTemplateSelector from "./StyleTemplateSelector";
 
 interface SceneDetailProps {
   scene: Scene;
+  onSetStyleOverride: (style: StyleTemplateValue) => void;
+  onSaveStyleOverride: () => void;
+  onRegeneratePrompt: () => void;
+  onClearStyleOverride: () => void;
+  styleLoading?: boolean;
 }
 
-export default function SceneDetail({ scene }: SceneDetailProps) {
+export default function SceneDetail({
+  scene,
+  onSetStyleOverride,
+  onSaveStyleOverride,
+  onRegeneratePrompt,
+  onClearStyleOverride,
+  styleLoading = false,
+}: SceneDetailProps) {
   const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [showNarrative, setShowNarrative] = useState(false);
+  const [showStyleOverride, setShowStyleOverride] = useState(false);
 
   const prompt = scene.imagePrompt || "";
   const truncatedPrompt =
@@ -29,6 +43,11 @@ export default function SceneDetail({ scene }: SceneDetailProps) {
             </span>
           ))}
         </div>
+        {scene.styleOverride && (
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-900/50 text-purple-300 border border-purple-700/50">
+            Custom style
+          </span>
+        )}
       </div>
 
       {prompt && (
@@ -73,6 +92,46 @@ export default function SceneDetail({ scene }: SceneDetailProps) {
           )}
         </div>
       )}
+
+      {/* Scene style override */}
+      <div className="mt-2">
+        <button
+          className="text-xs text-gray-500 hover:text-gray-400 flex items-center gap-1"
+          onClick={() => setShowStyleOverride(!showStyleOverride)}
+        >
+          <svg
+            className={`w-3 h-3 transition-transform ${showStyleOverride ? "rotate-90" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          Scene style override
+          {scene.styleOverride && (
+            <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-purple-400" />
+          )}
+        </button>
+        {showStyleOverride && (
+          <div className="mt-2 pl-4 border-l-2 border-gray-700">
+            <StyleTemplateSelector
+              value={scene.styleOverride ?? null}
+              onChange={onSetStyleOverride}
+              onSave={onSaveStyleOverride}
+              onSaveAndRegenerate={onRegeneratePrompt}
+              loading={styleLoading}
+              showClearButton={!!scene.styleOverride}
+              onClear={onClearStyleOverride}
+              compact
+            />
+          </div>
+        )}
+      </div>
 
       {scene.audioUrl && (
         <div className="mt-3 flex items-center gap-3">

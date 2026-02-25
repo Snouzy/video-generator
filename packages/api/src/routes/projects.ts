@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import {
+  BUILTIN_STYLE_TEMPLATES,
+} from "@video-generator/shared";
 import type {
   ApiResponse,
   CreateProjectRequest,
@@ -10,6 +13,28 @@ import { generateImage, generateClip, downloadToLocal } from "../services/fal";
 
 const router = Router();
 const prisma = new PrismaClient();
+
+function getEffectiveStyle(
+  projectConfig: ProjectConfig,
+  scene: { styleOverride?: any }
+): { stylePromptPrefix: string; llmSystemInstructions: string } {
+  if (scene.styleOverride) {
+    return {
+      stylePromptPrefix: scene.styleOverride.stylePromptPrefix,
+      llmSystemInstructions: scene.styleOverride.llmSystemInstructions,
+    };
+  }
+  if (projectConfig.styleTemplate) {
+    return {
+      stylePromptPrefix: projectConfig.styleTemplate.stylePromptPrefix,
+      llmSystemInstructions: projectConfig.styleTemplate.llmSystemInstructions,
+    };
+  }
+  return {
+    stylePromptPrefix: projectConfig.stylePromptPrefix,
+    llmSystemInstructions: BUILTIN_STYLE_TEMPLATES[0].llmSystemInstructions,
+  };
+}
 
 // POST /api/projects - Create project
 router.post("/", async (req, res) => {
@@ -119,10 +144,12 @@ router.post("/:id/split", async (req, res) => {
     // Create scenes and generate image prompts
     const scenes = [];
     for (const split of sceneSplits) {
+      const style = getEffectiveStyle(config, {});
       const imagePrompt = await generateImagePrompt(
         split.narrativeText,
         split.title,
-        config.stylePromptPrefix
+        style.stylePromptPrefix,
+        style.llmSystemInstructions
       );
 
       const scene = await prisma.scene.create({
@@ -181,10 +208,12 @@ router.post("/:id/regenerate-prompts", async (req, res) => {
 
     const updated = [];
     for (const scene of project.scenes) {
+      const style = getEffectiveStyle(config, scene);
       const imagePrompt = await generateImagePrompt(
         scene.narrativeText,
         scene.title,
-        config.stylePromptPrefix
+        style.stylePromptPrefix,
+        style.llmSystemInstructions
       );
       await prisma.scene.update({
         where: { id: scene.id },
