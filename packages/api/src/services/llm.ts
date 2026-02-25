@@ -120,6 +120,7 @@ Style prefix to prepend: "${stylePrefix}"
 Rules:
 - Describe the visual scene in vivid detail: characters, setting, lighting, camera angle, composition.
 - Include mood and atmosphere descriptions.
+- Characters MUST feel relatable and mainstream — dress them in real everyday outfits that Gen Z would recognize: hoodies, oversized tees, streetwear, suits, caps, beanies, sneakers, AirPods, tote bags, etc. Vary the outfits across scenes — some casual, some professional, some sporty. Make them look like real people living real lives, not generic blank mannequins.
 - Add realistic contextual details to make the scene feel alive: real-world objects relevant to the scene (branded logos, recognizable software interfaces, specific devices, documents, newspapers, real company names, stock tickers, etc.). Be subtle — these details should enrich the scene, not dominate it.
 - The prompt should work well with AI image generation models (Flux, SDXL, etc.).
 - Prepend the style prefix at the beginning.

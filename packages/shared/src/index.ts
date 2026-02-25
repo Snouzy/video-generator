@@ -38,7 +38,7 @@ export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   imagesPerScene: 1,
   imageModels: ["nano-banana", "nano-banana-pro", "flux"],
   animationModels: ["wan-i2v", "kling", "minimax"],
-  stylePromptPrefix: "3D render, mannequin-style characters, cinematic dark lighting, minimalist scene",
+  stylePromptPrefix: "3D render, stylized mannequin-style characters dressed in trendy real-world clothing, cinematic dark lighting, minimalist scene",
   maxScenes: null,
   format: "16:9",
   voiceId: "",

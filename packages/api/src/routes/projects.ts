@@ -158,6 +158,48 @@ router.post("/:id/split", async (req, res) => {
   }
 });
 
+// POST /api/projects/:id/regenerate-prompts - Regenerate image prompts for all scenes
+router.post("/:id/regenerate-prompts", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: { scenes: { orderBy: { sceneNumber: "asc" } } },
+    });
+
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" });
+      return;
+    }
+
+    if (project.scenes.length === 0) {
+      res.status(400).json({ success: false, error: "No scenes found" });
+      return;
+    }
+
+    const config = project.config as unknown as ProjectConfig;
+
+    const updated = [];
+    for (const scene of project.scenes) {
+      const imagePrompt = await generateImagePrompt(
+        scene.narrativeText,
+        scene.title,
+        config.stylePromptPrefix
+      );
+      await prisma.scene.update({
+        where: { id: scene.id },
+        data: { imagePrompt },
+      });
+      updated.push({ id: scene.id, imagePrompt });
+    }
+
+    res.json({ success: true, data: updated } as ApiResponse<any>);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
 // POST /api/projects/:id/generate-all-images - Generate images for ALL scenes
 router.post("/:id/generate-all-images", async (req, res) => {
   try {

@@ -141,3 +141,9 @@ export function generateNarration(projectId: number): Promise<void> {
     method: "POST",
   });
 }
+
+export function regeneratePrompts(projectId: number): Promise<void> {
+  return fetchApi<void>(`/api/projects/${projectId}/regenerate-prompts`, {
+    method: "POST",
+  });
+}

@@ -20,6 +20,7 @@ import {
   generateNarration,
   getVoices,
   updateProjectConfig,
+  regeneratePrompts,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
@@ -42,6 +43,8 @@ export default function ProjectView() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [voices, setVoices] = useState<ElevenLabsVoice[]>([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [stylePrefix, setStylePrefix] = useState("");
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -80,12 +83,13 @@ export default function ProjectView() {
     getVoices().then(setVoices).catch(() => {});
   }, []);
 
-  // Sync selected voice from project config
+  // Sync config state from project
   useEffect(() => {
-    if (project?.config?.voiceId) {
-      setSelectedVoiceId(project.config.voiceId);
+    if (project?.config) {
+      if (project.config.voiceId) setSelectedVoiceId(project.config.voiceId);
+      setStylePrefix(project.config.stylePromptPrefix ?? "");
     }
-  }, [project?.config?.voiceId]);
+  }, [project?.config]);
 
   // Load images/clips when current scene changes
   const loadSceneMedia = useCallback(async () => {
@@ -298,6 +302,31 @@ export default function ProjectView() {
     }
   }
 
+  async function handleSaveStylePrefix() {
+    setActionLoading("save-style");
+    try {
+      await updateProjectConfig(projectId, { stylePromptPrefix: stylePrefix });
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save style prefix");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleRegeneratePrompts() {
+    setActionLoading("regen-prompts");
+    try {
+      await updateProjectConfig(projectId, { stylePromptPrefix: stylePrefix });
+      await regeneratePrompts(projectId);
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to regenerate prompts");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -380,6 +409,8 @@ export default function ProjectView() {
         }
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        showSettings={showSettings}
+        onToggleSettings={() => setShowSettings((v) => !v)}
       />
 
       {/* Error banner */}
@@ -392,6 +423,41 @@ export default function ProjectView() {
           >
             Dismiss
           </button>
+        </div>
+      )}
+
+      {/* Settings panel */}
+      {showSettings && (
+        <div className="mx-6 mt-4 bg-gray-900/80 border border-gray-700 rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-300">Style Prompt Prefix</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveStylePrefix}
+                disabled={actionLoading === "save-style" || stylePrefix === project?.config?.stylePromptPrefix}
+                className="px-3 py-1 text-xs border border-gray-600 rounded-lg text-gray-300 hover:text-white hover:border-gray-400 disabled:opacity-30 transition-colors"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleRegeneratePrompts}
+                disabled={actionLoading === "regen-prompts"}
+                className="px-3 py-1 text-xs bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+              >
+                {actionLoading === "regen-prompts" ? "Regenerating..." : "Save & Regenerate All Prompts"}
+              </button>
+            </div>
+          </div>
+          <textarea
+            value={stylePrefix}
+            onChange={(e) => setStylePrefix(e.target.value)}
+            rows={2}
+            className="w-full bg-slate-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-yellow-500 resize-y"
+            placeholder="e.g. 3D render, mannequin-style characters, cinematic dark lighting..."
+          />
+          <p className="text-[11px] text-gray-500">
+            This prefix is prepended to every image prompt. Click "Save & Regenerate All Prompts" to re-generate prompts for all scenes with the new style.
+          </p>
         </div>
       )}
 
