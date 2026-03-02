@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
-import type { ApiResponse, UpdateSceneRequest, ProjectConfig } from "@video-generator/shared";
+import type { ApiResponse, UpdateSceneRequest, ProjectConfig, SceneGenerationOverride } from "@video-generator/shared";
 import { generateImage, generateClip, downloadToLocal } from "../services/fal";
 import { generateAnimationPrompt, generateImagePrompt } from "../services/llm";
 
@@ -27,6 +27,19 @@ function getEffectiveStyle(
   return {
     stylePromptPrefix: projectConfig.stylePromptPrefix,
     llmSystemInstructions: BUILTIN_STYLE_TEMPLATES[0].llmSystemInstructions,
+  };
+}
+
+function getEffectiveGeneration(
+  config: ProjectConfig,
+  scene: { generationOverride?: any }
+): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number } {
+  const override = scene.generationOverride as SceneGenerationOverride | null | undefined;
+  return {
+    imageModels: override?.imageModels ?? config.imageModels,
+    animationModels: override?.animationModels ?? config.animationModels,
+    imagesPerScene: override?.imagesPerScene ?? config.imagesPerScene,
+    clipsPerScene: override?.clipsPerScene ?? config.clipsPerScene ?? 1,
   };
 }
 
@@ -61,7 +74,7 @@ router.get("/projects/:id/scenes", async (req, res) => {
 router.patch("/scenes/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { imagePrompt, animationPrompt, styleOverride } = req.body as UpdateSceneRequest;
+    const { imagePrompt, animationPrompt, styleOverride, generationOverride } = req.body as UpdateSceneRequest;
 
     const scene = await prisma.scene.findUnique({ where: { id } });
     if (!scene) {
@@ -73,6 +86,7 @@ router.patch("/scenes/:id", async (req, res) => {
     if (imagePrompt !== undefined) updateData.imagePrompt = imagePrompt;
     if (animationPrompt !== undefined) updateData.animationPrompt = animationPrompt;
     if (styleOverride !== undefined) updateData.styleOverride = styleOverride;
+    if (generationOverride !== undefined) updateData.generationOverride = generationOverride;
 
     const updated = await prisma.scene.update({
       where: { id },
@@ -108,11 +122,12 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
 
     const config = scene.project.config as unknown as ProjectConfig;
     const style = getEffectiveStyle(config, scene);
+    const gen = getEffectiveGeneration(config, scene);
     const effectivePrompt = `${style.stylePromptPrefix}, ${scene.imagePrompt}`;
 
     const imageRecords = [];
-    for (const model of config.imageModels) {
-      for (let i = 0; i < config.imagesPerScene; i++) {
+    for (const model of gen.imageModels) {
+      for (let i = 0; i < gen.imagesPerScene; i++) {
         const imageRecord = await prisma.generatedImage.create({
           data: {
             sceneId: scene.id,
@@ -195,6 +210,7 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
     }
 
     const config = scene.project.config as unknown as ProjectConfig;
+    const gen = getEffectiveGeneration(config, scene);
 
     // Generate animation prompt if not already set
     let animPrompt = scene.animationPrompt;
@@ -207,17 +223,19 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
     }
 
     const clipRecords = [];
-    for (const model of config.animationModels) {
-      const clipRecord = await prisma.generatedClip.create({
-        data: {
-          sceneId: scene.id,
-          sourceImageId: selectedImage.id,
-          model,
-          animationPrompt: animPrompt,
-          status: "processing",
-        },
-      });
-      clipRecords.push(clipRecord);
+    for (const model of gen.animationModels) {
+      for (let i = 0; i < gen.clipsPerScene; i++) {
+        const clipRecord = await prisma.generatedClip.create({
+          data: {
+            sceneId: scene.id,
+            sourceImageId: selectedImage.id,
+            model,
+            animationPrompt: animPrompt,
+            status: "processing",
+          },
+        });
+        clipRecords.push(clipRecord);
+      }
     }
 
     // Respond immediately

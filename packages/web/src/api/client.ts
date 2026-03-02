@@ -8,6 +8,7 @@ import type {
   ElevenLabsVoice,
   StyleTemplate,
   StyleTemplateValue,
+  SceneGenerationOverride,
 } from "@video-generator/shared";
 
 const API_BASE = "http://localhost:3001";
@@ -195,5 +196,15 @@ export function updateSceneStyleOverride(
   return fetchApi<Scene>(`/api/scenes/${sceneId}`, {
     method: "PATCH",
     body: JSON.stringify({ styleOverride }),
+  });
+}
+
+export function updateSceneGenerationOverride(
+  sceneId: number,
+  generationOverride: SceneGenerationOverride | null
+): Promise<Scene> {
+  return fetchApi<Scene>(`/api/scenes/${sceneId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ generationOverride }),
   });
 }

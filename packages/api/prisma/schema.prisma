@@ -47,8 +47,9 @@ model Scene {
   status          String   @default("pending")
   selectedImageId Int?
   selectedClipId  Int?
-  styleOverride   Json?
-  createdAt       DateTime @default(now())
+  styleOverride       Json?
+  generationOverride  Json?
+  createdAt           DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   project Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)

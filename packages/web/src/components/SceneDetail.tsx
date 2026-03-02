@@ -1,8 +1,10 @@
 import { useState } from "react";
-import type { Scene, StyleTemplateValue } from "@video-generator/shared";
+import type { Scene, StyleTemplateValue, SceneGenerationOverride } from "@video-generator/shared";
+import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS } from "@video-generator/shared";
 import { getTagColor } from "./ImageCard";
 import { mediaUrl } from "../api/client";
 import StyleTemplateSelector from "./StyleTemplateSelector";
+import ModelSelector from "./ModelSelector";
 
 interface SceneDetailProps {
   scene: Scene;
@@ -11,6 +13,11 @@ interface SceneDetailProps {
   onRegeneratePrompt: () => void;
   onClearStyleOverride: () => void;
   styleLoading?: boolean;
+  onSetGenerationOverride: (override: SceneGenerationOverride) => void;
+  onSaveGenerationOverride: () => void;
+  onClearGenerationOverride: () => void;
+  generationLoading?: boolean;
+  projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number };
 }
 
 export default function SceneDetail({
@@ -20,10 +27,16 @@ export default function SceneDetail({
   onRegeneratePrompt,
   onClearStyleOverride,
   styleLoading = false,
+  onSetGenerationOverride,
+  onSaveGenerationOverride,
+  onClearGenerationOverride,
+  generationLoading = false,
+  projectConfig,
 }: SceneDetailProps) {
   const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [showNarrative, setShowNarrative] = useState(false);
   const [showStyleOverride, setShowStyleOverride] = useState(false);
+  const [showGenerationOverride, setShowGenerationOverride] = useState(false);
 
   const prompt = scene.imagePrompt || "";
   const truncatedPrompt =
@@ -46,6 +59,11 @@ export default function SceneDetail({
         {scene.styleOverride && (
           <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-900/50 text-purple-300 border border-purple-700/50">
             Custom style
+          </span>
+        )}
+        {scene.generationOverride && (
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-teal-900/50 text-teal-300 border border-teal-700/50">
+            Custom generation
           </span>
         )}
       </div>
@@ -129,6 +147,107 @@ export default function SceneDetail({
               onClear={onClearStyleOverride}
               compact
             />
+          </div>
+        )}
+      </div>
+
+      {/* Scene generation override */}
+      <div className="mt-2">
+        <button
+          className="text-xs text-gray-500 hover:text-gray-400 flex items-center gap-1"
+          onClick={() => setShowGenerationOverride(!showGenerationOverride)}
+        >
+          <svg
+            className={`w-3 h-3 transition-transform ${showGenerationOverride ? "rotate-90" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          Generation settings
+          {scene.generationOverride && (
+            <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-teal-400" />
+          )}
+        </button>
+        {showGenerationOverride && (
+          <div className="mt-2 pl-4 border-l-2 border-gray-700 space-y-3">
+            <ModelSelector
+              label="Image Models"
+              availableModels={AVAILABLE_IMAGE_MODELS}
+              selectedModels={scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? []}
+              onChange={(models) =>
+                onSetGenerationOverride({ ...scene.generationOverride, imageModels: models })
+              }
+            />
+
+            <ModelSelector
+              label="Clip Models"
+              availableModels={AVAILABLE_CLIP_MODELS}
+              selectedModels={scene.generationOverride?.animationModels ?? projectConfig?.animationModels ?? []}
+              onChange={(models) =>
+                onSetGenerationOverride({ ...scene.generationOverride, animationModels: models })
+              }
+            />
+
+            <div className="flex gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                  Images per model
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={scene.generationOverride?.imagesPerScene ?? projectConfig?.imagesPerScene ?? 1}
+                  onChange={(e) => {
+                    const val = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1));
+                    onSetGenerationOverride({ ...scene.generationOverride, imagesPerScene: val });
+                  }}
+                  className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                  Clips per model
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={scene.generationOverride?.clipsPerScene ?? projectConfig?.clipsPerScene ?? 1}
+                  onChange={(e) => {
+                    const val = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1));
+                    onSetGenerationOverride({ ...scene.generationOverride, clipsPerScene: val });
+                  }}
+                  className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={onSaveGenerationOverride}
+                disabled={generationLoading}
+                className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 disabled:bg-gray-700 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                {generationLoading ? "Saving..." : "Save"}
+              </button>
+              {scene.generationOverride && (
+                <button
+                  onClick={onClearGenerationOverride}
+                  disabled={generationLoading}
+                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-gray-300 rounded-lg text-xs font-medium transition-colors"
+                >
+                  Reset to project defaults
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -16,12 +16,16 @@ const IMAGE_MODEL_IDS: Record<string, string> = {
   flux: "fal-ai/flux/schnell",
   "nano-banana": "fal-ai/nano-banana",
   "nano-banana-pro": "fal-ai/nano-banana-pro",
+  "gemini-flash": "fal-ai/gemini-3.1-flash-image-preview",
 };
 
 const CLIP_MODEL_IDS: Record<string, string> = {
   "wan-i2v": "fal-ai/wan-i2v",
   kling: "fal-ai/kling-video/v1.6/pro/image-to-video",
   minimax: "fal-ai/minimax/video-01/image-to-video",
+  "kling-v2.6": "fal-ai/kling-video/v2.6/pro/image-to-video",
+  "kling-o3": "fal-ai/kling-video/o3/pro/image-to-video",
+  "veo3.1": "fal-ai/veo3.1/image-to-video",
 };
 
 const FORMAT_TO_IMAGE_SIZE: Record<string, string> = {
@@ -101,6 +105,13 @@ export async function generateImage(
     if (model === "nano-banana-pro") {
       (input as any).resolution = "2K";
     }
+  } else if (model === "gemini-flash") {
+    input = {
+      prompt,
+      aspect_ratio: aspectRatio,
+      num_images: 1,
+      output_format: "png",
+    };
   } else {
     input = {
       prompt,
@@ -149,6 +160,30 @@ export async function generateClip(
       image_url: resolvedImageUrl,
       prompt,
       aspect_ratio: aspectRatio,
+    };
+  } else if (model === "kling-v2.6") {
+    input = {
+      start_image_url: resolvedImageUrl,
+      prompt,
+      duration: "5",
+      generate_audio: false,
+    };
+  } else if (model === "kling-o3") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      aspect_ratio: aspectRatio,
+      duration: "5",
+      generate_audio: false,
+    };
+  } else if (model === "veo3.1") {
+    const veoAspect = ["16:9", "9:16"].includes(aspectRatio) ? aspectRatio : "auto";
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      aspect_ratio: veoAspect,
+      duration: "8s",
+      generate_audio: false,
     };
   } else {
     // minimax — no aspect_ratio support

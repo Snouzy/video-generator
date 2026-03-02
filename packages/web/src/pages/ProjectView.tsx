@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useParams } from "react-router-dom";
-import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue } from "@video-generator/shared";
+import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride } from "@video-generator/shared";
+import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS } from "@video-generator/shared";
 import {
   getProject,
   getScenes,
@@ -23,6 +24,7 @@ import {
   regeneratePrompts,
   updateSceneStyleOverride,
   regenerateScenePrompt,
+  updateSceneGenerationOverride,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
@@ -30,6 +32,7 @@ import SceneOverview from "../components/SceneOverview";
 import ImageGrid from "../components/ImageGrid";
 import ClipGrid from "../components/ClipGrid";
 import StyleTemplateSelector from "../components/StyleTemplateSelector";
+import ModelSelector from "../components/ModelSelector";
 
 export default function ProjectView() {
   const { id } = useParams<{ id: string }>();
@@ -344,11 +347,6 @@ export default function ProjectView() {
     }
   }
 
-  async function handleSaveSceneStyle() {
-    if (!currentScene) return;
-    // Scene style is saved via the updateSceneStyleOverride call in handleSetSceneStyle
-  }
-
   async function handleSetSceneStyle(style: StyleTemplateValue) {
     if (!currentScene) return;
     // Update scenes locally for instant feedback
@@ -383,6 +381,47 @@ export default function ProjectView() {
       await loadProject();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to regenerate scene prompt");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleSetGenerationOverride(override: SceneGenerationOverride) {
+    if (!currentScene) return;
+    setScenes((prev) =>
+      prev.map((s) =>
+        s.id === currentScene.id ? { ...s, generationOverride: override } : s
+      )
+    );
+  }
+
+  async function handleSaveGenerationOverride() {
+    if (!currentScene) return;
+    setActionLoading("save-gen-override");
+    try {
+      const scene = scenes.find((s) => s.id === currentScene.id);
+      await updateSceneGenerationOverride(currentScene.id, scene?.generationOverride ?? null);
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save generation settings");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleClearGenerationOverride() {
+    if (!currentScene) return;
+    setActionLoading("save-gen-override");
+    try {
+      await updateSceneGenerationOverride(currentScene.id, null);
+      setScenes((prev) =>
+        prev.map((s) =>
+          s.id === currentScene.id ? { ...s, generationOverride: null } : s
+        )
+      );
+      await loadProject();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to clear generation settings");
     } finally {
       setActionLoading(null);
     }
@@ -512,15 +551,70 @@ export default function ProjectView() {
 
       {/* Settings panel */}
       {showSettings && (
-        <div className="mx-6 mt-4 bg-gray-900/80 border border-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Project Style</h3>
-          <StyleTemplateSelector
-            value={projectStyle}
-            onChange={setProjectStyle}
-            onSave={handleSaveProjectStyle}
-            onSaveAndRegenerate={handleRegeneratePrompts}
-            loading={actionLoading === "save-style" || actionLoading === "regen-prompts"}
-          />
+        <div className="mx-6 mt-4 bg-gray-900/80 border border-gray-700 rounded-lg p-4 space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-300 mb-3">Project Style</h3>
+            <StyleTemplateSelector
+              value={projectStyle}
+              onChange={setProjectStyle}
+              onSave={handleSaveProjectStyle}
+              onSaveAndRegenerate={handleRegeneratePrompts}
+              loading={actionLoading === "save-style" || actionLoading === "regen-prompts"}
+            />
+          </div>
+
+          <div className="border-t border-gray-700 pt-4 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-300">Models & Quantities</h3>
+
+            <ModelSelector
+              label="Image Models"
+              availableModels={AVAILABLE_IMAGE_MODELS}
+              selectedModels={project.config?.imageModels ?? []}
+              onChange={(models) => updateProjectConfig(projectId, { imageModels: models }).then(loadProject)}
+            />
+
+            <ModelSelector
+              label="Clip Models"
+              availableModels={AVAILABLE_CLIP_MODELS}
+              selectedModels={project.config?.animationModels ?? []}
+              onChange={(models) => updateProjectConfig(projectId, { animationModels: models }).then(loadProject)}
+            />
+
+            <div className="flex gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                  Images per model
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={project.config?.imagesPerScene ?? 1}
+                  onChange={(e) => {
+                    const val = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1));
+                    updateProjectConfig(projectId, { imagesPerScene: val }).then(loadProject);
+                  }}
+                  className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                  Clips per model
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={project.config?.clipsPerScene ?? 1}
+                  onChange={(e) => {
+                    const val = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1));
+                    updateProjectConfig(projectId, { clipsPerScene: val }).then(loadProject);
+                  }}
+                  className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -546,6 +640,11 @@ export default function ProjectView() {
               onRegeneratePrompt={handleRegenerateScenePrompt}
               onClearStyleOverride={handleClearSceneStyleOverride}
               styleLoading={actionLoading === "save-scene-style" || actionLoading === "regen-scene-prompt"}
+              onSetGenerationOverride={handleSetGenerationOverride}
+              onSaveGenerationOverride={handleSaveGenerationOverride}
+              onClearGenerationOverride={handleClearGenerationOverride}
+              generationLoading={actionLoading === "save-gen-override"}
+              projectConfig={project.config}
             />
           )}
 

@@ -7,6 +7,7 @@ import type {
   ApiResponse,
   CreateProjectRequest,
   ProjectConfig,
+  SceneGenerationOverride,
 } from "@video-generator/shared";
 import { splitScript, generateImagePrompt, generateAnimationPrompt } from "../services/llm";
 import { generateImage, generateClip, downloadToLocal } from "../services/fal";
@@ -33,6 +34,19 @@ function getEffectiveStyle(
   return {
     stylePromptPrefix: projectConfig.stylePromptPrefix,
     llmSystemInstructions: BUILTIN_STYLE_TEMPLATES[0].llmSystemInstructions,
+  };
+}
+
+function getEffectiveGeneration(
+  config: ProjectConfig,
+  scene: { generationOverride?: any }
+): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number } {
+  const override = scene.generationOverride as SceneGenerationOverride | null | undefined;
+  return {
+    imageModels: override?.imageModels ?? config.imageModels,
+    animationModels: override?.animationModels ?? config.animationModels,
+    imagesPerScene: override?.imagesPerScene ?? config.imagesPerScene,
+    clipsPerScene: override?.clipsPerScene ?? config.clipsPerScene ?? 1,
   };
 }
 
@@ -260,10 +274,11 @@ router.post("/:id/generate-all-images", async (req, res) => {
       if (!scene.imagePrompt) continue;
 
       const style = getEffectiveStyle(config, scene);
+      const gen = getEffectiveGeneration(config, scene);
       const effectivePrompt = `${style.stylePromptPrefix}, ${scene.imagePrompt}`;
 
-      for (const model of config.imageModels) {
-        for (let i = 0; i < config.imagesPerScene; i++) {
+      for (const model of gen.imageModels) {
+        for (let i = 0; i < gen.imagesPerScene; i++) {
           const imageRecord = await prisma.generatedImage.create({
             data: {
               sceneId: scene.id,
@@ -385,22 +400,25 @@ router.post("/:id/generate-all-clips", async (req, res) => {
         });
       }
 
-      for (const model of config.animationModels) {
-        const clipRecord = await prisma.generatedClip.create({
-          data: {
-            sceneId: scene.id,
-            sourceImageId: selectedImage.id,
+      const gen = getEffectiveGeneration(config, scene);
+      for (const model of gen.animationModels) {
+        for (let i = 0; i < gen.clipsPerScene; i++) {
+          const clipRecord = await prisma.generatedClip.create({
+            data: {
+              sceneId: scene.id,
+              sourceImageId: selectedImage.id,
+              model,
+              animationPrompt: animPrompt,
+              status: "processing",
+            },
+          });
+          allClipRecords.push({
+            clipId: clipRecord.id,
             model,
+            imageUrl: selectedImage.imageUrl!,
             animationPrompt: animPrompt,
-            status: "processing",
-          },
-        });
-        allClipRecords.push({
-          clipId: clipRecord.id,
-          model,
-          imageUrl: selectedImage.imageUrl!,
-          animationPrompt: animPrompt,
-        });
+          });
+        }
       }
     }
 

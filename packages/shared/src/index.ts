@@ -124,8 +124,30 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
   },
 ];
 
+export interface ModelDefinition {
+  id: string;
+  label: string;
+}
+
+export const AVAILABLE_IMAGE_MODELS: ModelDefinition[] = [
+  { id: "nano-banana", label: "Nano Banana" },
+  { id: "nano-banana-pro", label: "Nano Banana Pro" },
+  { id: "flux", label: "Flux Schnell" },
+  { id: "gemini-flash", label: "Gemini Flash" },
+];
+
+export const AVAILABLE_CLIP_MODELS: ModelDefinition[] = [
+  { id: "wan-i2v", label: "Wan I2V" },
+  { id: "kling", label: "Kling v1.6" },
+  { id: "kling-v2.6", label: "Kling v2.6" },
+  { id: "kling-o3", label: "Kling O3" },
+  { id: "minimax", label: "Minimax" },
+  { id: "veo3.1", label: "Veo 3.1" },
+];
+
 export interface ProjectConfig {
   imagesPerScene: number;
+  clipsPerScene: number;
   imageModels: string[];
   animationModels: string[];
   stylePromptPrefix: string;
@@ -138,6 +160,7 @@ export interface ProjectConfig {
 
 export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   imagesPerScene: 1,
+  clipsPerScene: 1,
   imageModels: ["nano-banana", "nano-banana-pro", "flux"],
   animationModels: ["wan-i2v", "kling", "minimax"],
   stylePromptPrefix: BUILTIN_STYLE_TEMPLATES[0].stylePromptPrefix,
@@ -186,6 +209,7 @@ export interface Scene {
   selectedImageId: number | null;
   selectedClipId: number | null;
   styleOverride: StyleTemplateValue | null;
+  generationOverride: SceneGenerationOverride | null;
   createdAt: Date;
   updatedAt: Date;
   images?: GeneratedImage[];
@@ -227,8 +251,16 @@ export interface CreateProjectRequest {
   config?: Partial<ProjectConfig>;
 }
 
+export interface SceneGenerationOverride {
+  imageModels?: string[];
+  animationModels?: string[];
+  imagesPerScene?: number;
+  clipsPerScene?: number;
+}
+
 export interface UpdateSceneRequest {
   imagePrompt?: string;
   animationPrompt?: string;
   styleOverride?: StyleTemplateValue | null;
+  generationOverride?: SceneGenerationOverride | null;
 }
