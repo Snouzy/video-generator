@@ -13,11 +13,15 @@ export default function ModelSelector({
   selectedModels,
   onChange,
 }: ModelSelectorProps) {
+  // Filter out stale model IDs that no longer exist in available models
+  const validIds = new Set(availableModels.map((m) => m.id));
+  const cleanSelected = selectedModels.filter((id) => validIds.has(id));
+
   function toggle(id: string) {
-    if (selectedModels.includes(id)) {
-      onChange(selectedModels.filter((m) => m !== id));
+    if (cleanSelected.includes(id)) {
+      onChange(cleanSelected.filter((m) => m !== id));
     } else {
-      onChange([...selectedModels, id]);
+      onChange([...cleanSelected, id]);
     }
   }
 
@@ -28,7 +32,7 @@ export default function ModelSelector({
       </label>
       <div className="flex flex-wrap gap-1.5">
         {availableModels.map((m) => {
-          const active = selectedModels.includes(m.id);
+          const active = cleanSelected.includes(m.id);
           return (
             <button
               key={m.id}

@@ -8,9 +8,11 @@ import type {
   CreateProjectRequest,
   ProjectConfig,
   SceneGenerationOverride,
+  ClipParams,
 } from "@video-generator/shared";
 import { splitScript, generateImagePrompt, generateAnimationPrompt } from "../services/llm";
 import { generateImage, generateClip, downloadToLocal } from "../services/fal";
+import type { ClipGenerationOptions } from "../services/fal";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -40,13 +42,19 @@ function getEffectiveStyle(
 function getEffectiveGeneration(
   config: ProjectConfig,
   scene: { generationOverride?: any }
-): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number } {
+): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; clipOptions?: ClipGenerationOptions } {
   const override = scene.generationOverride as SceneGenerationOverride | null | undefined;
+  const clipParams = override?.clipParams;
   return {
     imageModels: override?.imageModels ?? config.imageModels,
     animationModels: override?.animationModels ?? config.animationModels,
     imagesPerScene: override?.imagesPerScene ?? config.imagesPerScene,
     clipsPerScene: override?.clipsPerScene ?? config.clipsPerScene ?? 1,
+    clipOptions: clipParams ? {
+      duration: clipParams.duration,
+      generateAudio: clipParams.generateAudio,
+      aspectRatio: clipParams.aspectRatio,
+    } : undefined,
   };
 }
 
@@ -385,7 +393,7 @@ router.post("/:id/generate-all-clips", async (req, res) => {
     });
 
     // Create all clip records
-    const allClipRecords: { clipId: number; model: string; imageUrl: string; animationPrompt: string }[] = [];
+    const allClipRecords: { clipId: number; model: string; imageUrl: string; animationPrompt: string; clipOptions?: ClipGenerationOptions }[] = [];
 
     for (const scene of eligibleScenes) {
       const selectedImage = scene.images[0];
@@ -417,6 +425,7 @@ router.post("/:id/generate-all-clips", async (req, res) => {
             model,
             imageUrl: selectedImage.imageUrl!,
             animationPrompt: animPrompt,
+            clipOptions: gen.clipOptions,
           });
         }
       }
@@ -435,7 +444,7 @@ router.post("/:id/generate-all-clips", async (req, res) => {
       await Promise.all(
         allClipRecords.map(async (record) => {
           try {
-            const result = await generateClip(record.model, record.imageUrl, record.animationPrompt, config.format);
+            const result = await generateClip(record.model, record.imageUrl, record.animationPrompt, config.format, record.clipOptions);
             let localUrl: string | null = null;
             if (result.clipUrl) {
               localUrl = await downloadToLocal(result.clipUrl, "clips", `clip-${record.clipId}`);

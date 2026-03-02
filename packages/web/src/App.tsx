@@ -7,7 +7,7 @@ import ProjectView from "./pages/ProjectView";
 function App() {
   return (
     <BrowserRouter>
-      <Toaster theme="dark" position="bottom-right" richColors />
+      <Toaster theme="dark" position="top-right" richColors />
       <Routes>
         <Route path="/" element={<ProjectList />} />
         <Route path="/projects/new" element={<ProjectCreate />} />

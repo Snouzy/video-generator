@@ -15,7 +15,7 @@ const IMAGE_MODEL_IDS: Record<string, string> = {
   "flux-dev": "fal-ai/flux/dev",
   flux: "fal-ai/flux/schnell",
   "nano-banana": "fal-ai/nano-banana",
-  "nano-banana-pro": "fal-ai/nano-banana-pro",
+  "nano-banana-pro": "fal-ai/nano-banana-pro", // 0.15$ per image
   "nano-banana-2": "fal-ai/nano-banana-2",
   "gemini-flash": "fal-ai/gemini-3.1-flash-image-preview",
 };
@@ -26,7 +26,7 @@ const CLIP_MODEL_IDS: Record<string, string> = {
   minimax: "fal-ai/minimax/video-01/image-to-video",
   "kling-v2.6-pro": "fal-ai/kling-video/v2.6/pro/image-to-video",
   "kling-o3-pro": "fal-ai/kling-video/o3/pro/image-to-video",
-  "veo3.1": "fal-ai/veo3.1/image-to-video",
+  "veo3.1": "fal-ai/veo3.1/image-to-video", // For every second of video you generate you will be charged $0.20 without audio or $0.40 with audio for 720p or 1080p. At 4k, you will be charged $0.40 per second without audio, or $0.60 with. For example, a 5 second video at 1080p with audio on will cost $2.00.
 };
 
 const FORMAT_TO_IMAGE_SIZE: Record<string, string> = {
@@ -142,14 +142,36 @@ export async function generateImage(
 // Clip / video generation (blocking — fal.subscribe waits for result)
 // ---------------------------------------------------------------------------
 
+export interface ClipGenerationOptions {
+  duration?: number;
+  generateAudio?: boolean;
+  aspectRatio?: string;
+}
+
+// Default clip params per model
+const CLIP_DEFAULTS: Record<string, { duration: number; generateAudio: boolean }> = {
+  "wan-i2v":        { duration: 5,  generateAudio: false },
+  "kling-v1.6":     { duration: 5,  generateAudio: false },
+  "kling-v2.6-pro": { duration: 5,  generateAudio: false },
+  "kling-o3-pro":   { duration: 5,  generateAudio: false },
+  minimax:          { duration: 5,  generateAudio: false },
+  "veo3.1":         { duration: 4,  generateAudio: true },
+};
+
 export async function generateClip(
   model: string,
   imageUrl: string,
   prompt: string,
-  aspectRatio: string = "16:9"
+  aspectRatio: string = "16:9",
+  options?: ClipGenerationOptions
 ): Promise<{ requestId: string; clipUrl?: string }> {
   const modelId = CLIP_MODEL_IDS[model];
   if (!modelId) throw new Error(`Unknown clip model: ${model}`);
+
+  const defaults = CLIP_DEFAULTS[model] ?? { duration: 5, generateAudio: false };
+  const duration = options?.duration ?? defaults.duration;
+  const generateAudio = options?.generateAudio ?? defaults.generateAudio;
+  const ar = options?.aspectRatio ?? aspectRatio;
 
   // Upload local images to fal.ai CDN — fal can't access localhost
   const resolvedImageUrl = imageUrl.startsWith("http") ? imageUrl : await uploadToFal(imageUrl);
@@ -160,38 +182,38 @@ export async function generateClip(
     input = {
       image_url: resolvedImageUrl,
       prompt,
-      aspect_ratio: aspectRatio,
+      aspect_ratio: ar,
       resolution: "480p",
     };
   } else if (model === "kling-v1.6") {
     input = {
       image_url: resolvedImageUrl,
       prompt,
-      aspect_ratio: aspectRatio,
+      aspect_ratio: ar,
     };
   } else if (model === "kling-v2.6-pro") {
     input = {
       start_image_url: resolvedImageUrl,
       prompt,
-      duration: "5",
-      generate_audio: false,
+      duration: String(duration),
+      generate_audio: generateAudio,
     };
   } else if (model === "kling-o3-pro") {
     input = {
       image_url: resolvedImageUrl,
       prompt,
-      aspect_ratio: aspectRatio,
-      duration: "5",
-      generate_audio: false,
+      aspect_ratio: ar,
+      duration: String(duration),
+      generate_audio: generateAudio,
     };
   } else if (model === "veo3.1") {
-    const veoAspect = ["16:9", "9:16"].includes(aspectRatio) ? aspectRatio : "auto";
+    const veoAspect = ["16:9", "9:16"].includes(ar) ? ar : "auto";
     input = {
       image_url: resolvedImageUrl,
       prompt,
       aspect_ratio: veoAspect,
-      duration: "8s",
-      generate_audio: false,
+      duration: `${duration}s`,
+      generate_audio: generateAudio,
     };
   } else {
     // minimax — no aspect_ratio support

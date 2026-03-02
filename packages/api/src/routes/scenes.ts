@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
-import type { ApiResponse, UpdateSceneRequest, ProjectConfig, SceneGenerationOverride } from "@video-generator/shared";
+import type { ApiResponse, UpdateSceneRequest, ProjectConfig, SceneGenerationOverride, ClipParams } from "@video-generator/shared";
 import { generateImage, generateClip, downloadToLocal } from "../services/fal";
+import type { ClipGenerationOptions } from "../services/fal";
 import { generateAnimationPrompt, generateImagePrompt } from "../services/llm";
 
 const router = Router();
@@ -33,13 +34,19 @@ function getEffectiveStyle(
 function getEffectiveGeneration(
   config: ProjectConfig,
   scene: { generationOverride?: any }
-): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number } {
+): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; clipOptions?: ClipGenerationOptions } {
   const override = scene.generationOverride as SceneGenerationOverride | null | undefined;
+  const clipParams = override?.clipParams;
   return {
     imageModels: override?.imageModels ?? config.imageModels,
     animationModels: override?.animationModels ?? config.animationModels,
     imagesPerScene: override?.imagesPerScene ?? config.imagesPerScene,
     clipsPerScene: override?.clipsPerScene ?? config.clipsPerScene ?? 1,
+    clipOptions: clipParams ? {
+      duration: clipParams.duration,
+      generateAudio: clipParams.generateAudio,
+      aspectRatio: clipParams.aspectRatio,
+    } : undefined,
   };
 }
 
@@ -258,7 +265,8 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
               clipRecord.model,
               selectedImage.imageUrl!,
               clipRecord.animationPrompt,
-              config.format
+              config.format,
+              gen.clipOptions
             );
             let localUrl: string | null = null;
             if (result.clipUrl) {

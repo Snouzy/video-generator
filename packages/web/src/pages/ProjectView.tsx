@@ -382,6 +382,7 @@ export default function ProjectView() {
   async function handleRegenerateScenePrompt() {
     if (!currentScene) return;
     const sceneId = currentScene.id;
+    const sceneNumber = currentScene.sceneNumber;
     const sceneTitle = currentScene.title;
     setActionLoading("regen-scene-prompt");
     setRegeneratingSceneIds((prev) => new Set(prev).add(sceneId));
@@ -390,11 +391,11 @@ export default function ProjectView() {
       await updateSceneStyleOverride(sceneId, scene?.styleOverride ?? null);
       await regenerateScenePrompt(sceneId);
       await loadProject();
-      toast.success(`Prompt regenerated for "${sceneTitle}"`);
+      toast.success(`Scene ${sceneNumber} — "${sceneTitle}"`, { description: "Prompt regenerated" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to regenerate scene prompt";
       setError(msg);
-      toast.error(`Failed: ${sceneTitle}`, { description: msg });
+      toast.error(`Scene ${sceneNumber} — "${sceneTitle}"`, { description: msg });
     } finally {
       setRegeneratingSceneIds((prev) => {
         const next = new Set(prev);

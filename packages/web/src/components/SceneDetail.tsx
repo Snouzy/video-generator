@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Scene, StyleTemplateValue, SceneGenerationOverride } from "@video-generator/shared";
+import type { Scene, StyleTemplateValue, SceneGenerationOverride, VideoFormat } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS } from "@video-generator/shared";
 import { getTagColor } from "./ImageCard";
 import { mediaUrl } from "../api/client";
@@ -17,7 +17,7 @@ interface SceneDetailProps {
   onSetGenerationOverride: (override: SceneGenerationOverride) => void;
   onClearGenerationOverride: () => void;
   promptRegenerating?: boolean;
-  projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number };
+  projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; format?: VideoFormat };
 }
 
 export default function SceneDetail({
@@ -212,6 +212,74 @@ export default function SceneDetail({
                   }}
                   className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
                 />
+              </div>
+            </div>
+
+            {/* Clip parameters */}
+            <div className="border-t border-gray-700/50 pt-3 mt-1">
+              <label className="block text-xs font-medium text-gray-400 mb-2">Clip parameters</label>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Duration (s)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={scene.generationOverride?.clipParams?.duration ?? 5}
+                    onChange={(e) => {
+                      const val = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 5));
+                      onSetGenerationOverride({
+                        ...scene.generationOverride,
+                        clipParams: { ...scene.generationOverride?.clipParams, duration: val },
+                      });
+                    }}
+                    className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Aspect ratio</label>
+                  <select
+                    value={scene.generationOverride?.clipParams?.aspectRatio ?? projectConfig?.format ?? "16:9"}
+                    onChange={(e) =>
+                      onSetGenerationOverride({
+                        ...scene.generationOverride,
+                        clipParams: { ...scene.generationOverride?.clipParams, aspectRatio: e.target.value as "16:9" | "9:16" },
+                      })
+                    }
+                    className="px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 pt-3.5">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={scene.generationOverride?.clipParams?.generateAudio ?? false}
+                    onClick={() =>
+                      onSetGenerationOverride({
+                        ...scene.generationOverride,
+                        clipParams: {
+                          ...scene.generationOverride?.clipParams,
+                          generateAudio: !(scene.generationOverride?.clipParams?.generateAudio ?? false),
+                        },
+                      })
+                    }
+                    className={`relative w-9 h-5 rounded-full transition-colors ${
+                      scene.generationOverride?.clipParams?.generateAudio
+                        ? "bg-blue-600"
+                        : "bg-gray-700"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                        scene.generationOverride?.clipParams?.generateAudio ? "translate-x-4" : ""
+                      }`}
+                    />
+                  </button>
+                  <label className="text-[11px] text-gray-500">Audio</label>
+                </div>
               </div>
             </div>
 

@@ -252,11 +252,18 @@ export interface CreateProjectRequest {
   config?: Partial<ProjectConfig>;
 }
 
+export interface ClipParams {
+  duration?: number;
+  generateAudio?: boolean;
+  aspectRatio?: VideoFormat;
+}
+
 export interface SceneGenerationOverride {
   imageModels?: string[];
   animationModels?: string[];
   imagesPerScene?: number;
   clipsPerScene?: number;
+  clipParams?: ClipParams;
 }
 
 export interface UpdateSceneRequest {
