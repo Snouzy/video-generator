@@ -16,15 +16,16 @@ const IMAGE_MODEL_IDS: Record<string, string> = {
   flux: "fal-ai/flux/schnell",
   "nano-banana": "fal-ai/nano-banana",
   "nano-banana-pro": "fal-ai/nano-banana-pro",
+  "nano-banana-2": "fal-ai/nano-banana-2",
   "gemini-flash": "fal-ai/gemini-3.1-flash-image-preview",
 };
 
 const CLIP_MODEL_IDS: Record<string, string> = {
   "wan-i2v": "fal-ai/wan-i2v",
-  kling: "fal-ai/kling-video/v1.6/pro/image-to-video",
+  "kling-v1.6": "fal-ai/kling-video/v1.6/pro/image-to-video",
   minimax: "fal-ai/minimax/video-01/image-to-video",
-  "kling-v2.6": "fal-ai/kling-video/v2.6/pro/image-to-video",
-  "kling-o3": "fal-ai/kling-video/o3/pro/image-to-video",
+  "kling-v2.6-pro": "fal-ai/kling-video/v2.6/pro/image-to-video",
+  "kling-o3-pro": "fal-ai/kling-video/o3/pro/image-to-video",
   "veo3.1": "fal-ai/veo3.1/image-to-video",
 };
 
@@ -105,6 +106,13 @@ export async function generateImage(
     if (model === "nano-banana-pro") {
       (input as any).resolution = "2K";
     }
+  } else if (model === "nano-banana-2") {
+    input = {
+      prompt,
+      aspect_ratio: aspectRatio,
+      num_images: 1,
+      output_format: "png",
+    };
   } else if (model === "gemini-flash") {
     input = {
       prompt,
@@ -155,20 +163,20 @@ export async function generateClip(
       aspect_ratio: aspectRatio,
       resolution: "480p",
     };
-  } else if (model === "kling") {
+  } else if (model === "kling-v1.6") {
     input = {
       image_url: resolvedImageUrl,
       prompt,
       aspect_ratio: aspectRatio,
     };
-  } else if (model === "kling-v2.6") {
+  } else if (model === "kling-v2.6-pro") {
     input = {
       start_image_url: resolvedImageUrl,
       prompt,
       duration: "5",
       generate_audio: false,
     };
-  } else if (model === "kling-o3") {
+  } else if (model === "kling-o3-pro") {
     input = {
       image_url: resolvedImageUrl,
       prompt,

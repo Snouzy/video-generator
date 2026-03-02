@@ -132,15 +132,16 @@ export interface ModelDefinition {
 export const AVAILABLE_IMAGE_MODELS: ModelDefinition[] = [
   { id: "nano-banana", label: "Nano Banana" },
   { id: "nano-banana-pro", label: "Nano Banana Pro" },
+  { id: "nano-banana-2", label: "Nano Banana 2" },
   { id: "flux", label: "Flux Schnell" },
   { id: "gemini-flash", label: "Gemini Flash" },
 ];
 
 export const AVAILABLE_CLIP_MODELS: ModelDefinition[] = [
   { id: "wan-i2v", label: "Wan I2V" },
-  { id: "kling", label: "Kling v1.6" },
-  { id: "kling-v2.6", label: "Kling v2.6" },
-  { id: "kling-o3", label: "Kling O3" },
+  { id: "kling-v1.6", label: "Kling v1.6" },
+  { id: "kling-v2.6-pro", label: "Kling v2.6 Pro" },
+  { id: "kling-o3-pro", label: "Kling O3 Pro" },
   { id: "minimax", label: "Minimax" },
   { id: "veo3.1", label: "Veo 3.1" },
 ];

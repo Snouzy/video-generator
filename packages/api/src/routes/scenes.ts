@@ -149,32 +149,34 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
       },
     } as ApiResponse<any>);
 
-    // Sequential background processing (respects rate limits)
+    // Parallel background processing
     (async () => {
-      for (const imageRecord of imageRecords) {
-        try {
-          const result = await generateImage(imageRecord.model, imageRecord.prompt, config.format);
-          let localUrl: string | null = null;
-          if (result.imageUrl) {
-            localUrl = await downloadToLocal(result.imageUrl, "images", `img-${imageRecord.id}`);
+      await Promise.all(
+        imageRecords.map(async (imageRecord) => {
+          try {
+            const result = await generateImage(imageRecord.model, imageRecord.prompt, config.format);
+            let localUrl: string | null = null;
+            if (result.imageUrl) {
+              localUrl = await downloadToLocal(result.imageUrl, "images", `img-${imageRecord.id}`);
+            }
+            await prisma.generatedImage.update({
+              where: { id: imageRecord.id },
+              data: {
+                falRequestId: result.requestId,
+                imageUrl: localUrl,
+                status: localUrl ? "completed" : "failed",
+              },
+            });
+            console.log(`Image ${imageRecord.id} completed`);
+          } catch (err) {
+            await prisma.generatedImage.update({
+              where: { id: imageRecord.id },
+              data: { status: "failed" },
+            });
+            console.error(`Image generation failed for image ${imageRecord.id}:`, err);
           }
-          await prisma.generatedImage.update({
-            where: { id: imageRecord.id },
-            data: {
-              falRequestId: result.requestId,
-              imageUrl: localUrl,
-              status: localUrl ? "completed" : "failed",
-            },
-          });
-          console.log(`Image ${imageRecord.id} completed`);
-        } catch (err) {
-          await prisma.generatedImage.update({
-            where: { id: imageRecord.id },
-            data: { status: "failed" },
-          });
-          console.error(`Image generation failed for image ${imageRecord.id}:`, err);
-        }
-      }
+        })
+      );
     })();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -247,37 +249,39 @@ router.post("/scenes/:id/generate-clips", async (req, res) => {
       },
     } as ApiResponse<any>);
 
-    // Sequential background processing (respects rate limits)
+    // Parallel background processing
     (async () => {
-      for (const clipRecord of clipRecords) {
-        try {
-          const result = await generateClip(
-            clipRecord.model,
-            selectedImage.imageUrl!,
-            clipRecord.animationPrompt,
-            config.format
-          );
-          let localUrl: string | null = null;
-          if (result.clipUrl) {
-            localUrl = await downloadToLocal(result.clipUrl, "clips", `clip-${clipRecord.id}`);
+      await Promise.all(
+        clipRecords.map(async (clipRecord) => {
+          try {
+            const result = await generateClip(
+              clipRecord.model,
+              selectedImage.imageUrl!,
+              clipRecord.animationPrompt,
+              config.format
+            );
+            let localUrl: string | null = null;
+            if (result.clipUrl) {
+              localUrl = await downloadToLocal(result.clipUrl, "clips", `clip-${clipRecord.id}`);
+            }
+            await prisma.generatedClip.update({
+              where: { id: clipRecord.id },
+              data: {
+                falRequestId: result.requestId,
+                clipUrl: localUrl,
+                status: localUrl ? "completed" : "failed",
+              },
+            });
+            console.log(`Clip ${clipRecord.id} completed`);
+          } catch (err) {
+            await prisma.generatedClip.update({
+              where: { id: clipRecord.id },
+              data: { status: "failed" },
+            });
+            console.error(`Clip generation failed for clip ${clipRecord.id}:`, err);
           }
-          await prisma.generatedClip.update({
-            where: { id: clipRecord.id },
-            data: {
-              falRequestId: result.requestId,
-              clipUrl: localUrl,
-              status: localUrl ? "completed" : "failed",
-            },
-          });
-          console.log(`Clip ${clipRecord.id} completed`);
-        } catch (err) {
-          await prisma.generatedClip.update({
-            where: { id: clipRecord.id },
-            data: { status: "failed" },
-          });
-          console.error(`Clip generation failed for clip ${clipRecord.id}:`, err);
-        }
-      }
+        })
+      );
     })();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
