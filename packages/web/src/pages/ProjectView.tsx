@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS } from "@video-generator/shared";
 import {
@@ -51,6 +52,7 @@ export default function ProjectView() {
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
   const [showSettings, setShowSettings] = useState(false);
   const [projectStyle, setProjectStyle] = useState<StyleTemplateValue | null>(null);
+  const [regeneratingSceneIds, setRegeneratingSceneIds] = useState<Set<number>>(new Set());
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -332,7 +334,9 @@ export default function ProjectView() {
 
   async function handleRegeneratePrompts() {
     if (!projectStyle) return;
+    const allSceneIds = new Set(scenes.map((s) => s.id));
     setActionLoading("regen-prompts");
+    setRegeneratingSceneIds(allSceneIds);
     try {
       await updateProjectConfig(projectId, {
         styleTemplate: projectStyle,
@@ -340,9 +344,13 @@ export default function ProjectView() {
       });
       await regeneratePrompts(projectId);
       await loadProject();
+      toast.success(`All prompts regenerated (${allSceneIds.size} scenes)`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to regenerate prompts");
+      const msg = e instanceof Error ? e.message : "Failed to regenerate prompts";
+      setError(msg);
+      toast.error("Failed to regenerate prompts", { description: msg });
     } finally {
+      setRegeneratingSceneIds(new Set());
       setActionLoading(null);
     }
   }
@@ -373,39 +381,43 @@ export default function ProjectView() {
 
   async function handleRegenerateScenePrompt() {
     if (!currentScene) return;
+    const sceneId = currentScene.id;
+    const sceneTitle = currentScene.title;
     setActionLoading("regen-scene-prompt");
+    setRegeneratingSceneIds((prev) => new Set(prev).add(sceneId));
     try {
-      const scene = scenes.find((s) => s.id === currentScene.id);
-      await updateSceneStyleOverride(currentScene.id, scene?.styleOverride ?? null);
-      await regenerateScenePrompt(currentScene.id);
+      const scene = scenes.find((s) => s.id === sceneId);
+      await updateSceneStyleOverride(sceneId, scene?.styleOverride ?? null);
+      await regenerateScenePrompt(sceneId);
       await loadProject();
+      toast.success(`Prompt regenerated for "${sceneTitle}"`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to regenerate scene prompt");
+      const msg = e instanceof Error ? e.message : "Failed to regenerate scene prompt";
+      setError(msg);
+      toast.error(`Failed: ${sceneTitle}`, { description: msg });
     } finally {
+      setRegeneratingSceneIds((prev) => {
+        const next = new Set(prev);
+        next.delete(sceneId);
+        return next;
+      });
       setActionLoading(null);
     }
   }
 
   async function handleSetGenerationOverride(override: SceneGenerationOverride) {
     if (!currentScene) return;
+    // Optimistic local update
     setScenes((prev) =>
       prev.map((s) =>
         s.id === currentScene.id ? { ...s, generationOverride: override } : s
       )
     );
-  }
-
-  async function handleSaveGenerationOverride() {
-    if (!currentScene) return;
-    setActionLoading("save-gen-override");
+    // Auto-save to API
     try {
-      const scene = scenes.find((s) => s.id === currentScene.id);
-      await updateSceneGenerationOverride(currentScene.id, scene?.generationOverride ?? null);
-      await loadProject();
+      await updateSceneGenerationOverride(currentScene.id, override);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save generation settings");
-    } finally {
-      setActionLoading(null);
     }
   }
 
@@ -626,6 +638,7 @@ export default function ProjectView() {
             scenes={scenes}
             currentIndex={currentIndex}
             onNavigate={setCurrentIndex}
+            regeneratingSceneIds={regeneratingSceneIds}
           />
         </div>
 
@@ -641,9 +654,8 @@ export default function ProjectView() {
               onClearStyleOverride={handleClearSceneStyleOverride}
               styleLoading={actionLoading === "save-scene-style" || actionLoading === "regen-scene-prompt"}
               onSetGenerationOverride={handleSetGenerationOverride}
-              onSaveGenerationOverride={handleSaveGenerationOverride}
               onClearGenerationOverride={handleClearGenerationOverride}
-              generationLoading={actionLoading === "save-gen-override"}
+              promptRegenerating={regeneratingSceneIds.has(currentScene.id)}
               projectConfig={project.config}
             />
           )}

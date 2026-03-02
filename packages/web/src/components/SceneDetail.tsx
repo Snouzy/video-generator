@@ -5,6 +5,7 @@ import { getTagColor } from "./ImageCard";
 import { mediaUrl } from "../api/client";
 import StyleTemplateSelector from "./StyleTemplateSelector";
 import ModelSelector from "./ModelSelector";
+import PromptDisplay from "./PromptDisplay";
 
 interface SceneDetailProps {
   scene: Scene;
@@ -14,9 +15,8 @@ interface SceneDetailProps {
   onClearStyleOverride: () => void;
   styleLoading?: boolean;
   onSetGenerationOverride: (override: SceneGenerationOverride) => void;
-  onSaveGenerationOverride: () => void;
   onClearGenerationOverride: () => void;
-  generationLoading?: boolean;
+  promptRegenerating?: boolean;
   projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number };
 }
 
@@ -28,19 +28,13 @@ export default function SceneDetail({
   onClearStyleOverride,
   styleLoading = false,
   onSetGenerationOverride,
-  onSaveGenerationOverride,
   onClearGenerationOverride,
-  generationLoading = false,
+  promptRegenerating = false,
   projectConfig,
 }: SceneDetailProps) {
-  const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [showNarrative, setShowNarrative] = useState(false);
   const [showStyleOverride, setShowStyleOverride] = useState(false);
   const [showGenerationOverride, setShowGenerationOverride] = useState(false);
-
-  const prompt = scene.imagePrompt || "";
-  const truncatedPrompt =
-    prompt.length > 150 ? prompt.slice(0, 150) + "..." : prompt;
 
   return (
     <div className="px-6 py-4 border-b border-gray-800">
@@ -68,19 +62,10 @@ export default function SceneDetail({
         )}
       </div>
 
-      {prompt && (
-        <p className="text-sm text-gray-400 leading-relaxed">
-          &quot;{showFullPrompt ? prompt : truncatedPrompt}&quot;
-          {prompt.length > 150 && (
-            <button
-              className="ml-2 text-blue-400 hover:text-blue-300 text-sm"
-              onClick={() => setShowFullPrompt(!showFullPrompt)}
-            >
-              {showFullPrompt ? "Show less" : "Show more"}
-            </button>
-          )}
-        </p>
-      )}
+      <PromptDisplay
+        prompt={scene.imagePrompt || ""}
+        loading={promptRegenerating}
+      />
 
       {scene.narrativeText && (
         <div className="mt-2">
@@ -230,24 +215,16 @@ export default function SceneDetail({
               </div>
             </div>
 
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={onSaveGenerationOverride}
-                disabled={generationLoading}
-                className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 disabled:bg-gray-700 text-white rounded-lg text-xs font-medium transition-colors"
-              >
-                {generationLoading ? "Saving..." : "Save"}
-              </button>
-              {scene.generationOverride && (
+            {scene.generationOverride && (
+              <div className="pt-1">
                 <button
                   onClick={onClearGenerationOverride}
-                  disabled={generationLoading}
-                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-gray-300 rounded-lg text-xs font-medium transition-colors"
+                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-xs font-medium transition-colors"
                 >
                   Reset to project defaults
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

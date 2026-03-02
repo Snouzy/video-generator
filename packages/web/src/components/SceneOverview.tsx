@@ -4,6 +4,7 @@ interface SceneOverviewProps {
   scenes: Scene[];
   currentIndex: number;
   onNavigate: (index: number) => void;
+  regeneratingSceneIds?: Set<number>;
 }
 
 function statusBadge(completed: number, total: number, failed: number) {
@@ -14,7 +15,7 @@ function statusBadge(completed: number, total: number, failed: number) {
   return { label: `0/${total}`, color: "bg-gray-700 text-gray-400" };
 }
 
-export default function SceneOverview({ scenes, currentIndex, onNavigate }: SceneOverviewProps) {
+export default function SceneOverview({ scenes, currentIndex, onNavigate, regeneratingSceneIds = new Set() }: SceneOverviewProps) {
   return (
     <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-800">
@@ -32,6 +33,7 @@ export default function SceneOverview({ scenes, currentIndex, onNavigate }: Scen
           const clipBadge = statusBadge(clipCompleted, clips.length, clipFailed);
           const hasSelectedImage = images.some((i) => i.isSelected);
           const hasSelectedClip = clips.some((c) => c.isSelected);
+          const isRegenerating = regeneratingSceneIds.has(scene.id);
           const isCurrent = index === currentIndex;
 
           return (
@@ -50,8 +52,11 @@ export default function SceneOverview({ scenes, currentIndex, onNavigate }: Scen
               </span>
 
               {/* Title */}
-              <span className="text-sm text-gray-300 truncate flex-1 min-w-0">
+              <span className="text-sm text-gray-300 truncate flex-1 min-w-0 flex items-center gap-1.5">
                 {scene.title}
+                {isRegenerating && (
+                  <span className="w-3 h-3 border-2 border-gray-600 border-t-blue-400 rounded-full animate-spin shrink-0" />
+                )}
               </span>
 
               {/* Status badges */}

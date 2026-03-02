@@ -163,7 +163,7 @@ export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   imagesPerScene: 1,
   clipsPerScene: 1,
   imageModels: ["nano-banana", "nano-banana-pro", "flux"],
-  animationModels: ["wan-i2v", "kling", "minimax"],
+  animationModels: ["wan-i2v", "kling-v1.6", "kling-v2.6-pro", "kling-o3-pro", "minimax", "veo3.1"],
   stylePromptPrefix: BUILTIN_STYLE_TEMPLATES[0].stylePromptPrefix,
   styleTemplate: {
     sourceId: BUILTIN_STYLE_TEMPLATES[0].sourceId,

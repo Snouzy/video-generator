@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
 import ProjectList from "./pages/ProjectList";
 import ProjectCreate from "./pages/ProjectCreate";
 import ProjectView from "./pages/ProjectView";
@@ -6,6 +7,7 @@ import ProjectView from "./pages/ProjectView";
 function App() {
   return (
     <BrowserRouter>
+      <Toaster theme="dark" position="bottom-right" richColors />
       <Routes>
         <Route path="/" element={<ProjectList />} />
         <Route path="/projects/new" element={<ProjectCreate />} />
