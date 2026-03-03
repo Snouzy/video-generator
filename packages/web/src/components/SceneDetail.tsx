@@ -16,6 +16,7 @@ interface SceneDetailProps {
   styleLoading?: boolean;
   onSetGenerationOverride: (override: SceneGenerationOverride) => void;
   onClearGenerationOverride: () => void;
+  onUpdateNarrativeText: (text: string) => void;
   promptRegenerating?: boolean;
   projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; format?: VideoFormat; textLanguage?: TextLanguage };
 }
@@ -29,6 +30,7 @@ export default function SceneDetail({
   styleLoading = false,
   onSetGenerationOverride,
   onClearGenerationOverride,
+  onUpdateNarrativeText,
   promptRegenerating = false,
   projectConfig,
 }: SceneDetailProps) {
@@ -67,7 +69,7 @@ export default function SceneDetail({
         loading={promptRegenerating}
       />
 
-      {scene.narrativeText && (
+      {scene.narrativeText != null && (
         <div className="mt-2">
           <button
             className="text-xs text-gray-500 hover:text-gray-400 flex items-center gap-1"
@@ -89,9 +91,12 @@ export default function SceneDetail({
             Narrative text
           </button>
           {showNarrative && (
-            <p className="mt-1 text-sm text-gray-500 leading-relaxed pl-4 border-l-2 border-gray-700">
-              {scene.narrativeText}
-            </p>
+            <textarea
+              value={scene.narrativeText}
+              onChange={(e) => onUpdateNarrativeText(e.target.value)}
+              rows={3}
+              className="mt-1 w-full text-sm text-gray-300 leading-relaxed pl-4 border-l-2 border-gray-700 bg-transparent resize-y focus:outline-none focus:border-l-blue-500"
+            />
           )}
         </div>
       )}

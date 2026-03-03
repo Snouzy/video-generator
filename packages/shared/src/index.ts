@@ -315,6 +315,7 @@ export interface SceneGenerationOverride {
 }
 
 export interface UpdateSceneRequest {
+  narrativeText?: string;
   imagePrompt?: string;
   animationPrompt?: string;
   styleOverride?: StyleTemplateValue | null;

@@ -84,7 +84,7 @@ router.get("/projects/:id/scenes", async (req, res) => {
 router.patch("/scenes/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { imagePrompt, animationPrompt, styleOverride, generationOverride } = req.body as UpdateSceneRequest;
+    const { narrativeText, imagePrompt, animationPrompt, styleOverride, generationOverride } = req.body as UpdateSceneRequest;
 
     const scene = await prisma.scene.findUnique({ where: { id } });
     if (!scene) {
@@ -93,6 +93,7 @@ router.patch("/scenes/:id", async (req, res) => {
     }
 
     const updateData: Record<string, any> = {};
+    if (narrativeText !== undefined) updateData.narrativeText = narrativeText;
     if (imagePrompt !== undefined) updateData.imagePrompt = imagePrompt;
     if (animationPrompt !== undefined) updateData.animationPrompt = animationPrompt;
     if (styleOverride !== undefined) updateData.styleOverride = styleOverride;

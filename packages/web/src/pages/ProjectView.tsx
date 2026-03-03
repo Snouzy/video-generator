@@ -26,6 +26,7 @@ import {
   updateSceneStyleOverride,
   regenerateScenePrompt,
   updateSceneGenerationOverride,
+  updateScene,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
@@ -428,6 +429,22 @@ export default function ProjectView() {
     }
   }
 
+  async function handleUpdateNarrativeText(text: string) {
+    if (!currentScene) return;
+    // Optimistic local update
+    setScenes((prev) =>
+      prev.map((s) =>
+        s.id === currentScene.id ? { ...s, narrativeText: text } : s
+      )
+    );
+    // Auto-save to API
+    try {
+      await updateScene(currentScene.id, { narrativeText: text });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update narrative text");
+    }
+  }
+
   async function handleClearGenerationOverride() {
     if (!currentScene) return;
     setActionLoading("save-gen-override");
@@ -679,6 +696,7 @@ export default function ProjectView() {
               styleLoading={actionLoading === "save-scene-style" || actionLoading === "regen-scene-prompt"}
               onSetGenerationOverride={handleSetGenerationOverride}
               onClearGenerationOverride={handleClearGenerationOverride}
+              onUpdateNarrativeText={handleUpdateNarrativeText}
               promptRegenerating={regeneratingSceneIds.has(currentScene.id)}
               projectConfig={project.config}
             />
