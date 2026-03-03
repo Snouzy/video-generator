@@ -91,7 +91,8 @@ export async function uploadToFal(localPath: string): Promise<string> {
 export async function generateImage(
   model: string,
   prompt: string,
-  aspectRatio: string = "16:9"
+  aspectRatio: string = "16:9",
+  resolution?: string
 ): Promise<{ requestId: string; imageUrl?: string }> {
   const modelId = IMAGE_MODEL_IDS[model];
   if (!modelId) throw new Error(`Unknown image model: ${model}`);
@@ -106,7 +107,7 @@ export async function generateImage(
       output_format: "png",
     };
     if (model === "nano-banana-pro") {
-      (input as any).resolution = "2K";
+      input.resolution = resolution ?? "2K";
     }
   } else if (model === "nano-banana-2") {
     input = {
@@ -115,6 +116,9 @@ export async function generateImage(
       num_images: 1,
       output_format: "png",
     };
+    if (resolution) {
+      input.resolution = resolution;
+    }
   } else if (model === "gemini-flash") {
     input = {
       prompt,

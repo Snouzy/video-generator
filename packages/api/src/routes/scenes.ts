@@ -36,7 +36,7 @@ function getEffectiveStyle(
 function getEffectiveGeneration(
   config: ProjectConfig,
   scene: { generationOverride?: any }
-): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; imageAspectRatio: string; clipOptions?: ClipGenerationOptions } {
+): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; imageAspectRatio: string; imageResolutions?: Record<string, string>; clipOptions?: ClipGenerationOptions } {
   const override = scene.generationOverride as SceneGenerationOverride | null | undefined;
   const clipParams = override?.clipParams;
   return {
@@ -45,6 +45,7 @@ function getEffectiveGeneration(
     imagesPerScene: override?.imagesPerScene ?? config.imagesPerScene,
     clipsPerScene: override?.clipsPerScene ?? config.clipsPerScene ?? 1,
     imageAspectRatio: override?.imageParams?.aspectRatio ?? config.format,
+    imageResolutions: override?.imageParams?.resolutions,
     clipOptions: clipParams ? {
       duration: clipParams.duration,
       generateAudio: clipParams.generateAudio,
@@ -165,7 +166,7 @@ router.post("/scenes/:id/generate-images", async (req, res) => {
       await Promise.all(
         imageRecords.map(async (imageRecord) => {
           try {
-            const result = await generateImage(imageRecord.model, imageRecord.prompt, gen.imageAspectRatio);
+            const result = await generateImage(imageRecord.model, imageRecord.prompt, gen.imageAspectRatio, gen.imageResolutions?.[imageRecord.model]);
             let localUrl: string | null = null;
             if (result.imageUrl) {
               localUrl = await downloadToLocal(result.imageUrl, "images", `img-${imageRecord.id}`);

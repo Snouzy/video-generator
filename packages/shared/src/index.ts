@@ -169,6 +169,20 @@ export const AVAILABLE_IMAGE_MODELS: ModelDefinition[] = [
   { id: "gemini-flash", label: "Gemini Flash" },
 ];
 
+export const IMAGE_MODEL_RESOLUTIONS: Record<string, { id: string; label: string }[]> = {
+  "nano-banana-pro": [
+    { id: "1K", label: "1K" },
+    { id: "2K", label: "2K" },
+    { id: "4K", label: "4K (2x cost)" },
+  ],
+  "nano-banana-2": [
+    { id: "0.5K", label: "0.5K" },
+    { id: "1K", label: "1K" },
+    { id: "2K", label: "2K (1.5x cost)" },
+    { id: "4K", label: "4K (2x cost)" },
+  ],
+};
+
 export const AVAILABLE_CLIP_MODELS: ModelDefinition[] = [
   { id: "wan-i2v", label: "Wan I2V" },
   { id: "kling-v1.6", label: "Kling v1.6" },
@@ -296,6 +310,7 @@ export interface CreateProjectRequest {
 
 export interface ImageParams {
   aspectRatio?: VideoFormat;
+  resolutions?: Record<string, string>; // modelId -> resolution (e.g. "nano-banana-pro" -> "2K")
 }
 
 export interface ClipParams {

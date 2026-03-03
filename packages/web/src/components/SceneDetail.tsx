@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Scene, StyleTemplateValue, SceneGenerationOverride, VideoFormat, TextLanguage } from "@video-generator/shared";
-import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES } from "@video-generator/shared";
+import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES, IMAGE_MODEL_RESOLUTIONS } from "@video-generator/shared";
 import { getTagColor } from "./ImageCard";
 import { mediaUrl } from "../api/client";
 import StyleTemplateSelector from "./StyleTemplateSelector";
@@ -265,6 +265,37 @@ export default function SceneDetail({
                     <option value="3:4">3:4</option>
                   </select>
                 </div>
+                {(scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? [])
+                  .filter((m) => IMAGE_MODEL_RESOLUTIONS[m])
+                  .map((modelId) => {
+                    const modelDef = AVAILABLE_IMAGE_MODELS.find((m) => m.id === modelId);
+                    const resOptions = IMAGE_MODEL_RESOLUTIONS[modelId];
+                    return (
+                      <div key={modelId}>
+                        <label className="block text-[11px] text-gray-500 mb-1">
+                          {modelDef?.label ?? modelId} resolution
+                        </label>
+                        <select
+                          value={scene.generationOverride?.imageParams?.resolutions?.[modelId] ?? resOptions[0].id}
+                          onChange={(e) => {
+                            const currentResolutions = scene.generationOverride?.imageParams?.resolutions ?? {};
+                            onSetGenerationOverride({
+                              ...scene.generationOverride,
+                              imageParams: {
+                                ...scene.generationOverride?.imageParams,
+                                resolutions: { ...currentResolutions, [modelId]: e.target.value },
+                              },
+                            });
+                          }}
+                          className="px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                        >
+                          {resOptions.map((r) => (
+                            <option key={r.id} value={r.id}>{r.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
 

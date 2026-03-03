@@ -44,7 +44,7 @@ function getEffectiveStyle(
 function getEffectiveGeneration(
   config: ProjectConfig,
   scene: { generationOverride?: any }
-): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; clipOptions?: ClipGenerationOptions } {
+): { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; imageResolutions?: Record<string, string>; clipOptions?: ClipGenerationOptions } {
   const override = scene.generationOverride as SceneGenerationOverride | null | undefined;
   const clipParams = override?.clipParams;
   return {
@@ -52,6 +52,7 @@ function getEffectiveGeneration(
     animationModels: override?.animationModels ?? config.animationModels,
     imagesPerScene: override?.imagesPerScene ?? config.imagesPerScene,
     clipsPerScene: override?.clipsPerScene ?? config.clipsPerScene ?? 1,
+    imageResolutions: override?.imageParams?.resolutions,
     clipOptions: clipParams ? {
       duration: clipParams.duration,
       generateAudio: clipParams.generateAudio,
@@ -279,13 +280,14 @@ router.post("/:id/generate-all-images", async (req, res) => {
     });
 
     // Create all image records first
-    const allImageRecords = [];
+    const allImageRecords: { id: number; model: string; prompt: string; aspectRatio: string; resolution?: string }[] = [];
     for (const scene of project.scenes) {
       if (!scene.imagePrompt) continue;
 
       const style = getEffectiveStyle(config, scene);
       const gen = getEffectiveGeneration(config, scene);
       const effectivePrompt = `${style.stylePromptPrefix}, ${scene.imagePrompt}`;
+      const aspectRatio = gen.imageResolutions ? (scene.generationOverride as any)?.imageParams?.aspectRatio ?? config.format : config.format;
 
       for (const model of gen.imageModels) {
         for (let i = 0; i < gen.imagesPerScene; i++) {
@@ -297,7 +299,13 @@ router.post("/:id/generate-all-images", async (req, res) => {
               status: "processing",
             },
           });
-          allImageRecords.push(imageRecord);
+          allImageRecords.push({
+            id: imageRecord.id,
+            model,
+            prompt: effectivePrompt,
+            aspectRatio,
+            resolution: gen.imageResolutions?.[model],
+          });
         }
       }
     }
@@ -314,28 +322,28 @@ router.post("/:id/generate-all-images", async (req, res) => {
     // Parallel background processing — fal.subscribe is blocking, so a single step
     (async () => {
       await Promise.all(
-        allImageRecords.map(async (imageRecord) => {
+        allImageRecords.map(async (record) => {
           try {
-            const result = await generateImage(imageRecord.model, imageRecord.prompt, config.format);
+            const result = await generateImage(record.model, record.prompt, record.aspectRatio, record.resolution);
             let localUrl: string | null = null;
             if (result.imageUrl) {
-              localUrl = await downloadToLocal(result.imageUrl, "images", `img-${imageRecord.id}`);
+              localUrl = await downloadToLocal(result.imageUrl, "images", `img-${record.id}`);
             }
             await prisma.generatedImage.update({
-              where: { id: imageRecord.id },
+              where: { id: record.id },
               data: {
                 falRequestId: result.requestId,
                 imageUrl: localUrl,
                 status: localUrl ? "completed" : "failed",
               },
             });
-            console.log(`Image ${imageRecord.id} completed: ${localUrl ? "success" : "no url"}`);
+            console.log(`Image ${record.id} completed: ${localUrl ? "success" : "no url"}`);
           } catch (err) {
             await prisma.generatedImage.update({
-              where: { id: imageRecord.id },
+              where: { id: record.id },
               data: { status: "failed" },
             });
-            console.error(`Image ${imageRecord.id} failed:`, err);
+            console.error(`Image ${record.id} failed:`, err);
           }
         })
       );
