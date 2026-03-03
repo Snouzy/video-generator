@@ -25,7 +25,7 @@ export default function ImageGrid({
   }
 
   return (
-    <div className={`grid gap-4 ${format === "9:16" ? "grid-cols-4" : "grid-cols-2"}`}>
+    <div className={`grid gap-4 ${format === "9:16" || format === "3:4" ? "grid-cols-4" : format === "4:3" ? "grid-cols-3" : "grid-cols-2"}`}>
       {images.map((image, index) => (
         <ImageCard
           key={image.id}

@@ -92,14 +92,19 @@ export const calculateMetadata: CalculateMetadataFunction<
   VideoAssemblyProps
 > = async ({ props }) => {
   const fps = 30;
-  const isPortrait = props.format === "9:16";
+  const dimensions = props.format === "9:16"
+    ? { width: 1080, height: 1920 }
+    : props.format === "4:3"
+      ? { width: 1440, height: 1080 }
+      : props.format === "3:4"
+        ? { width: 1080, height: 1440 }
+        : { width: 1920, height: 1080 };
 
   if (props.clips.length === 0) {
     return {
       durationInFrames: 1,
       fps,
-      width: isPortrait ? 1080 : 1920,
-      height: isPortrait ? 1920 : 1080,
+      ...dimensions,
     };
   }
 
@@ -127,8 +132,7 @@ export const calculateMetadata: CalculateMetadataFunction<
   return {
     durationInFrames: totalFrames,
     fps,
-    width: isPortrait ? 1080 : 1920,
-    height: isPortrait ? 1920 : 1080,
+    ...dimensions,
     props: {
       ...props,
       clipDurations: durations,

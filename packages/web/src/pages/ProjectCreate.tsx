@@ -152,6 +152,30 @@ export default function ProjectCreate() {
               </button>
               <button
                 type="button"
+                onClick={() => setFormat("4:3")}
+                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-colors border ${
+                  format === "4:3"
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                }`}
+              >
+                <span className="inline-block w-6 h-4.5 border border-current rounded-sm align-middle mr-2" />
+                4:3
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormat("3:4")}
+                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-colors border ${
+                  format === "3:4"
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                }`}
+              >
+                <span className="inline-block w-3.5 h-4.5 border border-current rounded-sm align-middle mr-2" />
+                3:4
+              </button>
+              <button
+                type="button"
                 onClick={() => setFormat("9:16")}
                 className={`flex-1 py-3 rounded-lg font-medium text-sm transition-colors border ${
                   format === "9:16"

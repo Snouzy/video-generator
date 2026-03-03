@@ -215,6 +215,31 @@ export default function SceneDetail({
               </div>
             </div>
 
+            {/* Image parameters */}
+            <div className="border-t border-gray-700/50 pt-3 mt-1">
+              <label className="block text-xs font-medium text-gray-400 mb-2">Image parameters</label>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Aspect ratio</label>
+                  <select
+                    value={scene.generationOverride?.imageParams?.aspectRatio ?? projectConfig?.format ?? "16:9"}
+                    onChange={(e) =>
+                      onSetGenerationOverride({
+                        ...scene.generationOverride,
+                        imageParams: { ...scene.generationOverride?.imageParams, aspectRatio: e.target.value as VideoFormat },
+                      })
+                    }
+                    className="px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                    <option value="4:3">4:3</option>
+                    <option value="3:4">3:4</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             {/* Clip parameters */}
             <div className="border-t border-gray-700/50 pt-3 mt-1">
               <label className="block text-xs font-medium text-gray-400 mb-2">Clip parameters</label>
@@ -243,13 +268,15 @@ export default function SceneDetail({
                     onChange={(e) =>
                       onSetGenerationOverride({
                         ...scene.generationOverride,
-                        clipParams: { ...scene.generationOverride?.clipParams, aspectRatio: e.target.value as "16:9" | "9:16" },
+                        clipParams: { ...scene.generationOverride?.clipParams, aspectRatio: e.target.value as VideoFormat },
                       })
                     }
                     className="px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
                   >
                     <option value="16:9">16:9</option>
                     <option value="9:16">9:16</option>
+                    <option value="4:3">4:3</option>
+                    <option value="3:4">3:4</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-2 pt-3.5">
