@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { VideoFormat, ElevenLabsVoice } from "@video-generator/shared";
+import type { VideoFormat, ElevenLabsVoice, TextLanguage } from "@video-generator/shared";
+import { AVAILABLE_TEXT_LANGUAGES } from "@video-generator/shared";
 import { createProject, getVoices } from "../api/client";
 
 export default function ProjectCreate() {
   const [title, setTitle] = useState("");
   const [scriptContent, setScriptContent] = useState("");
   const [format, setFormat] = useState<VideoFormat>("16:9");
+  const [textLanguage, setTextLanguage] = useState<TextLanguage>("French");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voices, setVoices] = useState<ElevenLabsVoice[]>([]);
@@ -42,7 +44,7 @@ export default function ProjectCreate() {
       const project = await createProject({
         title: title.trim(),
         scriptContent: scriptContent.trim(),
-        config: { format, voiceId: selectedVoiceId },
+        config: { format, voiceId: selectedVoiceId, textLanguage },
       });
       navigate(`/projects/${project.id}`);
     } catch (err) {
@@ -187,6 +189,27 @@ export default function ProjectCreate() {
                 9:16 Short / TikTok
               </button>
             </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="textLanguage"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
+              Langue du texte (s'il y en a)
+            </label>
+            <select
+              id="textLanguage"
+              value={textLanguage}
+              onChange={(e) => setTextLanguage(e.target.value as TextLanguage)}
+              className="w-full bg-slate-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
+            >
+              {AVAILABLE_TEXT_LANGUAGES.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

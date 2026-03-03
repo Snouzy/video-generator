@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
-import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride } from "@video-generator/shared";
-import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS } from "@video-generator/shared";
+import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride, TextLanguage } from "@video-generator/shared";
+import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES } from "@video-generator/shared";
 import {
   getProject,
   getScenes,
@@ -357,12 +357,18 @@ export default function ProjectView() {
 
   async function handleSetSceneStyle(style: StyleTemplateValue) {
     if (!currentScene) return;
-    // Update scenes locally for instant feedback
+    // Optimistic local update
     setScenes((prev) =>
       prev.map((s) =>
         s.id === currentScene.id ? { ...s, styleOverride: style } : s
       )
     );
+    // Auto-save to API
+    try {
+      await updateSceneStyleOverride(currentScene.id, style);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save scene style");
+    }
   }
 
   async function handleSaveSceneStyleOverride() {
@@ -626,6 +632,23 @@ export default function ProjectView() {
                   className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                Langue du texte (s'il y en a)
+              </label>
+              <select
+                value={project.config?.textLanguage ?? "French"}
+                onChange={(e) => updateProjectConfig(projectId, { textLanguage: e.target.value as TextLanguage }).then(loadProject)}
+                className="px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              >
+                {AVAILABLE_TEXT_LANGUAGES.map((lang) => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

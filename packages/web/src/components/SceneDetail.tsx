@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { Scene, StyleTemplateValue, SceneGenerationOverride, VideoFormat } from "@video-generator/shared";
-import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS } from "@video-generator/shared";
+import type { Scene, StyleTemplateValue, SceneGenerationOverride, VideoFormat, TextLanguage } from "@video-generator/shared";
+import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES } from "@video-generator/shared";
 import { getTagColor } from "./ImageCard";
 import { mediaUrl } from "../api/client";
 import StyleTemplateSelector from "./StyleTemplateSelector";
@@ -17,7 +17,7 @@ interface SceneDetailProps {
   onSetGenerationOverride: (override: SceneGenerationOverride) => void;
   onClearGenerationOverride: () => void;
   promptRegenerating?: boolean;
-  projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; format?: VideoFormat };
+  projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; format?: VideoFormat; textLanguage?: TextLanguage };
 }
 
 export default function SceneDetail({
@@ -213,6 +213,29 @@ export default function SceneDetail({
                   className="w-20 px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
                 />
               </div>
+            </div>
+
+            {/* Text language */}
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                Langue du texte (s'il y en a)
+              </label>
+              <select
+                value={scene.generationOverride?.textLanguage ?? projectConfig?.textLanguage ?? "French"}
+                onChange={(e) =>
+                  onSetGenerationOverride({
+                    ...scene.generationOverride,
+                    textLanguage: e.target.value as TextLanguage,
+                  })
+                }
+                className="px-2.5 py-1 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              >
+                {AVAILABLE_TEXT_LANGUAGES.map((lang) => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Image parameters */}

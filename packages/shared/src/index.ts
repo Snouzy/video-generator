@@ -122,6 +122,38 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
 - Include real-world contextual props that ground the scene: smartphones, energy drinks, fast food packaging, branded logos (or parody versions), work tools, vehicles, Uber Eats bags, headphones, cigarettes, etc.`,
     isBuiltin: true,
   },
+  {
+    id: "builtin:fitcoach",
+    name: "Fit Coach / Social Media",
+    description: "Avatar 3D coach sportif stylisé, typographie bold, grid background, palette orange/noir",
+    sourceId: "builtin:fitcoach",
+    stylePromptPrefix: "Modern social media graphic design, stylized 3D avatar of an athletic male coach character with short dark brown hair with a bright orange streak, fitted black athletic shirt with white 'FD' logo, orange sneakers and orange whistle, bold heavy sans-serif typography in black and bright orange (#FF5722), light gray grid/notebook paper background, clean graphic layout, Instagram carousel style, fitness and sports coaching aesthetic",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST feature the same recurring 3D avatar character — a friendly, athletic male sports coach. He has: short dark brown hair with a modern fade and a distinctive bright orange streak (#FF5722) above his right temple, light stubble, blue eyes, muscular but approachable build, broad shoulders. He wears a fitted black athletic t-shirt with a white 'FD' logo on the chest, black joggers, bright orange sneakers (#FF5722), an orange whistle on a black cord around his neck, and a black smartwatch with an orange band on his left wrist. The style is modern and slightly stylized like Notion or Headspace characters — NOT hyper-realistic.
+- The composition should look like a polished Instagram carousel slide or social media post. Use BOLD, heavy sans-serif typography as a major visual element — big impactful headlines, numbers, and text overlays are part of the image, not just the subject.
+- Color palette is strictly: bright orange (#FF5722) for accents, highlights, and key text; black (#1A1A1A) for headlines and the avatar's clothing; white for contrast text; light gray grid/notebook paper background for light slides, or dark charcoal (#1A1A1A) grid background for dark slides.
+- Include graphic design elements typical of social media content: arrows, hand-drawn circles, emoji, icons, "NEW" badges, calendar elements, comparison layouts (VS), numbered lists, checkmarks.
+- The avatar should have expressive poses matching the content: pointing, shrugging, celebrating, thinking, presenting. He should feel like a brand mascot guiding the viewer through the content.
+- Backgrounds alternate between: light mode (white/light gray with subtle grid lines like notebook paper, with a faint repeating 'FD' watermark pattern) and dark mode (dark charcoal #1A1A1A with subtle grid lines).
+- Think of the overall aesthetic as a fitness influencer's polished Instagram content — professional, energetic, bold, with strong visual hierarchy. Every image should feel like it could be swiped through in a carousel.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:scientific",
+    name: "Scientific / Etude",
+    description: "Figures scientifiques style publication, graphiques, schémas, palette sobre",
+    sourceId: "builtin:scientific",
+    stylePromptPrefix: "Scientific educational illustration inspired by figures found in medical articles and research journals, clean minimalist style, light background, ample negative space, data visualization with bar charts line graphs pie charts, biological or hormonal pathway diagrams, simple human silhouettes, arrows indicating cause-effect relationships and variations, sober readable color palette of blue green orange red, sans-serif academic typography for titles legends percentages and biomarker names, no cartoon no photorealism no 3D effects, only clean graphs and diagrams like a scientific publication figure",
+    llmSystemInstructions: `- Each image prompt MUST describe a single, self-contained scientific figure — like one figure from a research paper. Think of it as "Figure 1", "Figure 2", etc.
+- Use data visualization elements appropriate to the narrative content: bar charts, line graphs, scatter plots, pie/donut charts, hormonal pathway diagrams, dose-response curves, before/after comparisons, timeline progressions.
+- Include simple human silhouettes or anatomical outlines when relevant (e.g., muscle groups, organs, hormonal axes like the HPA axis). Keep them schematic, never photorealistic.
+- Use arrows (→, ↑, ↓) to indicate cause-effect relationships, increases, decreases, and feedback loops. These are essential to the scientific visual language.
+- Color palette MUST be sober and readable: use blue for primary data, green for positive outcomes, orange for moderate/warning, red for negative outcomes or inflammation markers. Use gray for baselines and controls.
+- All text elements in the figure (axis labels, legend entries, percentages, biomarker names like "cortisol", "testosterone", "VO2max", "HRV") should use clean sans-serif typography — like you'd see in a Nature or JAMA figure.
+- Include a short centered caption at the bottom of the image in italic, summarizing the key finding, e.g.: "Acute effects of HIIT on appetite hormones in trained athletes" or "Dose-response relationship between sleep duration and recovery markers."
+- The overall composition should feel like a polished figure from a peer-reviewed publication: structured, precise, informative. NO decorative elements, no gradients, no shadows, no 3D effects.
+- Vary the figure types across scenes to keep the visual narrative interesting: don't repeat the same chart type for every scene.`,
+    isBuiltin: true,
+  },
 ];
 
 export interface ModelDefinition {
@@ -146,6 +178,14 @@ export const AVAILABLE_CLIP_MODELS: ModelDefinition[] = [
   { id: "veo3.1", label: "Veo 3.1" },
 ];
 
+export type TextLanguage = "French" | "English" | "Spanish";
+
+export const AVAILABLE_TEXT_LANGUAGES: { id: TextLanguage; label: string }[] = [
+  { id: "French", label: "Francais" },
+  { id: "English", label: "English" },
+  { id: "Spanish", label: "Espanol" },
+];
+
 export interface ProjectConfig {
   imagesPerScene: number;
   clipsPerScene: number;
@@ -157,6 +197,7 @@ export interface ProjectConfig {
   format: VideoFormat;
   voiceId: string;
   ttsModel: string;
+  textLanguage: TextLanguage;
 }
 
 export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
@@ -174,6 +215,7 @@ export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   format: "16:9",
   voiceId: "",
   ttsModel: "eleven_multilingual_v2",
+  textLanguage: "French",
 };
 
 export interface ElevenLabsVoice {
@@ -269,6 +311,7 @@ export interface SceneGenerationOverride {
   clipsPerScene?: number;
   imageParams?: ImageParams;
   clipParams?: ClipParams;
+  textLanguage?: TextLanguage;
 }
 
 export interface UpdateSceneRequest {

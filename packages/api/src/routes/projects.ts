@@ -19,24 +19,26 @@ const prisma = new PrismaClient();
 
 function getEffectiveStyle(
   projectConfig: ProjectConfig,
-  scene: { styleOverride?: any }
+  scene: { styleOverride?: any; generationOverride?: any }
 ): { stylePromptPrefix: string; llmSystemInstructions: string } {
+  let instructions: string;
+  let prefix: string;
+
   if (scene.styleOverride) {
-    return {
-      stylePromptPrefix: scene.styleOverride.stylePromptPrefix,
-      llmSystemInstructions: scene.styleOverride.llmSystemInstructions,
-    };
+    prefix = scene.styleOverride.stylePromptPrefix;
+    instructions = scene.styleOverride.llmSystemInstructions;
+  } else if (projectConfig.styleTemplate) {
+    prefix = projectConfig.styleTemplate.stylePromptPrefix;
+    instructions = projectConfig.styleTemplate.llmSystemInstructions;
+  } else {
+    prefix = projectConfig.stylePromptPrefix;
+    instructions = BUILTIN_STYLE_TEMPLATES[0].llmSystemInstructions;
   }
-  if (projectConfig.styleTemplate) {
-    return {
-      stylePromptPrefix: projectConfig.styleTemplate.stylePromptPrefix,
-      llmSystemInstructions: projectConfig.styleTemplate.llmSystemInstructions,
-    };
-  }
-  return {
-    stylePromptPrefix: projectConfig.stylePromptPrefix,
-    llmSystemInstructions: BUILTIN_STYLE_TEMPLATES[0].llmSystemInstructions,
-  };
+
+  const lang = scene.generationOverride?.textLanguage || projectConfig.textLanguage || "French";
+  instructions += `\n- ALL text, typography, headlines, labels, and captions visible in the image MUST be written in ${lang}. Never use any other language for visible text.`;
+
+  return { stylePromptPrefix: prefix, llmSystemInstructions: instructions };
 }
 
 function getEffectiveGeneration(
