@@ -183,6 +183,112 @@ export const IMAGE_MODEL_RESOLUTIONS: Record<string, { id: string; label: string
   ],
 };
 
+// ---------------------------------------------------------------------------
+// fal.ai Model Pricing
+// ---------------------------------------------------------------------------
+
+export interface ImageModelPricing {
+  basePrice: number;
+  resolutionPricing?: Record<string, number>;
+}
+
+export interface ClipModelPricing {
+  type: "flat" | "per_second";
+  basePrice: number;
+  audioPricePerSecond?: number;
+}
+
+export const IMAGE_MODEL_PRICING: Record<string, ImageModelPricing> = {
+  "nano-banana": { basePrice: 0.039 },
+  "nano-banana-pro": {
+    basePrice: 0.15,
+    resolutionPricing: { "1K": 0.15, "2K": 0.15, "4K": 0.30 },
+  },
+  "nano-banana-2": {
+    basePrice: 0.08,
+    resolutionPricing: { "0.5K": 0.06, "1K": 0.08, "2K": 0.12, "4K": 0.16 },
+  },
+  "flux": { basePrice: 0.003 },
+  "gemini-flash": { basePrice: 0.039 },
+};
+
+export const CLIP_MODEL_PRICING: Record<string, ClipModelPricing> = {
+  "wan-i2v": { type: "flat", basePrice: 0.40 },
+  "kling-v1.6": { type: "per_second", basePrice: 0.098 },
+  "kling-v2.6-pro": { type: "per_second", basePrice: 0.07, audioPricePerSecond: 0.14 },
+  "kling-o3-pro": { type: "per_second", basePrice: 0.224, audioPricePerSecond: 0.28 },
+  "minimax": { type: "flat", basePrice: 0.50 },
+  "veo3.1": { type: "per_second", basePrice: 0.20, audioPricePerSecond: 0.40 },
+};
+
+export interface CostBreakdownItem {
+  model: string;
+  type: "image" | "clip";
+  unitCost: number;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface SceneCostEstimate {
+  imageCost: number;
+  clipCost: number;
+  totalCost: number;
+  breakdown: CostBreakdownItem[];
+}
+
+export function calculateSceneCost(params: {
+  imageModels: string[];
+  imagesPerScene: number;
+  imageResolutions?: Record<string, string>;
+  animationModels: string[];
+  clipsPerScene: number;
+  clipDuration?: number;
+  generateAudio?: boolean;
+}): SceneCostEstimate {
+  const breakdown: CostBreakdownItem[] = [];
+  let imageCost = 0;
+  let clipCost = 0;
+
+  // Image costs
+  for (const model of params.imageModels) {
+    const pricing = IMAGE_MODEL_PRICING[model];
+    if (!pricing) continue;
+
+    const resolution = params.imageResolutions?.[model];
+    const unitCost = (resolution && pricing.resolutionPricing?.[resolution]) ?? pricing.basePrice;
+    const quantity = params.imagesPerScene;
+    const subtotal = unitCost * quantity;
+
+    breakdown.push({ model, type: "image", unitCost, quantity, subtotal });
+    imageCost += subtotal;
+  }
+
+  // Clip costs
+  const duration = params.clipDuration ?? 5;
+  for (const model of params.animationModels) {
+    const pricing = CLIP_MODEL_PRICING[model];
+    if (!pricing) continue;
+
+    let unitCost: number;
+    if (pricing.type === "flat") {
+      unitCost = pricing.basePrice;
+    } else {
+      const pricePerSecond = params.generateAudio && pricing.audioPricePerSecond
+        ? pricing.audioPricePerSecond
+        : pricing.basePrice;
+      unitCost = pricePerSecond * duration;
+    }
+
+    const quantity = params.clipsPerScene;
+    const subtotal = unitCost * quantity;
+
+    breakdown.push({ model, type: "clip", unitCost, quantity, subtotal });
+    clipCost += subtotal;
+  }
+
+  return { imageCost, clipCost, totalCost: imageCost + clipCost, breakdown };
+}
+
 export const AVAILABLE_CLIP_MODELS: ModelDefinition[] = [
   { id: "wan-i2v", label: "Wan I2V" },
   { id: "kling-v1.6", label: "Kling v1.6" },

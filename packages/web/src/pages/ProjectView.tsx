@@ -18,7 +18,6 @@ import {
   selectClip,
   regenerateImage,
   regenerateClip,
-  renderProject,
   generateNarration,
   getVoices,
   updateProjectConfig,
@@ -283,18 +282,6 @@ export default function ProjectView() {
       await loadSceneMedia();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to regenerate clip");
-    }
-  }
-
-  async function handleRenderVideo() {
-    setActionLoading("render");
-    try {
-      await renderProject(projectId);
-      await loadProject();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to start render");
-    } finally {
-      setActionLoading(null);
     }
   }
 
@@ -567,7 +554,6 @@ export default function ProjectView() {
         onToggleSettings={() => setShowSettings((v) => !v)}
         onGenerateAllImages={handleGenerateAll}
         onGenerateAllClips={handleGenerateAllClips}
-        onRenderVideo={handleRenderVideo}
         actionLoading={actionLoading}
         projectStatus={project.status}
       />

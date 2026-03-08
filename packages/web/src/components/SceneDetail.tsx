@@ -6,6 +6,7 @@ import { mediaUrl } from "../api/client";
 import StyleTemplateSelector from "./StyleTemplateSelector";
 import ModelSelector from "./ModelSelector";
 import PromptDisplay from "./PromptDisplay";
+import CostEstimate from "./CostEstimate";
 
 interface SceneDetailProps {
   scene: Scene;
@@ -368,6 +369,16 @@ export default function SceneDetail({
                 </div>
               </div>
             </div>
+
+            <CostEstimate
+              imageModels={scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? []}
+              imagesPerScene={scene.generationOverride?.imagesPerScene ?? projectConfig?.imagesPerScene ?? 1}
+              imageResolutions={scene.generationOverride?.imageParams?.resolutions}
+              animationModels={scene.generationOverride?.animationModels ?? projectConfig?.animationModels ?? []}
+              clipsPerScene={scene.generationOverride?.clipsPerScene ?? projectConfig?.clipsPerScene ?? 1}
+              clipDuration={scene.generationOverride?.clipParams?.duration ?? 5}
+              generateAudio={scene.generationOverride?.clipParams?.generateAudio ?? false}
+            />
 
             {scene.generationOverride && (
               <div className="pt-1">
