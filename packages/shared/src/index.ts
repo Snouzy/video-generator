@@ -154,6 +154,79 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
 - Vary the figure types across scenes to keep the visual narrative interesting: don't repeat the same chart type for every scene.`,
     isBuiltin: true,
   },
+  {
+    id: "builtin:comic",
+    name: "Bande Dessinée",
+    description: "Style BD franco-belge, traits encrés nets, aplats de couleur, cases dynamiques",
+    sourceId: "builtin:comic",
+    stylePromptPrefix: "Franco-Belgian comic book style illustration, clean bold ink outlines, flat color fills, dynamic composition, slight halftone texture, vivid saturated colors, expressive characters, hand-drawn aesthetic, thick black contour lines, editorial comic art",
+    llmSystemInstructions: `- Describe the scene as a single comic book panel or splash page. Use dynamic composition with dramatic angles (low-angle, bird's eye, Dutch tilt) to add energy.
+- Characters should have expressive, slightly exaggerated features in the Franco-Belgian BD tradition (think Tintin, Astérix, Blacksad, Moebius). Clear facial expressions, defined body language, stylized but recognizable proportions.
+- Use bold ink outlines with varying line weight — thicker for foreground elements, thinner for details and background. This is essential to the BD aesthetic.
+- Colors should be flat fills with minimal gradients, using a vivid and saturated palette. Add subtle halftone dot textures or crosshatching for shadows and depth where appropriate.
+- Backgrounds should be detailed and hand-drawn: cityscapes, interiors, landscapes. They set the tone as much as the characters. Include environmental storytelling details (posters, signs, objects) that enrich the narrative.
+- Include motion lines, impact effects, or small visual sound effects (onomatopoeia) where they enhance the scene's energy. Keep it tasteful — this is editorial BD, not American superhero comics.
+- The overall feel should be a polished album-quality illustration — something you'd see printed in a hardcover BD from Dargaud, Dupuis, or Casterman.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:pixel-art",
+    name: "Pixel Art / Retro Gaming",
+    description: "Style rétro 16-bit/32-bit, pixels visibles, palette limitée, nostalgie gaming",
+    sourceId: "builtin:pixel-art",
+    stylePromptPrefix: "Pixel art illustration, retro 16-bit and 32-bit video game aesthetic, visible pixel grid, limited color palette, clean pixel-perfect sprites, detailed pixel backgrounds, nostalgic gaming atmosphere, dithering shading technique",
+    llmSystemInstructions: `- Describe the scene as if it were a frame from a high-quality 16-bit or 32-bit era video game (think Final Fantasy VI, Chrono Trigger, Metal Slug, or Celeste). Every element should be rendered in clean, deliberate pixel art.
+- Characters should be expressive pixel sprites with clear silhouettes and readable poses. Use limited but impactful animation-ready poses — the character should feel alive even in a still frame.
+- Use a constrained color palette (16 to 64 colors max per scene). Apply dithering techniques for gradients and shading rather than smooth blending. This is essential to authentic pixel art.
+- Backgrounds should be richly detailed in pixel art style: tile-based environments, parallax-ready layers, atmospheric pixel skies, detailed architecture. Think of it as a game environment the player could explore.
+- Include UI-style elements where relevant: health bars, dialogue boxes, inventory icons, score counters — these add to the retro gaming authenticity.
+- The overall mood should balance nostalgia with modern pixel art craftsmanship. Think indie game art direction — polished, intentional, and full of personality.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:film-noir",
+    name: "Film Noir",
+    description: "Noir et blanc cinématique, contrastes forts, ombres dramatiques, atmosphère mystérieuse",
+    sourceId: "builtin:film-noir",
+    stylePromptPrefix: "Film noir style, high contrast black and white, dramatic chiaroscuro lighting, deep shadows, venetian blind light patterns, moody atmospheric composition, 1940s cinematic aesthetic, grain texture",
+    llmSystemInstructions: `- Describe the scene as a still frame from a classic 1940s-50s film noir. Everything is in stark black and white with extreme contrast — deep blacks, bright whites, and rich mid-tones. No color whatsoever.
+- Lighting is the protagonist. Use dramatic chiaroscuro: harsh directional light from single sources (desk lamps, streetlights, neon signs through windows). Venetian blind shadow patterns, long cast shadows, silhouettes against backlit doorways. Light should sculpt the scene and create mood.
+- Characters should feel like noir archetypes dressed for the era or in timeless clothing: trench coats, fedoras, suits, cigarettes, glasses. But adapt their role to fit the narrative — a tech CEO becomes a shadowy businessman, a developer becomes a late-night detective at his desk.
+- Environments should drip with noir atmosphere: rain-slicked streets, smoke-filled rooms, dimly lit offices, empty diners at night, dark alleys. Include noir props: rotary phones, typewriters, whiskey glasses, newspapers, revolvers, filing cabinets.
+- Composition should use Dutch angles, deep focus, and dramatic framing. Reflections in mirrors, puddles, and glass add visual depth.
+- Add subtle film grain texture for authenticity. The overall mood is suspenseful, melancholic, and mysterious — every frame should tell a story of moral ambiguity.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:sketch",
+    name: "Crayon / Sketch",
+    description: "Croquis au crayon sur papier blanc, hachures, style carnet de designer",
+    sourceId: "builtin:sketch",
+    stylePromptPrefix: "Pencil sketch on white paper, hand-drawn illustration, graphite pencil strokes, crosshatching shading, visible paper texture, designer sketchbook aesthetic, loose confident linework, architectural drawing quality",
+    llmSystemInstructions: `- Describe the scene as a hand-drawn pencil sketch in a designer's or architect's sketchbook. The medium is graphite pencil on white or off-white textured paper. The aesthetic is refined but organic — not clinical, not messy.
+- Use varying pencil pressure and line weight: bold confident strokes for primary subjects, lighter delicate lines for secondary elements, and very faint construction lines visible in the background for authenticity.
+- Shading should use traditional pencil techniques: crosshatching, parallel hatching, stippling, and smooth tonal gradients. Avoid digital-looking effects. The shading should feel hand-made and intentional.
+- Characters and objects should be drawn with anatomical accuracy and confident proportions, like a skilled illustrator's work. Include subtle imperfections that make it feel human: slightly uneven lines, eraser marks, smudges.
+- Leave strategic areas of the composition as white space — not everything needs to be fully rendered. The contrast between detailed focal points and loose, unfinished edges is part of the sketch aesthetic.
+- Include sketchbook elements where appropriate: margin notes, small detail studies, arrows pointing to elements, dimensional annotations. This reinforces the "working document" feeling.
+- The overall mood should feel intellectual and contemplative — like peeking into the creative process of a talented designer or storyboard artist.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:isometric",
+    name: "Isométrique / Low Poly",
+    description: "Vue isométrique 3D, formes géométriques low-poly, couleurs pastels, style diorama",
+    sourceId: "builtin:isometric",
+    stylePromptPrefix: "Isometric 3D illustration, low-poly geometric style, soft pastel color palette, miniature diorama aesthetic, clean geometric shapes, subtle ambient occlusion shadows, tilt-shift depth of field, cute minimalist design",
+    llmSystemInstructions: `- Describe the scene as an isometric 3D diorama viewed from the classic isometric angle (30° from horizontal). Everything should feel like a miniature world — a tiny detailed scene you could pick up and examine.
+- All objects and characters should be rendered in low-poly geometric style: simplified forms made of flat polygonal faces, visible facets, no smooth curves. Think Monument Valley, Crossy Road, or Polytopia. Characters are cute, simplified geometric figures with minimal facial features.
+- Use a soft, harmonious pastel color palette: muted pinks, light blues, warm yellows, sage greens, lavenders. Colors should feel cohesive and calming. Each scene can have a dominant color tone that sets the mood.
+- The scene should be self-contained on a floating isometric "tile" or platform — like a game board piece or architectural model. Include multiple layers of detail: ground level, furniture/objects, and small characters interacting.
+- Add subtle tilt-shift depth-of-field blur at the edges to enhance the miniature/diorama feeling. Soft ambient occlusion shadows ground objects to surfaces.
+- Include charming environmental details that reward close inspection: tiny trees, miniature vehicles, small animals, decorative objects. The scene should feel alive and full of stories despite its simplified style.
+- The overall aesthetic should feel like a premium mobile game or a polished editorial illustration — clean, geometric, delightful, and instantly readable.`,
+    isBuiltin: true,
+  },
 ];
 
 export interface ModelDefinition {
