@@ -157,74 +157,72 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
   {
     id: "builtin:comic",
     name: "Bande Dessinée",
-    description: "Style BD franco-belge, traits encrés nets, aplats de couleur, cases dynamiques",
+    description: "Personnages BD franco-belge expressifs, traits encrés, aplats de couleur vifs",
     sourceId: "builtin:comic",
-    stylePromptPrefix: "Franco-Belgian comic book style illustration, clean bold ink outlines, flat color fills, dynamic composition, slight halftone texture, vivid saturated colors, expressive characters, hand-drawn aesthetic, thick black contour lines, editorial comic art",
-    llmSystemInstructions: `- Describe the scene as a single comic book panel or splash page. Use dynamic composition with dramatic angles (low-angle, bird's eye, Dutch tilt) to add energy.
-- Characters should have expressive, slightly exaggerated features in the Franco-Belgian BD tradition (think Tintin, Astérix, Blacksad, Moebius). Clear facial expressions, defined body language, stylized but recognizable proportions.
-- Use bold ink outlines with varying line weight — thicker for foreground elements, thinner for details and background. This is essential to the BD aesthetic.
-- Colors should be flat fills with minimal gradients, using a vivid and saturated palette. Add subtle halftone dot textures or crosshatching for shadows and depth where appropriate.
-- Backgrounds should be detailed and hand-drawn: cityscapes, interiors, landscapes. They set the tone as much as the characters. Include environmental storytelling details (posters, signs, objects) that enrich the narrative.
-- Include motion lines, impact effects, or small visual sound effects (onomatopoeia) where they enhance the scene's energy. Keep it tasteful — this is editorial BD, not American superhero comics.
-- The overall feel should be a polished album-quality illustration — something you'd see printed in a hardcover BD from Dargaud, Dupuis, or Casterman.`,
+    stylePromptPrefix: "Franco-Belgian comic book style illustration, expressive stylized characters with clean bold ink outlines, flat color fills, dynamic poses, vivid saturated colors, thick black contour lines, hand-drawn aesthetic, detailed semi-realistic backgrounds",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST feature expressive, well-defined characters as the focal point. Characters should have slightly exaggerated but recognizable proportions in the Franco-Belgian BD tradition (think Blacksad, Largo Winch, or Moebius). Strong jawlines, expressive eyes, defined body language, dynamic poses.
+- Characters MUST be dressed in real, recognizable clothing appropriate to the scene: business suits, hoodies, streetwear, uniforms, lab coats, leather jackets, etc. Vary outfits across scenes. Add personality through accessories: watches, glasses, tattoos, piercings, headphones, bags. They should look like real people drawn in BD style, not generic cartoon characters.
+- Facial expressions are key — BD characters communicate emotion through exaggerated but readable faces: furrowed brows, wide grins, clenched jaws, raised eyebrows. Specify the emotion clearly for each character in the scene.
+- Use bold ink outlines with varying line weight — thicker for character silhouettes, thinner for facial details and background. This contrast makes characters pop from the environment.
+- Backgrounds should be detailed and hand-drawn but secondary to the characters: cityscapes, offices, cafés, streets. Include contextual props that ground the characters in reality: smartphones, laptops, coffee cups, branded items, vehicles.
+- The overall feel should be a polished album-quality BD panel — characters you'd want to follow across an entire graphic novel.`,
     isBuiltin: true,
   },
   {
     id: "builtin:pixel-art",
     name: "Pixel Art / Retro Gaming",
-    description: "Style rétro 16-bit/32-bit, pixels visibles, palette limitée, nostalgie gaming",
+    description: "Personnages pixel art expressifs style RPG 16-bit, sprites détaillés, nostalgie gaming",
     sourceId: "builtin:pixel-art",
-    stylePromptPrefix: "Pixel art illustration, retro 16-bit and 32-bit video game aesthetic, visible pixel grid, limited color palette, clean pixel-perfect sprites, detailed pixel backgrounds, nostalgic gaming atmosphere, dithering shading technique",
-    llmSystemInstructions: `- Describe the scene as if it were a frame from a high-quality 16-bit or 32-bit era video game (think Final Fantasy VI, Chrono Trigger, Metal Slug, or Celeste). Every element should be rendered in clean, deliberate pixel art.
-- Characters should be expressive pixel sprites with clear silhouettes and readable poses. Use limited but impactful animation-ready poses — the character should feel alive even in a still frame.
-- Use a constrained color palette (16 to 64 colors max per scene). Apply dithering techniques for gradients and shading rather than smooth blending. This is essential to authentic pixel art.
-- Backgrounds should be richly detailed in pixel art style: tile-based environments, parallax-ready layers, atmospheric pixel skies, detailed architecture. Think of it as a game environment the player could explore.
-- Include UI-style elements where relevant: health bars, dialogue boxes, inventory icons, score counters — these add to the retro gaming authenticity.
-- The overall mood should balance nostalgia with modern pixel art craftsmanship. Think indie game art direction — polished, intentional, and full of personality.`,
+    stylePromptPrefix: "Pixel art illustration, retro 16-bit and 32-bit video game aesthetic, expressive character sprites with visible pixel grid, limited color palette, detailed pixel backgrounds, nostalgic gaming atmosphere, dithering shading technique",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST feature one or more expressive pixel art character sprites as the central focus. Characters should have clear, readable silhouettes and dynamic poses — like the best RPG character sprites from Final Fantasy VI, Chrono Trigger, or Celeste.
+- Characters MUST be dressed in recognizable, context-appropriate pixel outfits: suits with tiny pixel ties, hoodies with logos, streetwear, work uniforms, armor, casual wear. Vary outfits across scenes. Add pixel accessories: tiny glasses, hats, headphones, backpacks, watches. Each character should have a distinct look and personality even at low resolution.
+- Character expressions should be readable despite the pixel limitation: use eye shape, mouth position, body posture, and gesture to convey emotion. A pixel character pointing, shrugging, facepalming, or celebrating should be immediately understood.
+- Use a constrained color palette (16 to 64 colors per scene). Apply dithering for shading. Characters should use slightly brighter, more saturated colors than backgrounds so they pop visually.
+- Backgrounds are detailed pixel environments that contextualize the characters: offices, city streets, bedrooms with PC setups, cafés, public transport. Include pixel props characters interact with: laptops, phones, coffee cups, documents.
+- Include RPG-style UI elements where they enhance the narrative: dialogue boxes with character portraits, status bars, inventory icons, quest prompts. These should frame the characters, not replace them.`,
     isBuiltin: true,
   },
   {
     id: "builtin:film-noir",
     name: "Film Noir",
-    description: "Noir et blanc cinématique, contrastes forts, ombres dramatiques, atmosphère mystérieuse",
+    description: "Personnages mystérieux en noir et blanc, contrastes forts, ombres dramatiques, style détective",
     sourceId: "builtin:film-noir",
-    stylePromptPrefix: "Film noir style, high contrast black and white, dramatic chiaroscuro lighting, deep shadows, venetian blind light patterns, moody atmospheric composition, 1940s cinematic aesthetic, grain texture",
-    llmSystemInstructions: `- Describe the scene as a still frame from a classic 1940s-50s film noir. Everything is in stark black and white with extreme contrast — deep blacks, bright whites, and rich mid-tones. No color whatsoever.
-- Lighting is the protagonist. Use dramatic chiaroscuro: harsh directional light from single sources (desk lamps, streetlights, neon signs through windows). Venetian blind shadow patterns, long cast shadows, silhouettes against backlit doorways. Light should sculpt the scene and create mood.
-- Characters should feel like noir archetypes dressed for the era or in timeless clothing: trench coats, fedoras, suits, cigarettes, glasses. But adapt their role to fit the narrative — a tech CEO becomes a shadowy businessman, a developer becomes a late-night detective at his desk.
-- Environments should drip with noir atmosphere: rain-slicked streets, smoke-filled rooms, dimly lit offices, empty diners at night, dark alleys. Include noir props: rotary phones, typewriters, whiskey glasses, newspapers, revolvers, filing cabinets.
-- Composition should use Dutch angles, deep focus, and dramatic framing. Reflections in mirrors, puddles, and glass add visual depth.
-- Add subtle film grain texture for authenticity. The overall mood is suspenseful, melancholic, and mysterious — every frame should tell a story of moral ambiguity.`,
+    stylePromptPrefix: "Film noir style, high contrast black and white, dramatic chiaroscuro lighting, stylish mysterious characters in sharp clothing, deep shadows, venetian blind light patterns, moody atmospheric composition, 1940s cinematic aesthetic, grain texture",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST be centered on one or more characters who feel like film noir protagonists. Characters are the emotional anchor — the lighting, shadows, and environment exist to frame them.
+- Characters MUST be dressed in stylish, timeless clothing that translates the narrative to noir: tailored suits, trench coats, fedoras, long coats, turtlenecks, leather gloves, sharp dress shoes. For modern contexts, adapt: a tech CEO becomes a shadowy businessman in a dark overcoat, a developer becomes a brooding figure hunched over a glowing screen in a dark room, a journalist becomes a trench-coated investigator. Always elegant, never casual.
+- Facial features should be sculpted by light and shadow: half-lit faces, eyes catching a sliver of light, jawlines defined by harsh contrast. Characters should have intense, unreadable expressions — the noir mystique. Specify whether they look determined, suspicious, exhausted, conflicted.
+- Lighting defines the character's mood. Use dramatic chiaroscuro from single sources: desk lamps illuminating only hands and face, streetlights casting long shadows behind a walking figure, neon signs through rain-streaked windows painting light across a character's silhouette. Venetian blind shadow patterns falling across characters are iconic.
+- Characters should interact with noir props that extend their personality: cigarettes, whiskey glasses, newspapers, briefcases, phones, car steering wheels. These objects tell stories about the character.
+- Environments frame the characters: rain-slicked streets they walk alone, smoke-filled bars where they sit in corners, dimly lit offices where they work late. Always black and white, subtle film grain. Dutch angles and reflections in puddles/mirrors add depth.`,
     isBuiltin: true,
   },
   {
     id: "builtin:sketch",
     name: "Crayon / Sketch",
-    description: "Croquis au crayon sur papier blanc, hachures, style carnet de designer",
+    description: "Personnages croqués au crayon sur papier, traits expressifs, style carnet d'illustrateur",
     sourceId: "builtin:sketch",
-    stylePromptPrefix: "Pencil sketch on white paper, hand-drawn illustration, graphite pencil strokes, crosshatching shading, visible paper texture, designer sketchbook aesthetic, loose confident linework, architectural drawing quality",
-    llmSystemInstructions: `- Describe the scene as a hand-drawn pencil sketch in a designer's or architect's sketchbook. The medium is graphite pencil on white or off-white textured paper. The aesthetic is refined but organic — not clinical, not messy.
-- Use varying pencil pressure and line weight: bold confident strokes for primary subjects, lighter delicate lines for secondary elements, and very faint construction lines visible in the background for authenticity.
-- Shading should use traditional pencil techniques: crosshatching, parallel hatching, stippling, and smooth tonal gradients. Avoid digital-looking effects. The shading should feel hand-made and intentional.
-- Characters and objects should be drawn with anatomical accuracy and confident proportions, like a skilled illustrator's work. Include subtle imperfections that make it feel human: slightly uneven lines, eraser marks, smudges.
-- Leave strategic areas of the composition as white space — not everything needs to be fully rendered. The contrast between detailed focal points and loose, unfinished edges is part of the sketch aesthetic.
-- Include sketchbook elements where appropriate: margin notes, small detail studies, arrows pointing to elements, dimensional annotations. This reinforces the "working document" feeling.
-- The overall mood should feel intellectual and contemplative — like peeking into the creative process of a talented designer or storyboard artist.`,
+    stylePromptPrefix: "Pencil sketch on white paper, hand-drawn character illustration, expressive graphite pencil strokes, crosshatching shading, visible paper texture, figure drawing aesthetic, loose confident linework, detailed character studies",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST feature one or more hand-drawn pencil characters as the central subject. The characters are the sketch — they should feel like a skilled illustrator's character study or storyboard frame.
+- Characters should be drawn with confident, anatomically accurate proportions and expressive poses. Use varying pencil pressure: bold dark strokes for character outlines and facial features, lighter lines for clothing folds and hair texture, very faint construction lines visible underneath for authenticity.
+- Characters MUST wear recognizable, detailed clothing rendered in pencil: the texture of a knit sweater through crosshatching, the creases of a suit jacket through parallel lines, the softness of a hoodie through light shading. Clothing details (zippers, buttons, logos, patterns) should be carefully sketched. Vary outfits across scenes.
+- Facial expressions are paramount — pencil sketches live or die by the face. Describe precise expressions: furrowed brows with deep crosshatch shadows, a slight smirk with minimal line work, tired eyes with dark tonal shading underneath. The character's emotion should be immediately readable.
+- Shade characters using traditional pencil techniques: crosshatching for dark areas (under chin, inside jacket), parallel hatching for mid-tones (cheeks, arms), smooth graphite gradients for soft surfaces (skin, hair). Leave highlights as pure white paper.
+- Leave strategic areas unfinished — a character's hand might trail off into loose gestural lines, the background might be barely suggested with faint marks. The contrast between the detailed character and the sparse surroundings focuses attention on the person.
+- Include subtle sketchbook authenticity: faint eraser marks, a small character expression study in the corner, pencil smudges. The feel is an illustrator's working sketchbook, not a finished piece.`,
     isBuiltin: true,
   },
   {
     id: "builtin:isometric",
     name: "Isométrique / Low Poly",
-    description: "Vue isométrique 3D, formes géométriques low-poly, couleurs pastels, style diorama",
+    description: "Personnages low-poly mignons dans des dioramas isométriques, couleurs pastels, style miniature",
     sourceId: "builtin:isometric",
-    stylePromptPrefix: "Isometric 3D illustration, low-poly geometric style, soft pastel color palette, miniature diorama aesthetic, clean geometric shapes, subtle ambient occlusion shadows, tilt-shift depth of field, cute minimalist design",
-    llmSystemInstructions: `- Describe the scene as an isometric 3D diorama viewed from the classic isometric angle (30° from horizontal). Everything should feel like a miniature world — a tiny detailed scene you could pick up and examine.
-- All objects and characters should be rendered in low-poly geometric style: simplified forms made of flat polygonal faces, visible facets, no smooth curves. Think Monument Valley, Crossy Road, or Polytopia. Characters are cute, simplified geometric figures with minimal facial features.
-- Use a soft, harmonious pastel color palette: muted pinks, light blues, warm yellows, sage greens, lavenders. Colors should feel cohesive and calming. Each scene can have a dominant color tone that sets the mood.
-- The scene should be self-contained on a floating isometric "tile" or platform — like a game board piece or architectural model. Include multiple layers of detail: ground level, furniture/objects, and small characters interacting.
-- Add subtle tilt-shift depth-of-field blur at the edges to enhance the miniature/diorama feeling. Soft ambient occlusion shadows ground objects to surfaces.
-- Include charming environmental details that reward close inspection: tiny trees, miniature vehicles, small animals, decorative objects. The scene should feel alive and full of stories despite its simplified style.
-- The overall aesthetic should feel like a premium mobile game or a polished editorial illustration — clean, geometric, delightful, and instantly readable.`,
+    stylePromptPrefix: "Isometric 3D illustration, cute low-poly geometric characters interacting in miniature diorama scenes, soft pastel color palette, clean geometric shapes, subtle ambient occlusion shadows, tilt-shift depth of field, charming minimalist design",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST feature one or more cute low-poly characters as the focus. Characters are small geometric figures made of flat polygonal faces — simplified but full of personality. Think Monument Valley meets The Sims. Characters should be DOING something: working, talking, walking, reacting.
+- Characters should have minimal but expressive features: simple dot eyes, a tiny geometric mouth or no mouth at all — emotion is conveyed through body posture, head tilt, arm position, and the objects they interact with. A character slumped at a desk reads as tired, one with arms raised reads as excited.
+- Characters MUST wear recognizable low-poly outfits that tell a story: a tiny geometric suit for a businessman, a hoodie with a visible pixel-logo for a developer, an apron for a barista, a hard hat for a worker. Add small accessories: geometric glasses, tiny bags, miniature headphones, small hats. Vary character appearances and outfits across scenes.
+- Place characters in self-contained isometric dioramas — floating tile platforms they inhabit like game boards. The environment should be built around the characters: a tiny office with a desk they sit at, a miniature café where they order coffee, a small street corner where they wait.
+- Use a soft pastel palette: muted pinks, light blues, warm yellows, sage greens. Characters should use slightly more saturated colors than their environment so they stand out as the focal point.
+- Include charming details that enhance the characters' world: tiny trees, miniature vehicles, small pets next to characters, steam rising from a cup they hold. Tilt-shift blur at edges reinforces the miniature diorama feeling.`,
     isBuiltin: true,
   },
 ];
