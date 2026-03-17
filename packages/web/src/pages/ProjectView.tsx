@@ -432,6 +432,20 @@ export default function ProjectView() {
     }
   }
 
+  async function handleUpdateAnimationPrompt(text: string) {
+    if (!currentScene) return;
+    setScenes((prev) =>
+      prev.map((s) =>
+        s.id === currentScene.id ? { ...s, animationPrompt: text } : s
+      )
+    );
+    try {
+      await updateScene(currentScene.id, { animationPrompt: text });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update animation prompt");
+    }
+  }
+
   async function handleClearGenerationOverride() {
     if (!currentScene) return;
     setActionLoading("save-gen-override");
@@ -683,6 +697,7 @@ export default function ProjectView() {
               onSetGenerationOverride={handleSetGenerationOverride}
               onClearGenerationOverride={handleClearGenerationOverride}
               onUpdateNarrativeText={handleUpdateNarrativeText}
+              onUpdateAnimationPrompt={handleUpdateAnimationPrompt}
               promptRegenerating={regeneratingSceneIds.has(currentScene.id)}
               projectConfig={project.config}
             />

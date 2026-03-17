@@ -169,6 +169,24 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
     isBuiltin: true,
   },
   {
+    id: "builtin:comic-bubbles",
+    name: "BD avec Bulles",
+    description: "Bande dessinée franco-belge avec bulles de dialogue, phylactères expressifs, onomatopées",
+    sourceId: "builtin:comic-bubbles",
+    stylePromptPrefix: "Franco-Belgian comic book style illustration with prominent speech bubbles and dialogue balloons, expressive stylized characters with clean bold ink outlines, flat color fills, dynamic poses, vivid saturated colors, thick black contour lines, hand-drawn aesthetic, detailed semi-realistic backgrounds, visible comic panel layout",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST feature expressive characters WITH prominent speech bubbles (phylactères) as a core visual element. The speech bubbles are not optional — they are the defining feature of this style. Each character who speaks or thinks MUST have a visible bubble connected to them.
+- Speech bubbles MUST be classic comic-style: white or light-colored rounded shapes with a pointed tail aimed at the speaking character's mouth. Use different bubble styles for different purposes: smooth oval bubbles for normal speech, cloud-shaped bubbles for thoughts, jagged/spiky bubbles for shouting or anger, wavy bubbles for whispering or weakness, dripping bubbles for sarcasm or disgust.
+- Include SHORT text inside the bubbles that captures the key dialogue or reaction of the scene. The text should be in bold comic lettering, 3-8 words maximum per bubble. Use the narrative language. Multiple bubbles per character are fine for back-and-forth exchanges.
+- Add onomatopoeia (sound effects) as bold stylized text integrated into the scene: "BOOM", "CRACK", "SPLASH", "DING", "WHOOSH", "HAHA", etc. These should be large, colorful, and dynamic — part of the composition, not an afterthought.
+- Characters should have slightly exaggerated but recognizable proportions in the Franco-Belgian BD tradition (think Astérix, Tintin, Lucky Luke, or Blacksad). Strong expressions, dynamic poses, expressive eyes and mouths that match what their bubble says.
+- Characters MUST be dressed in real, recognizable clothing appropriate to the scene: business suits, hoodies, streetwear, uniforms, lab coats, leather jackets, etc. Vary outfits across scenes. Add personality through accessories.
+- Facial expressions are key and MUST match the speech bubble content — a character with a shouting bubble should have an open mouth and intense eyes, a character with a thought bubble should look pensive.
+- Use bold ink outlines with varying line weight — thicker for character silhouettes, thinner for facial details and background. Speech bubbles should have clean, consistent outlines.
+- Compose the scene as a comic panel or page layout: consider the reading order of bubbles (top-left to bottom-right), leave enough space for bubbles without crowding the characters. The bubbles and characters together should tell the story at a glance.
+- Backgrounds should be detailed and hand-drawn but secondary to the characters and their dialogue: cityscapes, offices, cafés, streets. Include contextual props that ground the scene in reality.`,
+    isBuiltin: true,
+  },
+  {
     id: "builtin:pixel-art",
     name: "Pixel Art / Retro Gaming",
     description: "Personnages pixel art expressifs style RPG 16-bit, sprites détaillés, nostalgie gaming",
@@ -291,6 +309,50 @@ export const CLIP_MODEL_PRICING: Record<string, ClipModelPricing> = {
   "minimax": { type: "flat", basePrice: 0.50 },
   "veo3.1": { type: "per_second", basePrice: 0.20, audioPricePerSecond: 0.40 },
 };
+
+// ---------------------------------------------------------------------------
+// Animation Prompt Templates (presets for clip generation prompts)
+// ---------------------------------------------------------------------------
+
+export interface AnimationTemplate {
+  id: string;
+  name: string;
+  description: string;
+  prompt: string;
+}
+
+export const BUILTIN_ANIMATION_TEMPLATES: AnimationTemplate[] = [
+  {
+    id: "comic-limited",
+    name: "BD / Animation limitée",
+    description: "Mouvements minimaux, expressions faciales subtiles, bouches qui bougent",
+    prompt: "Very limited animation like an animated comic book panel. Characters barely move their bodies — only subtle facial expression changes: eyes blinking slowly, mouth opening and closing gently as if speaking, slight eyebrow raises. No body movement, no camera movement, no dynamic action. The scene feels like a living comic book illustration with minimal, restrained animation. Soft breathing motion only.",
+  },
+  {
+    id: "cinematic",
+    name: "Cinématique",
+    description: "Mouvements de caméra fluides, action dynamique, transitions cinématiques",
+    prompt: "Cinematic camera movement with smooth dolly, pan, or crane motion. Characters move naturally with fluid body language, gestures, and realistic weight. Dynamic lighting shifts. The scene feels like a shot from a high-budget film with professional cinematography.",
+  },
+  {
+    id: "ken-burns",
+    name: "Ken Burns / Zoom lent",
+    description: "Zoom lent et pan doux sur image statique, style documentaire",
+    prompt: "Slow Ken Burns effect — gentle, almost imperceptible zoom in or slow pan across the scene. No character movement, no animation. The image is treated as a static photograph with only a subtle camera drift to add life. Documentary style.",
+  },
+  {
+    id: "parallax",
+    name: "Parallaxe / Profondeur",
+    description: "Effet de parallaxe avec séparation des plans, profondeur 2.5D",
+    prompt: "2.5D parallax depth effect — foreground elements move slightly faster than background elements, creating a sense of depth. No character animation. Subtle floating particles or atmospheric effects (dust, light rays) add life. The scene feels like layered paper cutouts with gentle independent movement.",
+  },
+  {
+    id: "talking-head",
+    name: "Talking Head",
+    description: "Personnage qui parle face caméra, gestes naturels des mains",
+    prompt: "Character talking directly to camera with natural head movements, hand gestures while speaking, occasional nods, and expressive facial animations. Mouth moves in sync with speech rhythm. Slight body sway. Background is static. The feel is a YouTube video or podcast recording.",
+  },
+];
 
 export interface CostBreakdownItem {
   model: string;

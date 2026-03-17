@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { VideoFormat, ElevenLabsVoice, TextLanguage } from "@video-generator/shared";
-import { AVAILABLE_TEXT_LANGUAGES } from "@video-generator/shared";
+import type { VideoFormat, ElevenLabsVoice, TextLanguage, StyleTemplateValue } from "@video-generator/shared";
+import { AVAILABLE_TEXT_LANGUAGES, BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
 import { createProject, getVoices } from "../api/client";
 
 export default function ProjectCreate() {
@@ -9,6 +9,11 @@ export default function ProjectCreate() {
   const [scriptContent, setScriptContent] = useState("");
   const [format, setFormat] = useState<VideoFormat>("16:9");
   const [textLanguage, setTextLanguage] = useState<TextLanguage>("French");
+  const [styleTemplate, setStyleTemplate] = useState<StyleTemplateValue>({
+    sourceId: BUILTIN_STYLE_TEMPLATES[0].sourceId,
+    stylePromptPrefix: BUILTIN_STYLE_TEMPLATES[0].stylePromptPrefix,
+    llmSystemInstructions: BUILTIN_STYLE_TEMPLATES[0].llmSystemInstructions,
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voices, setVoices] = useState<ElevenLabsVoice[]>([]);
@@ -44,7 +49,13 @@ export default function ProjectCreate() {
       const project = await createProject({
         title: title.trim(),
         scriptContent: scriptContent.trim(),
-        config: { format, voiceId: selectedVoiceId, textLanguage },
+        config: {
+          format,
+          voiceId: selectedVoiceId,
+          textLanguage,
+          stylePromptPrefix: styleTemplate.stylePromptPrefix,
+          styleTemplate,
+        },
       });
       navigate(`/projects/${project.id}`);
     } catch (err) {
@@ -189,6 +200,38 @@ export default function ProjectCreate() {
                 9:16 Short / TikTok
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Style Template
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {BUILTIN_STYLE_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() =>
+                    setStyleTemplate({
+                      sourceId: tpl.sourceId,
+                      stylePromptPrefix: tpl.stylePromptPrefix,
+                      llmSystemInstructions: tpl.llmSystemInstructions,
+                    })
+                  }
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    styleTemplate.sourceId === tpl.sourceId
+                      ? "bg-blue-600 text-white ring-2 ring-blue-400/50"
+                      : "bg-slate-900 text-gray-400 hover:bg-slate-800 hover:text-gray-200 border border-gray-700"
+                  }`}
+                  title={tpl.description}
+                >
+                  {tpl.name}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-gray-500">
+              {BUILTIN_STYLE_TEMPLATES.find((t) => t.sourceId === styleTemplate.sourceId)?.description}
+            </p>
           </div>
 
           <div>

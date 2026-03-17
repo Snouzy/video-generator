@@ -111,45 +111,39 @@ export default function ImageCard({
         )}
       </div>
 
-      {/* Action icons on hover */}
-      <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Action icons on hover + selected checkmark */}
+      <div className="absolute top-2 right-2 flex gap-1.5">
+        {image.imageUrl && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              fetch(mediaUrl(image.imageUrl!))
+                .then((res) => res.blob())
+                .then((blob) => {
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${sceneLabel}-${image.model}-${index + 1}.png`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                });
+            }}
+            className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Download"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </button>
+        )}
         {isSelected && (
-          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center opacity-100">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
+          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
         )}
       </div>
-
-      {/* Always show checkmark if selected */}
-      {isSelected && (
-        <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-          <svg
-            className="w-5 h-5 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </div>
-      )}
 
       {/* Bottom overlay with model name and scene label */}
       <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center px-3 py-2 bg-gradient-to-t from-black/80 to-transparent">

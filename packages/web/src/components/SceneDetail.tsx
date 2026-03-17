@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Scene, StyleTemplateValue, SceneGenerationOverride, VideoFormat, TextLanguage } from "@video-generator/shared";
-import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES, IMAGE_MODEL_RESOLUTIONS } from "@video-generator/shared";
+import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES, IMAGE_MODEL_RESOLUTIONS, BUILTIN_ANIMATION_TEMPLATES } from "@video-generator/shared";
 import { getTagColor } from "./ImageCard";
 import { mediaUrl } from "../api/client";
 import StyleTemplateSelector from "./StyleTemplateSelector";
@@ -18,6 +18,7 @@ interface SceneDetailProps {
   onSetGenerationOverride: (override: SceneGenerationOverride) => void;
   onClearGenerationOverride: () => void;
   onUpdateNarrativeText: (text: string) => void;
+  onUpdateAnimationPrompt: (text: string) => void;
   promptRegenerating?: boolean;
   projectConfig?: { imageModels: string[]; animationModels: string[]; imagesPerScene: number; clipsPerScene: number; format?: VideoFormat; textLanguage?: TextLanguage };
 }
@@ -32,10 +33,12 @@ export default function SceneDetail({
   onSetGenerationOverride,
   onClearGenerationOverride,
   onUpdateNarrativeText,
+  onUpdateAnimationPrompt,
   promptRegenerating = false,
   projectConfig,
 }: SceneDetailProps) {
   const [showNarrative, setShowNarrative] = useState(false);
+  const [showAnimationPrompt, setShowAnimationPrompt] = useState(false);
   const [showStyleOverride, setShowStyleOverride] = useState(false);
   const [showGenerationOverride, setShowGenerationOverride] = useState(false);
 
@@ -101,6 +104,59 @@ export default function SceneDetail({
           )}
         </div>
       )}
+
+      {/* Animation prompt */}
+      <div className="mt-2">
+        <button
+          className="text-xs text-gray-500 hover:text-gray-400 flex items-center gap-1"
+          onClick={() => setShowAnimationPrompt(!showAnimationPrompt)}
+        >
+          <svg
+            className={`w-3 h-3 transition-transform ${showAnimationPrompt ? "rotate-90" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          Animation prompt
+          {scene.animationPrompt && (
+            <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-blue-400" />
+          )}
+        </button>
+        {showAnimationPrompt && (
+          <div className="mt-1 pl-4 border-l-2 border-gray-700">
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {BUILTIN_ANIMATION_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  onClick={() => onUpdateAnimationPrompt(tpl.prompt)}
+                  title={tpl.description}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                    scene.animationPrompt === tpl.prompt
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+                  }`}
+                >
+                  {tpl.name}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={scene.animationPrompt || ""}
+              onChange={(e) => onUpdateAnimationPrompt(e.target.value)}
+              placeholder="Auto-generated when clips are created. Edit to override."
+              rows={3}
+              className="w-full text-sm text-gray-300 leading-relaxed bg-transparent resize-y focus:outline-none"
+            />
+          </div>
+        )}
+      </div>
 
       {/* Scene style override */}
       <div className="mt-2">
