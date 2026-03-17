@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
-import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride, TextLanguage } from "@video-generator/shared";
+import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride, TextLanguage, ComicStructure } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES } from "@video-generator/shared";
 import {
   getProject,
@@ -26,6 +26,7 @@ import {
   regenerateScenePrompt,
   updateSceneGenerationOverride,
   updateScene,
+  generateComicStructure,
 } from "../api/client";
 import SceneNavigation from "../components/SceneNavigation";
 import SceneDetail from "../components/SceneDetail";
@@ -34,6 +35,7 @@ import ImageGrid from "../components/ImageGrid";
 import ClipGrid from "../components/ClipGrid";
 import StyleTemplateSelector from "../components/StyleTemplateSelector";
 import ModelSelector from "../components/ModelSelector";
+import ComicPanel from "../components/ComicPanel";
 
 export default function ProjectView() {
   const { id } = useParams<{ id: string }>();
@@ -42,7 +44,7 @@ export default function ProjectView() {
   const [project, setProject] = useState<Project | null>(null);
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<"images" | "clips">("images");
+  const [activeTab, setActiveTab] = useState<"images" | "clips" | "comics">("images");
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [clips, setClips] = useState<GeneratedClip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,12 +55,14 @@ export default function ProjectView() {
   const [showSettings, setShowSettings] = useState(false);
   const [projectStyle, setProjectStyle] = useState<StyleTemplateValue | null>(null);
   const [regeneratingSceneIds, setRegeneratingSceneIds] = useState<Set<number>>(new Set());
+  const [comicStructure, setComicStructure] = useState<ComicStructure | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Keyboard shortcuts: 1 = images, 2 = clips, left/right = prev/next scene
   useHotkeys("1", () => setActiveTab("images"));
   useHotkeys("2", () => setActiveTab("clips"));
+  useHotkeys("3", () => setActiveTab("comics"));
   useHotkeys("left", () => setCurrentIndex((i) => Math.max(0, i - 1)));
   useHotkeys("right", () => setCurrentIndex((i) => Math.min(scenes.length - 1, i + 1)));
 
@@ -90,6 +94,13 @@ export default function ProjectView() {
   useEffect(() => {
     getVoices().then(setVoices).catch(() => {});
   }, []);
+
+  // Load persisted comic structure (use JSON string to detect deep changes)
+  const comicJson = JSON.stringify(project?.comicStructure ?? null);
+  useEffect(() => {
+    const parsed = JSON.parse(comicJson);
+    setComicStructure(parsed);
+  }, [comicJson]);
 
   // Sync config state from project
   useEffect(() => {
@@ -153,6 +164,20 @@ export default function ProjectView() {
       }
     };
   }, [images, clips, loadSceneMedia]);
+
+  // Poll comic structure when any panel is processing
+  useEffect(() => {
+    const hasComicProcessing = comicStructure?.pages.some((page) =>
+      page.panels.some((p) => p.imageStatus === "processing")
+    );
+
+    if (!hasComicProcessing) return;
+
+    const interval = setInterval(() => {
+      loadProject();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [comicStructure, loadProject]);
 
   // Also poll project/scenes when splitting or generating
   useEffect(() => {
@@ -459,6 +484,21 @@ export default function ProjectView() {
       await loadProject();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to clear generation settings");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleGenerateComic() {
+    setActionLoading("generate-comic");
+    try {
+      const structure = await generateComicStructure(projectId);
+      setComicStructure(structure);
+      toast.success(`BD structure generated — ${structure.pages.length} pages`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to generate comic structure";
+      setError(msg);
+      toast.error("Comic generation failed", { description: msg });
     } finally {
       setActionLoading(null);
     }
@@ -794,6 +834,35 @@ export default function ProjectView() {
                   />
                 )}
               </>
+            )}
+
+            {activeTab === "comics" && (
+              <div>
+                {comicStructure ? (
+                  <ComicPanel
+                    projectId={projectId}
+                    comicStructure={comicStructure}
+                    onRegenerate={handleGenerateComic}
+                    onRefresh={loadProject}
+                    regenerating={actionLoading === "generate-comic"}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-4 py-20">
+                    <p className="text-gray-500">
+                      Aucune BD générée. Cliquez pour créer la structure de la bande dessinée à partir de vos scènes.
+                    </p>
+                    <button
+                      onClick={handleGenerateComic}
+                      disabled={actionLoading === "generate-comic"}
+                      className="px-6 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      {actionLoading === "generate-comic"
+                        ? "Generating BD..."
+                        : "Generate BD"}
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

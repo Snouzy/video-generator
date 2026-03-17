@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { ContentBlock } from "@anthropic-ai/sdk/resources/messages/messages";
+import type { ComicLayout, ComicStructure, TextLanguage } from "@video-generator/shared";
 
 let _anthropic: Anthropic | null = null;
 function getClient(): Anthropic {
@@ -161,4 +162,92 @@ Rules:
   });
 
   return extractText(response.content).trim();
+}
+
+// ---------------------------------------------------------------------------
+// Comic Book Structure Generation
+// ---------------------------------------------------------------------------
+
+export async function generateComicStructure(
+  scenes: Array<{ sceneNumber: number; title: string; narrativeText: string; imageUrl: string | null }>,
+  layouts: ComicLayout[],
+  language: TextLanguage
+): Promise<ComicStructure> {
+  if (process.env.USE_MOCK_LLM === "true") {
+    console.log("[MOCK] Using mock comic structure");
+    const raw = readFileSync(join(__dirname, "../fixtures/mock-comic-structure.json"), "utf-8");
+    return JSON.parse(raw);
+  }
+
+  const layoutSummary = layouts.map(l => ({
+    id: l.id,
+    name: l.name,
+    description: l.description,
+    panelCount: l.panelCount,
+    panelIds: l.panels.map(p => p.id),
+  }));
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 16384,
+    messages: [
+      {
+        role: "user",
+        content: `You are a comic book editor (bande dessinée). Your job is to organize scenes into comic book pages with narration captions and speech bubbles, like the graphic novel adaptation of "Sapiens".
+
+You are given:
+1. A list of scenes (each has a sceneNumber, title, narrativeText)
+2. Available page layouts (each has an id, panelCount, and panel IDs)
+
+Your task:
+- Distribute ALL scenes across pages by choosing the best layout for each page based on narrative pacing.
+- A dramatic or important scene should get a large panel (use "layout:full-page" or "layout:1-large-2-small" with the key scene in panel-1).
+- Fast-paced sequences or montages should use layouts with more panels ("layout:2x2-grid", "layout:3-top-2-bottom", "layout:6-grid").
+- Dialogue exchanges work well with "layout:2-horizontal" or "layout:3-horizontal".
+- Each panel holds exactly ONE scene. Every scene must appear exactly once.
+- For each panel, generate:
+  - An "imagePrompt": a detailed AI image generation prompt describing ONLY the visual scene content. Be vivid and specific: characters, setting, lighting, camera angle, composition, mood. CRITICAL: The generated image will be placed into a comic panel layout separately — so the prompt must describe ONLY the scene itself. Do NOT mention or include any comic panel elements: no borders, no frames, no speech bubbles, no text overlays, no captions, no character name labels, no "comic panel" framing, no white borders, no black outlines around the image. Just describe the raw scene as if directing a photograph or painting.
+  - A "caption" (narrator voice-over) adapted from the narrativeText. Keep it short (1-2 sentences max), in the style of Sapiens: factual, slightly ironic, engaging. Set position to "top" or "bottom".
+  - "bubbles" must ALWAYS be an empty array []. Do NOT generate any speech bubbles.
+
+ALL text (captions and bubbles) MUST be in ${language}.
+
+Available layouts:
+${JSON.stringify(layoutSummary, null, 2)}
+
+Scenes:
+${JSON.stringify(scenes.map(s => ({ sceneNumber: s.sceneNumber, title: s.title, narrativeText: s.narrativeText })), null, 2)}
+
+Return ONLY a valid JSON object with this exact structure (no other text):
+{
+  "title": "Comic title",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "layoutId": "layout:...",
+      "panels": [
+        {
+          "panelId": "panel-1",
+          "sceneNumber": 1,
+          "imagePrompt": "A detailed visual description of the scene for AI image generation...",
+          "caption": { "text": "Narrator text...", "position": "top" },
+          "bubbles": []
+        }
+      ]
+    }
+  ]
+}`,
+      },
+    ],
+  });
+
+  const text = extractText(response.content);
+  let jsonStr = text.trim();
+  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    jsonStr = jsonMatch[1].trim();
+  }
+
+  const structure: ComicStructure = JSON.parse(jsonStr);
+  return structure;
 }

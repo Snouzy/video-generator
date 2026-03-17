@@ -11,6 +11,7 @@ import clipsRouter from "./routes/clips";
 import renderRouter from "./routes/render";
 import narrationRouter from "./routes/narration";
 import styleTemplatesRouter from "./routes/styleTemplates";
+import comicRouter from "./routes/comic";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -45,6 +46,7 @@ app.use("/api", clipsRouter);
 app.use("/api/projects", renderRouter);
 app.use("/api", narrationRouter);
 app.use("/api", styleTemplatesRouter);
+app.use("/api/projects", comicRouter);
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);

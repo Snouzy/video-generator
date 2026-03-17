@@ -199,6 +199,55 @@ export function updateSceneStyleOverride(
   });
 }
 
+// --- Comic BD Generation ---
+
+import type { ComicStructure } from "@video-generator/shared";
+
+export function generateComicStructure(projectId: number): Promise<ComicStructure> {
+  return fetchApi<ComicStructure>(`/api/projects/${projectId}/comic/generate`, {
+    method: "POST",
+  });
+}
+
+export function generateComicImages(
+  projectId: number,
+  panels: { pageNumber: number; panelId: string; sceneNumber: number; imagePrompt: string }[],
+  model: string,
+  stylePromptPrefix?: string,
+  aspectRatio?: string
+): Promise<{ message: string; totalPanels: number }> {
+  return fetchApi<{ message: string; totalPanels: number }>(
+    `/api/projects/${projectId}/comic/generate-images`,
+    {
+      method: "POST",
+      body: JSON.stringify({ panels, model, stylePromptPrefix, aspectRatio }),
+    }
+  );
+}
+
+export async function downloadComicSvgs(projectId: number, comicStructure: ComicStructure): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/projects/${projectId}/comic/download`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ comicStructure }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({ error: "Download failed" }));
+    throw new Error(json.error || "Download failed");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const disposition = res.headers.get("Content-Disposition");
+  const match = disposition?.match(/filename="(.+)"/);
+  a.download = match?.[1] ?? "comic.zip";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function updateSceneGenerationOverride(
   sceneId: number,
   generationOverride: SceneGenerationOverride | null

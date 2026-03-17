@@ -484,6 +484,7 @@ export interface Project {
   scriptContent: string;
   status: ProjectStatus;
   config: ProjectConfig;
+  comicStructure: ComicStructure | null;
   createdAt: Date;
   updatedAt: Date;
   scenes?: Scene[];
@@ -574,4 +575,221 @@ export interface UpdateSceneRequest {
   animationPrompt?: string;
   styleOverride?: StyleTemplateValue | null;
   generationOverride?: SceneGenerationOverride | null;
+}
+
+// ---------------------------------------------------------------------------
+// Comic Book (BD) Generation
+// ---------------------------------------------------------------------------
+
+export const COMIC_PAGE_WIDTH = 595;
+export const COMIC_PAGE_HEIGHT = 842;
+export const COMIC_PAGE_MARGIN = 20;
+export const COMIC_PANEL_GUTTER = 10;
+
+export interface ComicPanel {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface ComicLayout {
+  id: string;
+  name: string;
+  description: string;
+  panelCount: number;
+  panels: ComicPanel[];
+}
+
+const M = COMIC_PAGE_MARGIN;
+const G = COMIC_PANEL_GUTTER;
+const W = COMIC_PAGE_WIDTH - 2 * M;   // 555
+const H = COMIC_PAGE_HEIGHT - 2 * M;  // 802
+
+export const BUILTIN_COMIC_LAYOUTS: ComicLayout[] = [
+  {
+    id: "layout:full-page",
+    name: "Pleine page",
+    description: "1 case pleine page — idéal pour une scène dramatique ou d'ouverture",
+    panelCount: 1,
+    panels: [
+      { id: "panel-1", x: M, y: M, width: W, height: H },
+    ],
+  },
+  {
+    id: "layout:2-horizontal",
+    name: "2 bandes",
+    description: "2 cases horizontales égales — dialogue ou avant/après",
+    panelCount: 2,
+    panels: [
+      { id: "panel-1", x: M, y: M, width: W, height: (H - G) / 2 },
+      { id: "panel-2", x: M, y: M + (H - G) / 2 + G, width: W, height: (H - G) / 2 },
+    ],
+  },
+  {
+    id: "layout:3-horizontal",
+    name: "3 bandes",
+    description: "3 bandes horizontales égales — progression narrative classique",
+    panelCount: 3,
+    panels: (() => {
+      const ph = (H - 2 * G) / 3;
+      return [
+        { id: "panel-1", x: M, y: M, width: W, height: ph },
+        { id: "panel-2", x: M, y: M + ph + G, width: W, height: ph },
+        { id: "panel-3", x: M, y: M + 2 * (ph + G), width: W, height: ph },
+      ];
+    })(),
+  },
+  {
+    id: "layout:2x2-grid",
+    name: "Grille 2×2",
+    description: "4 cases en grille — séquence rapide ou montage",
+    panelCount: 4,
+    panels: (() => {
+      const pw = (W - G) / 2;
+      const ph = (H - G) / 2;
+      return [
+        { id: "panel-1", x: M, y: M, width: pw, height: ph },
+        { id: "panel-2", x: M + pw + G, y: M, width: pw, height: ph },
+        { id: "panel-3", x: M, y: M + ph + G, width: pw, height: ph },
+        { id: "panel-4", x: M + pw + G, y: M + ph + G, width: pw, height: ph },
+      ];
+    })(),
+  },
+  {
+    id: "layout:1-large-2-small",
+    name: "1 grande + 2 petites",
+    description: "1 grande case en haut, 2 petites en bas — intro puis détails",
+    panelCount: 3,
+    panels: (() => {
+      const topH = Math.round(H * 0.6);
+      const botH = H - topH - G;
+      const pw = (W - G) / 2;
+      return [
+        { id: "panel-1", x: M, y: M, width: W, height: topH },
+        { id: "panel-2", x: M, y: M + topH + G, width: pw, height: botH },
+        { id: "panel-3", x: M + pw + G, y: M + topH + G, width: pw, height: botH },
+      ];
+    })(),
+  },
+  {
+    id: "layout:2-small-1-large",
+    name: "2 petites + 1 grande",
+    description: "2 petites en haut, 1 grande en bas — build-up vers climax",
+    panelCount: 3,
+    panels: (() => {
+      const topH = Math.round(H * 0.38);
+      const botH = H - topH - G;
+      const pw = (W - G) / 2;
+      return [
+        { id: "panel-1", x: M, y: M, width: pw, height: topH },
+        { id: "panel-2", x: M + pw + G, y: M, width: pw, height: topH },
+        { id: "panel-3", x: M, y: M + topH + G, width: W, height: botH },
+      ];
+    })(),
+  },
+  {
+    id: "layout:2-top-1-bottom",
+    name: "2 en haut + 1 en bas",
+    description: "2 cases en haut, 1 panoramique en bas — transition",
+    panelCount: 3,
+    panels: (() => {
+      const topH = (H - G) / 2;
+      const pw = (W - G) / 2;
+      return [
+        { id: "panel-1", x: M, y: M, width: pw, height: topH },
+        { id: "panel-2", x: M + pw + G, y: M, width: pw, height: topH },
+        { id: "panel-3", x: M, y: M + topH + G, width: W, height: topH },
+      ];
+    })(),
+  },
+  {
+    id: "layout:1-large-3-small",
+    name: "1 grande gauche + 3 petites",
+    description: "1 grande case à gauche, 3 empilées à droite — focus + détails",
+    panelCount: 4,
+    panels: (() => {
+      const leftW = Math.round(W * 0.58);
+      const rightW = W - leftW - G;
+      const ph = (H - 2 * G) / 3;
+      return [
+        { id: "panel-1", x: M, y: M, width: leftW, height: H },
+        { id: "panel-2", x: M + leftW + G, y: M, width: rightW, height: ph },
+        { id: "panel-3", x: M + leftW + G, y: M + ph + G, width: rightW, height: ph },
+        { id: "panel-4", x: M + leftW + G, y: M + 2 * (ph + G), width: rightW, height: ph },
+      ];
+    })(),
+  },
+  {
+    id: "layout:3-top-2-bottom",
+    name: "3 en haut + 2 en bas",
+    description: "5 cases — rythme soutenu, séquence d'action",
+    panelCount: 5,
+    panels: (() => {
+      const topH = (H - G) / 2;
+      const pw3 = (W - 2 * G) / 3;
+      const pw2 = (W - G) / 2;
+      return [
+        { id: "panel-1", x: M, y: M, width: pw3, height: topH },
+        { id: "panel-2", x: M + pw3 + G, y: M, width: pw3, height: topH },
+        { id: "panel-3", x: M + 2 * (pw3 + G), y: M, width: pw3, height: topH },
+        { id: "panel-4", x: M, y: M + topH + G, width: pw2, height: topH },
+        { id: "panel-5", x: M + pw2 + G, y: M + topH + G, width: pw2, height: topH },
+      ];
+    })(),
+  },
+  {
+    id: "layout:6-grid",
+    name: "Grille 3×2",
+    description: "6 cases — montage rapide, séquence narrative dense",
+    panelCount: 6,
+    panels: (() => {
+      const pw = (W - 2 * G) / 3;
+      const ph = (H - G) / 2;
+      return [
+        { id: "panel-1", x: M, y: M, width: pw, height: ph },
+        { id: "panel-2", x: M + pw + G, y: M, width: pw, height: ph },
+        { id: "panel-3", x: M + 2 * (pw + G), y: M, width: pw, height: ph },
+        { id: "panel-4", x: M, y: M + ph + G, width: pw, height: ph },
+        { id: "panel-5", x: M + pw + G, y: M + ph + G, width: pw, height: ph },
+        { id: "panel-6", x: M + 2 * (pw + G), y: M + ph + G, width: pw, height: ph },
+      ];
+    })(),
+  },
+];
+
+// --- Comic Structure (LLM output types) ---
+
+export interface ComicSpeechBubble {
+  character: string;
+  text: string;
+  type: "speech" | "thought" | "shout" | "whisper";
+  position: { x: number; y: number }; // 0-1 relative to panel
+}
+
+export interface ComicCaption {
+  text: string;
+  position: "top" | "bottom";
+}
+
+export interface ComicPagePanel {
+  panelId: string;
+  sceneNumber: number;
+  imagePrompt: string;
+  caption?: ComicCaption;
+  bubbles: ComicSpeechBubble[];
+  imageUrl?: string | null;
+  imageStatus?: "pending" | "processing" | "completed" | "failed";
+}
+
+export interface ComicPage {
+  pageNumber: number;
+  layoutId: string;
+  panels: ComicPagePanel[];
+}
+
+export interface ComicStructure {
+  title: string;
+  pages: ComicPage[];
 }

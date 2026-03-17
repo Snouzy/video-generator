@@ -1,0 +1,72 @@
+{
+  "title": "Mock Comic",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "layoutId": "layout:full-page",
+      "panels": [
+        {
+          "panelId": "panel-1",
+          "sceneNumber": 1,
+          "imagePrompt": "A modern open-plan office on a Tuesday morning, fluorescent lights, employees at their desks typing, coffee cups scattered around, mundane corporate atmosphere, wide angle shot",
+          "caption": { "text": "Tout commence dans un bureau ordinaire, un mardi matin comme les autres...", "position": "top" },
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "pageNumber": 2,
+      "layoutId": "layout:1-large-2-small",
+      "panels": [
+        {
+          "panelId": "panel-1",
+          "sceneNumber": 2,
+          "imagePrompt": "Two colleagues looking at a computer screen showing shocking data graphs, one standing one sitting, dramatic office lighting, expressions of disbelief",
+          "caption": { "text": "Mais rien ne se passe comme prévu.", "position": "top" },
+          "bubbles": []
+        },
+        {
+          "panelId": "panel-2",
+          "sceneNumber": 3,
+          "imagePrompt": "A man alone at his desk, hand on chin, deep in thought, dark shadows, single desk lamp illuminating his worried face",
+          "caption": null,
+          "bubbles": []
+        },
+        {
+          "panelId": "panel-3",
+          "sceneNumber": 4,
+          "imagePrompt": "A woman standing up from her chair decisively, pointing at a whiteboard covered in plans, determined expression, dynamic pose, conference room",
+          "caption": null,
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "pageNumber": 3,
+      "layoutId": "layout:3-horizontal",
+      "panels": [
+        {
+          "panelId": "panel-1",
+          "sceneNumber": 5,
+          "imagePrompt": "A team huddled around a table covered in documents and laptops, late at night, city skyline visible through office windows, focused teamwork",
+          "caption": { "text": "Le plan est en marche.", "position": "bottom" },
+          "bubbles": []
+        },
+        {
+          "panelId": "panel-2",
+          "sceneNumber": 6,
+          "imagePrompt": "Close-up of hands typing furiously on a keyboard, multiple terminal windows with code on the screen, green text on black background, tense atmosphere",
+          "caption": null,
+          "bubbles": []
+        },
+        {
+          "panelId": "panel-3",
+          "sceneNumber": 7,
+          "imagePrompt": "Sunrise over a city skyline, golden light flooding through office windows, a single figure silhouetted against the dawn, sense of achievement and new beginning",
+          "caption": { "text": "Et c'est ainsi que tout a changé.", "position": "top" },
+          "bubbles": []
+        }
+      ]
+    }
+  ]
+}

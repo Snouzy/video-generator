@@ -19,13 +19,14 @@ model Video {
 }
 
 model Project {
-  id            Int      @id @default(autoincrement())
-  title         String
-  scriptContent String
-  status        String   @default("draft")
-  config        Json     @default("{}")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  title           String
+  scriptContent   String
+  status          String   @default("draft")
+  config          Json     @default("{}")
+  comicStructure  Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   scenes Scene[]
 

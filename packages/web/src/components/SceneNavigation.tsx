@@ -7,8 +7,8 @@ interface SceneNavigationProps {
   projectId: number;
   onPrev: () => void;
   onNext: () => void;
-  activeTab: "images" | "clips";
-  onTabChange: (tab: "images" | "clips") => void;
+  activeTab: "images" | "clips" | "comics";
+  onTabChange: (tab: "images" | "clips" | "comics") => void;
   showSettings: boolean;
   onToggleSettings: () => void;
   onGenerateAllImages: () => void;
@@ -93,6 +93,17 @@ export default function SceneNavigation({
         >
           Clips
           <Kbd>2</Kbd>
+        </button>
+        <button
+          className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center ${
+            activeTab === "comics"
+              ? "bg-gray-700 text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+          onClick={() => onTabChange("comics")}
+        >
+          BD
+          <Kbd>3</Kbd>
         </button>
       </div>
 
