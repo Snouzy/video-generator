@@ -138,7 +138,7 @@ router.post("/:id/comic/generate-images", async (req, res) => {
     const prefix = stylePromptPrefix ?? "";
     const config = project.config as unknown as ProjectConfig | null;
     const lang = config?.textLanguage ?? "French";
-    const singlePanelSuffix = `. The illustration must fill the entire image as a single scene — no panel borders, no adjacent panels, no page layout, no visible frames or gutters around the edges. CRITICAL: All visible text in the image — speech bubbles, dialogue, onomatopoeia, signs, labels — must be in ${lang}`;
+    const singlePanelSuffix = `. The illustration must fill the entire image edge to edge as a single scene — no panel borders, no adjacent panels, no page layout, no visible frames or gutters, no white borders, no black borders, no margins, no vignette. The artwork must bleed to all four edges of the image with zero padding. CRITICAL: All visible text in the image — speech bubbles, dialogue, onomatopoeia, signs, labels — must be in ${lang}`;
 
     (async () => {
       for (const panel of panels) {

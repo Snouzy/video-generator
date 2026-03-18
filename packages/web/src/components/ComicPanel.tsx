@@ -47,12 +47,16 @@ function aspectRatioClass(ar?: string): string {
   }
 }
 
-function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate }: {
+const ASPECT_RATIO_OPTIONS = ["16:9", "9:16", "4:3", "3:4", "1:1"] as const;
+
+function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate, aspectRatio, onAspectChange }: {
   panel: ComicPagePanel;
   pageNumber: number;
   isSelected: boolean;
   onToggle: () => void;
   onRegenerate: () => void;
+  aspectRatio: string;
+  onAspectChange: (ar: string) => void;
 }) {
   const status = panel.imageStatus;
   const hasImage = status === "completed" && panel.imageUrl;
@@ -67,7 +71,7 @@ function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate }: {
       }`}
     >
       {/* Image area */}
-      <div className={`relative bg-gray-800 ${aspectRatioClass(panel.aspectRatio)}`}>
+      <div className={`relative bg-gray-800 ${aspectRatioClass(aspectRatio)}`}>
         {status === "processing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div className="w-10 h-10 border-4 border-gray-600 border-t-purple-400 rounded-full animate-spin" />
@@ -160,6 +164,16 @@ function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate }: {
       <div className="px-2 py-1.5 bg-gray-900/80">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-gray-400">{panel.panelId}</span>
+          <select
+            value={aspectRatio}
+            onChange={(e) => { e.stopPropagation(); onAspectChange(e.target.value); }}
+            onClick={(e) => e.stopPropagation()}
+            className="px-1 py-0.5 bg-gray-800 border border-gray-700 text-gray-300 rounded text-[11px] focus:outline-none focus:border-blue-500"
+          >
+            {ASPECT_RATIO_OPTIONS.map((ar) => (
+              <option key={ar} value={ar}>{ar}</option>
+            ))}
+          </select>
           <span className="text-xs text-gray-600">Scene {panel.sceneNumber}</span>
         </div>
         {panel.caption?.text && (
@@ -194,8 +208,17 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
   const [styleId, setStyleId] = useState("");
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [aspectOverrides, setAspectOverrides] = useState<Record<string, string>>({});
 
   const panelKey = (p: { pageNumber: number; panelId: string }) => `${p.pageNumber}-${p.panelId}`;
+
+  function getAspectRatio(p: ComicPanelItem): string {
+    return aspectOverrides[panelKey(p)] ?? p.aspectRatio ?? "4:3";
+  }
+
+  function setAspectRatio(p: { pageNumber: number; panelId: string }, ar: string) {
+    setAspectOverrides((prev) => ({ ...prev, [panelKey(p)]: ar }));
+  }
 
   function togglePanel(p: ComicPanelItem) {
     setSelected((prev) => {
@@ -222,7 +245,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
     try {
       await generateComicImages(
         projectId,
-        [{ pageNumber: item.pageNumber, panelId: item.panelId, sceneNumber: item.sceneNumber, imagePrompt: item.imagePrompt, aspectRatio: item.aspectRatio }],
+        [{ pageNumber: item.pageNumber, panelId: item.panelId, sceneNumber: item.sceneNumber, imagePrompt: item.imagePrompt, aspectRatio: getAspectRatio(item) }],
         model,
         prefix
       );
@@ -247,8 +270,8 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
     try {
       await generateComicImages(
         projectId,
-        panelsToGenerate.map(({ pageNumber, panelId, sceneNumber, imagePrompt, aspectRatio: ar }) => ({
-          pageNumber, panelId, sceneNumber, imagePrompt, aspectRatio: ar,
+        panelsToGenerate.map((p) => ({
+          pageNumber: p.pageNumber, panelId: p.panelId, sceneNumber: p.sceneNumber, imagePrompt: p.imagePrompt, aspectRatio: getAspectRatio(p),
         })),
         model,
         prefix
@@ -404,6 +427,8 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                       isSelected={selected.has(key)}
                       onToggle={() => togglePanel(item)}
                       onRegenerate={() => handleRegenerateOne(item)}
+                      aspectRatio={getAspectRatio(item)}
+                      onAspectChange={(ar) => setAspectRatio(item, ar)}
                     />
                   );
                 })}
