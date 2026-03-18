@@ -224,6 +224,21 @@ export function generateComicImages(
   );
 }
 
+export function regenerateComicPanelPrompt(
+  projectId: number,
+  pageNumber: number,
+  panelId: string,
+  narrativeText: string
+): Promise<{ imagePrompt: string }> {
+  return fetchApi<{ imagePrompt: string }>(
+    `/api/projects/${projectId}/comic/regenerate-panel-prompt`,
+    {
+      method: "POST",
+      body: JSON.stringify({ pageNumber, panelId, narrativeText }),
+    }
+  );
+}
+
 export async function downloadComicSvgs(projectId: number, comicStructure: ComicStructure): Promise<void> {
   const res = await fetch(`${API_BASE}/api/projects/${projectId}/comic/download`, {
     method: "POST",

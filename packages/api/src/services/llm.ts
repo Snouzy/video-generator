@@ -252,3 +252,40 @@ Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte (pas d'autr
   const structure: ComicStructure = JSON.parse(jsonStr);
   return structure;
 }
+
+// ---------------------------------------------------------------------------
+// Regenerate a single comic panel prompt from narrative text
+// ---------------------------------------------------------------------------
+
+export async function regenerateComicPanelPrompt(
+  narrativeText: string,
+  sceneTitle: string,
+  language: TextLanguage
+): Promise<string> {
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Tu es un directeur artistique de bande dessinée. À partir du texte narratif ci-dessous, génère un prompt détaillé de génération d'image IA pour une case de BD.
+
+Le prompt doit être EN ANGLAIS et décrire UNIQUEMENT le contenu visuel de la scène : personnages, décor, éclairage, angle de caméra, composition, ambiance, expressions faciales.
+
+Règles :
+- L'image doit remplir tout le cadre sans bordures, sans cases adjacentes, sans marges blanches ou noires.
+- Les dialogues et textes visibles dans les bulles doivent être en ${language}.
+- Sois vivant, précis et cinématique. Pense à un plan de film ou une peinture.
+
+Titre de la scène : ${sceneTitle}
+
+Texte narratif :
+${narrativeText}
+
+Retourne UNIQUEMENT le prompt (texte brut, pas de JSON, pas de guillemets).`,
+      },
+    ],
+  });
+
+  return extractText(response.content).trim();
+}

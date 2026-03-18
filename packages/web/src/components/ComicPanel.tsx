@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ComicStructure, ComicPagePanel } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
-import { generateComicImages, downloadComicSvgs, mediaUrl } from "../api/client";
+import { generateComicImages, downloadComicSvgs, mediaUrl, regenerateComicPanelPrompt } from "../api/client";
 import { toast } from "sonner";
 
 interface ComicPanelItem {
@@ -36,6 +36,34 @@ function downloadImage(url: string, filename: string) {
     });
 }
 
+async function copyImageToClipboard(url: string) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    // Convert to PNG for clipboard compatibility
+    const pngBlob = blob.type === "image/png"
+      ? blob
+      : await new Promise<Blob>((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext("2d")!.drawImage(img, 0, 0);
+            canvas.toBlob((b) => resolve(b!), "image/png");
+          };
+          img.src = URL.createObjectURL(blob);
+        });
+    await navigator.clipboard.write([
+      new ClipboardItem({ "image/png": pngBlob }),
+    ]);
+    toast.success("Image copiee");
+  } catch {
+    toast.error("Impossible de copier l'image");
+  }
+}
+
 function aspectRatioClass(ar?: string): string {
   switch (ar) {
     case "16:9": return "aspect-[16/9]";
@@ -49,7 +77,7 @@ function aspectRatioClass(ar?: string): string {
 
 const ASPECT_RATIO_OPTIONS = ["16:9", "9:16", "4:3", "3:4", "1:1"] as const;
 
-function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate, aspectRatio, onAspectChange }: {
+function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate, aspectRatio, onAspectChange, prompt, onPromptChange, narrative, onNarrativeChange, onGeneratePrompt, generatingPrompt, onZoom }: {
   panel: ComicPagePanel;
   pageNumber: number;
   isSelected: boolean;
@@ -57,7 +85,15 @@ function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate, aspe
   onRegenerate: () => void;
   aspectRatio: string;
   onAspectChange: (ar: string) => void;
+  prompt: string;
+  onPromptChange: (text: string) => void;
+  narrative: string;
+  onNarrativeChange: (text: string) => void;
+  onGeneratePrompt: () => void;
+  generatingPrompt: boolean;
+  onZoom: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
   const status = panel.imageStatus;
   const hasImage = status === "completed" && panel.imageUrl;
 
@@ -115,26 +151,48 @@ function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate, aspe
             <button
               onClick={(e) => { e.stopPropagation(); onRegenerate(); }}
               className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center"
-              title="(Re)generate image"
+              title="Regenerer l'image"
             >
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
-            {/* Download */}
             {hasImage && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downloadImage(mediaUrl(panel.imageUrl!), `comic-p${pageNumber}-${panel.panelId}.png`);
-                }}
-                className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center"
-                title="Download image"
-              >
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-              </button>
+              <>
+                {/* Copy to clipboard */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); copyImageToClipboard(mediaUrl(panel.imageUrl!)); }}
+                  className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center"
+                  title="Copier l'image"
+                >
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                </button>
+                {/* Zoom / fullscreen */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onZoom(); }}
+                  className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center"
+                  title="Agrandir"
+                >
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
+                </button>
+                {/* Download */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadImage(mediaUrl(panel.imageUrl!), `comic-p${pageNumber}-${panel.panelId}.png`);
+                  }}
+                  className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center"
+                  title="Telecharger"
+                >
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </button>
+              </>
             )}
           </div>
         )}
@@ -176,14 +234,57 @@ function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate, aspe
           </select>
           <span className="text-xs text-gray-600">Scene {panel.sceneNumber}</span>
         </div>
-        {panel.caption?.text && (
-          <p className="text-[11px] text-yellow-500/70 truncate mt-0.5" title={panel.caption.text}>
-            {panel.caption.text}
+        {/* 1. Narrative (editable) */}
+        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+          <textarea
+            value={narrative}
+            onChange={(e) => onNarrativeChange(e.target.value)}
+            rows={2}
+            placeholder="Texte narratif..."
+            className="w-full text-[11px] text-yellow-500/80 bg-gray-800/50 border border-gray-700 rounded p-1.5 resize-y focus:outline-none focus:border-yellow-600"
+          />
+          <button
+            onClick={onGeneratePrompt}
+            disabled={generatingPrompt || !narrative.trim()}
+            className="mt-1 w-full px-2 py-1 text-[11px] bg-yellow-700 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded transition-colors"
+          >
+            {generatingPrompt ? "Generation du prompt..." : "Generer le prompt"}
+          </button>
+        </div>
+
+        {/* 2. Image prompt (editable) + regenerate */}
+        {editing ? (
+          <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+            <textarea
+              value={prompt}
+              onChange={(e) => onPromptChange(e.target.value)}
+              rows={4}
+              className="w-full text-[11px] text-gray-300 bg-gray-800 border border-gray-600 rounded p-1.5 resize-y focus:outline-none focus:border-blue-500"
+            />
+            <div className="flex items-center gap-1.5 mt-1">
+              <button
+                onClick={() => { setEditing(false); onRegenerate(); }}
+                className="px-2 py-0.5 text-[11px] bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors"
+              >
+                Regenerer image
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="px-2 py-0.5 text-[11px] text-gray-400 hover:text-white transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p
+            className="text-[11px] text-gray-500 truncate mt-1 hover:text-gray-300 cursor-text"
+            title={prompt}
+            onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+          >
+            {prompt}
           </p>
         )}
-        <p className="text-[11px] text-gray-500 truncate mt-0.5" title={panel.imagePrompt}>
-          {panel.imagePrompt}
-        </p>
       </div>
     </div>
   );
@@ -209,6 +310,10 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [aspectOverrides, setAspectOverrides] = useState<Record<string, string>>({});
+  const [promptOverrides, setPromptOverrides] = useState<Record<string, string>>({});
+  const [narrativeOverrides, setNarrativeOverrides] = useState<Record<string, string>>({});
+  const [generatingPromptKeys, setGeneratingPromptKeys] = useState<Set<string>>(new Set());
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   const panelKey = (p: { pageNumber: number; panelId: string }) => `${p.pageNumber}-${p.panelId}`;
 
@@ -218,6 +323,54 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
 
   function setAspectRatio(p: { pageNumber: number; panelId: string }, ar: string) {
     setAspectOverrides((prev) => ({ ...prev, [panelKey(p)]: ar }));
+  }
+
+  function getPrompt(p: ComicPanelItem): string {
+    return promptOverrides[panelKey(p)] ?? p.imagePrompt;
+  }
+
+  function setPrompt(p: { pageNumber: number; panelId: string }, text: string) {
+    setPromptOverrides((prev) => ({ ...prev, [panelKey(p)]: text }));
+  }
+
+  function getNarrative(p: ComicPanelItem): string {
+    const key = panelKey(p);
+    if (key in narrativeOverrides) return narrativeOverrides[key];
+    // Find the caption from the comic structure
+    const page = comicStructure.pages.find((pg) => pg.pageNumber === p.pageNumber);
+    const panel = page?.panels.find((pan) => pan.panelId === p.panelId);
+    return panel?.caption?.text ?? "";
+  }
+
+  function setNarrative(p: { pageNumber: number; panelId: string }, text: string) {
+    setNarrativeOverrides((prev) => ({ ...prev, [panelKey(p)]: text }));
+  }
+
+  async function handleGeneratePrompt(item: ComicPanelItem) {
+    const key = panelKey(item);
+    const narrative = getNarrative(item);
+    if (!narrative.trim()) return;
+
+    setGeneratingPromptKeys((prev) => new Set(prev).add(key));
+    try {
+      const { imagePrompt } = await regenerateComicPanelPrompt(
+        projectId,
+        item.pageNumber,
+        item.panelId,
+        narrative
+      );
+      setPromptOverrides((prev) => ({ ...prev, [key]: imagePrompt }));
+      toast.success(`Prompt regenere pour ${item.panelId}`);
+      onRefresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Echec de la generation du prompt");
+    } finally {
+      setGeneratingPromptKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
   }
 
   function togglePanel(p: ComicPanelItem) {
@@ -245,7 +398,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
     try {
       await generateComicImages(
         projectId,
-        [{ pageNumber: item.pageNumber, panelId: item.panelId, sceneNumber: item.sceneNumber, imagePrompt: item.imagePrompt, aspectRatio: getAspectRatio(item) }],
+        [{ pageNumber: item.pageNumber, panelId: item.panelId, sceneNumber: item.sceneNumber, imagePrompt: getPrompt(item), aspectRatio: getAspectRatio(item) }],
         model,
         prefix
       );
@@ -271,7 +424,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
       await generateComicImages(
         projectId,
         panelsToGenerate.map((p) => ({
-          pageNumber: p.pageNumber, panelId: p.panelId, sceneNumber: p.sceneNumber, imagePrompt: p.imagePrompt, aspectRatio: getAspectRatio(p),
+          pageNumber: p.pageNumber, panelId: p.panelId, sceneNumber: p.sceneNumber, imagePrompt: getPrompt(p), aspectRatio: getAspectRatio(p),
         })),
         model,
         prefix
@@ -429,6 +582,13 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                       onRegenerate={() => handleRegenerateOne(item)}
                       aspectRatio={getAspectRatio(item)}
                       onAspectChange={(ar) => setAspectRatio(item, ar)}
+                      prompt={getPrompt(item)}
+                      onPromptChange={(text) => setPrompt(item, text)}
+                      narrative={getNarrative(item)}
+                      onNarrativeChange={(text) => setNarrative(item, text)}
+                      onGeneratePrompt={() => handleGeneratePrompt(item)}
+                      generatingPrompt={generatingPromptKeys.has(key)}
+                      onZoom={() => panel.imageUrl && setZoomedImage(mediaUrl(panel.imageUrl))}
                     />
                   );
                 })}
@@ -437,6 +597,41 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
           );
         })}
       </div>
+
+      {/* Lightbox */}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer"
+          onClick={() => setZoomedImage(null)}
+        >
+          <img
+            src={zoomedImage}
+            alt="Zoom"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setZoomedImage(null)}
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-xl"
+          >
+            &times;
+          </button>
+          <div className="absolute bottom-6 flex gap-3">
+            <button
+              onClick={(e) => { e.stopPropagation(); copyImageToClipboard(zoomedImage); }}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm backdrop-blur transition-colors"
+            >
+              Copier
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); downloadImage(zoomedImage, "comic-panel.png"); }}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm backdrop-blur transition-colors"
+            >
+              Telecharger
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

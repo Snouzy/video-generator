@@ -2,7 +2,7 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, ProjectConfig, ComicStructure } from "@video-generator/shared";
 import { BUILTIN_COMIC_LAYOUTS, closestAspectRatio } from "@video-generator/shared";
-import { generateComicStructure } from "../services/llm";
+import { generateComicStructure, regenerateComicPanelPrompt } from "../services/llm";
 import { generateComicPageSVG } from "../services/comic-svg";
 import { generateImage, downloadToLocal } from "../services/fal";
 import archiver from "archiver";
@@ -187,6 +187,56 @@ router.post("/:id/comic/generate-images", async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({ success: false, error: message } as ApiResponse<never>);
     }
+  }
+});
+
+// POST /api/projects/:id/comic/regenerate-panel-prompt
+// Regenerates the imagePrompt for a single panel from its narrative text
+router.post("/:id/comic/regenerate-panel-prompt", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { pageNumber, panelId, narrativeText } = req.body as {
+      pageNumber: number;
+      panelId: string;
+      narrativeText: string;
+    };
+
+    if (!narrativeText) {
+      res.status(400).json({ success: false, error: "narrativeText is required" } as ApiResponse<never>);
+      return;
+    }
+
+    const project = await prisma.project.findUnique({ where: { id } });
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" } as ApiResponse<never>);
+      return;
+    }
+
+    const config = project.config as unknown as ProjectConfig | null;
+    const lang = config?.textLanguage ?? "French";
+
+    // Find the panel's scene title
+    const comic = project.comicStructure as unknown as ComicStructure | null;
+    const page = comic?.pages.find((p) => p.pageNumber === pageNumber);
+    const panel = page?.panels.find((p) => p.panelId === panelId);
+    const sceneTitle = panel ? `Scene ${panel.sceneNumber}` : "Scene";
+
+    const imagePrompt = await regenerateComicPanelPrompt(narrativeText, sceneTitle, lang);
+
+    // Update the panel's imagePrompt and caption in the persisted structure
+    if (comic && panel) {
+      panel.imagePrompt = imagePrompt;
+      panel.caption = { text: narrativeText, position: panel.caption?.position ?? "bottom" };
+      await prisma.project.update({
+        where: { id },
+        data: { comicStructure: comic as any },
+      });
+    }
+
+    res.json({ success: true, data: { imagePrompt } } as ApiResponse<{ imagePrompt: string }>);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
   }
 });
 
