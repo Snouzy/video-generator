@@ -173,17 +173,17 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
     name: "BD avec Bulles",
     description: "Bande dessinée franco-belge avec bulles de dialogue, phylactères expressifs, onomatopées",
     sourceId: "builtin:comic-bubbles",
-    stylePromptPrefix: "Franco-Belgian comic book style illustration with prominent speech bubbles and dialogue balloons, expressive stylized characters with clean bold ink outlines, flat color fills, dynamic poses, vivid saturated colors, thick black contour lines, hand-drawn aesthetic, detailed semi-realistic backgrounds, visible comic panel layout",
-    llmSystemInstructions: `- CRITICAL: Every scene MUST feature expressive characters WITH prominent speech bubbles (phylactères) as a core visual element. The speech bubbles are not optional — they are the defining feature of this style. Each character who speaks or thinks MUST have a visible bubble connected to them.
-- Speech bubbles MUST be classic comic-style: white or light-colored rounded shapes with a pointed tail aimed at the speaking character's mouth. Use different bubble styles for different purposes: smooth oval bubbles for normal speech, cloud-shaped bubbles for thoughts, jagged/spiky bubbles for shouting or anger, wavy bubbles for whispering or weakness, dripping bubbles for sarcasm or disgust.
-- Include SHORT text inside the bubbles that captures the key dialogue or reaction of the scene. The text should be in bold comic lettering, 3-8 words maximum per bubble. Use the narrative language. Multiple bubbles per character are fine for back-and-forth exchanges.
-- Add onomatopoeia (sound effects) as bold stylized text integrated into the scene: "BOOM", "CRACK", "SPLASH", "DING", "WHOOSH", "HAHA", etc. These should be large, colorful, and dynamic — part of the composition, not an afterthought.
-- Characters should have slightly exaggerated but recognizable proportions in the Franco-Belgian BD tradition (think Astérix, Tintin, Lucky Luke, or Blacksad). Strong expressions, dynamic poses, expressive eyes and mouths that match what their bubble says.
-- Characters MUST be dressed in real, recognizable clothing appropriate to the scene: business suits, hoodies, streetwear, uniforms, lab coats, leather jackets, etc. Vary outfits across scenes. Add personality through accessories.
-- Facial expressions are key and MUST match the speech bubble content — a character with a shouting bubble should have an open mouth and intense eyes, a character with a thought bubble should look pensive.
-- Use bold ink outlines with varying line weight — thicker for character silhouettes, thinner for facial details and background. Speech bubbles should have clean, consistent outlines.
-- Compose the scene as a comic panel or page layout: consider the reading order of bubbles (top-left to bottom-right), leave enough space for bubbles without crowding the characters. The bubbles and characters together should tell the story at a glance.
-- Backgrounds should be detailed and hand-drawn but secondary to the characters and their dialogue: cityscapes, offices, cafés, streets. Include contextual props that ground the scene in reality.`,
+    stylePromptPrefix: "Franco-Belgian comic book style single panel illustration, expressive stylized characters with clean bold ink outlines, flat color fills, dynamic poses, vivid saturated colors, thick black contour lines, hand-drawn aesthetic, detailed semi-realistic backgrounds, with prominent speech bubbles and dialogue balloons. The illustration must fill the entire image as a single scene — no panel borders, no adjacent panels, no page layout, no visible frames or gutters around the edges",
+    llmSystemInstructions: `- CRITIQUE : chaque scène DOIT mettre en avant des personnages expressifs AVEC des bulles de dialogue (phylactères) bien visibles EN FRANÇAIS. Les bulles sont un élément visuel central de ce style. Chaque personnage qui parle ou pense DOIT avoir une bulle visible reliée à lui.
+- Les bulles DOIVENT être de style BD classique : formes arrondies blanches ou claires avec une queue pointée vers la bouche du personnage. Différents styles selon le contexte : bulles ovales lisses pour la parole normale, en forme de nuage pour les pensées, dentelées/piquantes pour les cris ou la colère, ondulées pour les chuchotements.
+- Inclure un texte COURT dans les bulles qui capture le dialogue ou la réaction clé de la scène. Le texte doit être en lettrage BD gras, 3-8 mots maximum par bulle. CRITIQUE : le texte des bulles et onomatopées DOIT être dans la langue du récit (PAS en anglais). Plusieurs bulles par personnage sont possibles pour les échanges.
+- Ajouter des onomatopées (effets sonores) en texte stylisé gras intégré à la scène : "BOOM", "CRACK", "SPLASH", etc. Grands, colorés et dynamiques.
+- Les personnages doivent avoir des proportions légèrement exagérées mais reconnaissables dans la tradition BD franco-belge (Astérix, Tintin, Lucky Luke, Blacksad). Expressions fortes, poses dynamiques, yeux et bouches expressifs qui correspondent au contenu des bulles.
+- Les personnages DOIVENT porter des vêtements réels et reconnaissables adaptés à la scène. Varier les tenues entre les scènes. Ajouter de la personnalité via les accessoires.
+- Les expressions faciales DOIVENT correspondre au contenu des bulles — un personnage avec une bulle de cri doit avoir la bouche ouverte et les yeux intenses.
+- Contours encrés gras avec variation d'épaisseur de trait — plus épais pour les silhouettes, plus fins pour les détails et l'arrière-plan.
+- CRITIQUE : composer la scène comme UNE SEULE case de BD remplissant toute l'image. PAS de bordures de cases visibles, PAS de cases adjacentes, PAS de mise en page multi-cases, PAS de cadres ou gouttières sur les bords. L'illustration doit occuper 100% de l'image.
+- Arrière-plans détaillés et dessinés à la main mais secondaires par rapport aux personnages et leurs dialogues.`,
     isBuiltin: true,
   },
   {
@@ -388,7 +388,7 @@ export function calculateSceneCost(params: {
     if (!pricing) continue;
 
     const resolution = params.imageResolutions?.[model];
-    const unitCost = (resolution && pricing.resolutionPricing?.[resolution]) ?? pricing.basePrice;
+    const unitCost = (resolution ? pricing.resolutionPricing?.[resolution] : undefined) ?? pricing.basePrice;
     const quantity = params.imagesPerScene;
     const subtotal = unitCost * quantity;
 

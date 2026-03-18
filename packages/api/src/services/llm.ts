@@ -193,34 +193,35 @@ export async function generateComicStructure(
     messages: [
       {
         role: "user",
-        content: `You are a comic book editor (bande dessinée). Your job is to organize scenes into comic book pages with narration captions and speech bubbles, like the graphic novel adaptation of "Sapiens".
+        content: `Tu es un éditeur de bande dessinée. Ton travail est d'organiser des scènes en pages de BD avec des légendes narratives, dans le style de l'adaptation graphique de « Sapiens ».
 
-You are given:
-1. A list of scenes (each has a sceneNumber, title, narrativeText)
-2. Available page layouts (each has an id, panelCount, and panel IDs)
+Tu reçois :
+1. Une liste de scènes (chacune a un sceneNumber, title, narrativeText)
+2. Des mises en page disponibles (chacune a un id, panelCount, et des IDs de cases)
 
-Your task:
-- Distribute ALL scenes across pages by choosing the best layout for each page based on narrative pacing.
-- A dramatic or important scene should get a large panel (use "layout:full-page" or "layout:1-large-2-small" with the key scene in panel-1).
-- Fast-paced sequences or montages should use layouts with more panels ("layout:2x2-grid", "layout:3-top-2-bottom", "layout:6-grid").
-- Dialogue exchanges work well with "layout:2-horizontal" or "layout:3-horizontal".
-- Each panel holds exactly ONE scene. Every scene must appear exactly once.
-- For each panel, generate:
-  - An "imagePrompt": a detailed AI image generation prompt describing ONLY the visual scene content. Be vivid and specific: characters, setting, lighting, camera angle, composition, mood. CRITICAL: The generated image will be placed into a comic panel layout separately — so the prompt must describe ONLY the scene itself. Do NOT mention or include any comic panel elements: no borders, no frames, no speech bubbles, no text overlays, no captions, no character name labels, no "comic panel" framing, no white borders, no black outlines around the image. Just describe the raw scene as if directing a photograph or painting.
-  - A "caption" (narrator voice-over) adapted from the narrativeText. Keep it short (1-2 sentences max), in the style of Sapiens: factual, slightly ironic, engaging. Set position to "top" or "bottom".
-  - "bubbles" must ALWAYS be an empty array []. Do NOT generate any speech bubbles.
+Ta mission :
+- Distribuer TOUTES les scènes sur des pages en choisissant la meilleure mise en page selon le rythme narratif.
+- Une scène dramatique ou importante doit avoir une grande case (utilise "layout:full-page" ou "layout:1-large-2-small" avec la scène clé en panel-1).
+- Les séquences rapides ou montages doivent utiliser des mises en page avec plus de cases ("layout:2x2-grid", "layout:3-top-2-bottom", "layout:6-grid").
+- Les échanges de dialogue fonctionnent bien avec "layout:2-horizontal" ou "layout:3-horizontal".
+- Chaque case contient exactement UNE scène. Chaque scène doit apparaître exactement une fois.
+- Pour chaque case, génère :
+  - Un "imagePrompt" : un prompt détaillé de génération d'image IA décrivant le contenu visuel de la scène, EN ANGLAIS. Sois vivant et précis : personnages, décor, éclairage, angle de caméra, composition, ambiance. CRITIQUE : L'image doit représenter UNE SEULE scène remplissant toute l'image. PAS de bordures de cases, PAS de cases adjacentes visibles, PAS de mise en page multi-cases, PAS de cadres ou gouttières sur les bords. L'illustration occupe 100% de l'image. Les bulles de dialogue et le texte sont OK si le style le demande. Ajoute toujours à la fin : "Single panel illustration filling the entire image, no panel borders, no adjacent panels, no page layout visible."
+  - Une "caption" (voix-off du narrateur) adaptée du narrativeText. Courte (1-2 phrases max), dans le style de Sapiens : factuel, légèrement ironique, engageant. Position "top" ou "bottom".
+  - "bubbles" doit TOUJOURS être un tableau vide []. NE génère AUCUNE bulle de dialogue.
 
-ALL text (captions and bubbles) MUST be in ${language}.
+TOUT le texte (captions) DOIT être en ${language}.
+Les "imagePrompt" DOIVENT être en anglais SAUF le texte des dialogues/bulles/onomatopées qui doit être en ${language}. Exemple : "... Two men arguing in an office. Speech bubble from the left man: «On a un accord, messieurs !». Speech bubble from the right man: «L'avenir est à nous !» ..."
 
-Available layouts:
+Mises en page disponibles :
 ${JSON.stringify(layoutSummary, null, 2)}
 
-Scenes:
+Scènes :
 ${JSON.stringify(scenes.map(s => ({ sceneNumber: s.sceneNumber, title: s.title, narrativeText: s.narrativeText })), null, 2)}
 
-Return ONLY a valid JSON object with this exact structure (no other text):
+Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte (pas d'autre texte) :
 {
-  "title": "Comic title",
+  "title": "Titre de la BD",
   "pages": [
     {
       "pageNumber": 1,
@@ -229,8 +230,8 @@ Return ONLY a valid JSON object with this exact structure (no other text):
         {
           "panelId": "panel-1",
           "sceneNumber": 1,
-          "imagePrompt": "A detailed visual description of the scene for AI image generation...",
-          "caption": { "text": "Narrator text...", "position": "top" },
+          "imagePrompt": "A detailed visual description of the scene for AI image generation, in English...",
+          "caption": { "text": "Texte du narrateur en ${language}...", "position": "top" },
           "bubbles": []
         }
       ]

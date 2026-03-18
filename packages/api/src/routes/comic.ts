@@ -136,11 +136,13 @@ router.post("/:id/comic/generate-images", async (req, res) => {
     // Background: generate images and update status per panel
     const fallbackAr = aspectRatio ?? "4:3";
     const prefix = stylePromptPrefix ?? "";
+    const singlePanelSuffix = ". The illustration must fill the entire image as a single scene — no panel borders, no adjacent panels, no page layout, no visible frames or gutters around the edges";
 
     (async () => {
       for (const panel of panels) {
         const ar = panel.aspectRatio ?? fallbackAr;
-        const fullPrompt = prefix ? `${prefix}, ${panel.imagePrompt}` : panel.imagePrompt;
+        const basePrompt = prefix ? `${prefix}, ${panel.imagePrompt}` : panel.imagePrompt;
+        const fullPrompt = `${basePrompt}${singlePanelSuffix}`;
         let localUrl: string | null = null;
         let status: "completed" | "failed" = "failed";
 
@@ -165,7 +167,7 @@ router.post("/:id/comic/generate-images", async (req, res) => {
             const targetPanel = targetPage?.panels.find((p) => p.panelId === panel.panelId);
             if (targetPanel) {
               targetPanel.imageStatus = status;
-              targetPanel.imageUrl = localUrl;
+              targetPanel.imageUrl = localUrl ? `${localUrl}?v=${Date.now()}` : null;
             }
             await prisma.project.update({
               where: { id },

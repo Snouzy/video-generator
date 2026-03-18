@@ -266,7 +266,8 @@ export function generateComicPageSVG(
   svg += `      .bubble-bg { fill: #FFFFFF; stroke: #000000; stroke-width: 2; }\n`;
   svg += `      .bubble-text { font-family: ${FONT_FAMILY}; font-size: ${BUBBLE_FONT_SIZE}px; font-weight: bold; fill: #000000; }\n`;
   svg += `      .bubble-character { font-family: sans-serif; font-size: 9px; fill: #666666; }\n`;
-  svg += `      .scene-label { font-family: sans-serif; font-size: 16px; fill: #999999; font-weight: bold; }\n`;
+  svg += `      .scene-label { font-family: sans-serif; font-size: 16px; fill: #999999; font-weight: bold; }\n\
+      .page-number { font-family: sans-serif; font-size: 12px; fill: #666666; }\n`;
   svg += `    </style>\n`;
   svg += `  </defs>\n\n`;
 
@@ -282,6 +283,9 @@ export function generateComicPageSVG(
     svg += renderPanel(layoutPanel, pagePanel);
     svg += "\n";
   }
+
+  // Page number (bottom center)
+  svg += `  <text x="${W / 2}" y="${H - 6}" text-anchor="middle" class="page-number">${page.pageNumber}</text>\n`;
 
   svg += `</svg>\n`;
   return svg;
