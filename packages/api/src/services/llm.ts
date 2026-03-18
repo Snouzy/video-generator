@@ -353,3 +353,42 @@ Retourne UNIQUEMENT un objet JSON :
   const jsonStr = jsonMatch ? jsonMatch[1].trim() : text;
   return JSON.parse(jsonStr);
 }
+
+// ---------------------------------------------------------------------------
+// Generate a cover image prompt from the comic's scenes
+// ---------------------------------------------------------------------------
+
+export async function generateCoverPrompt(
+  title: string,
+  scenes: Array<{ sceneNumber: number; title: string; narrativeText: string }>,
+  language: TextLanguage
+): Promise<string> {
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Tu es un directeur artistique de bande dessinée. Tu dois créer un prompt de génération d'image IA pour la PREMIÈRE DE COUVERTURE d'une BD.
+
+Titre de la BD : "${title}"
+
+Résumé des scènes :
+${scenes.map((s) => `- Scene ${s.sceneNumber}: ${s.title} — ${s.narrativeText}`).join("\n")}
+
+Le prompt doit être EN ANGLAIS et décrire une illustration de couverture impactante :
+- Composition forte, accrocheuse, qui donne envie de lire
+- Personnage(s) principal(aux) mis en avant avec une pose dynamique ou iconique
+- Ambiance visuelle qui capture le thème central de l'histoire
+- Éclairage cinématique, couleurs vibrantes
+- Format portrait (A4), l'illustration remplit tout le cadre bord à bord
+- PAS de texte, PAS de titre, PAS de bordures — uniquement l'illustration. Le titre sera superposé séparément.
+- Les dialogues/bulles visibles doivent être en ${language} s'il y en a.
+
+Retourne UNIQUEMENT le prompt (texte brut, pas de JSON, pas de guillemets).`,
+      },
+    ],
+  });
+
+  return extractText(response.content).trim();
+}

@@ -812,7 +812,14 @@ export interface ComicPage {
   panels: ComicPagePanel[];
 }
 
+export interface ComicCover {
+  imagePrompt: string;
+  imageUrl?: string | null;
+  imageStatus?: "pending" | "processing" | "completed" | "failed";
+}
+
 export interface ComicStructure {
   title: string;
+  cover?: ComicCover;
   pages: ComicPage[];
 }

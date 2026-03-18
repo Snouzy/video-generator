@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ComicStructure, ComicPagePanel } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
-import { generateComicImages, downloadComicSvgs, mediaUrl, regenerateComicPanelPrompt, regenerateComicPage } from "../api/client";
+import { generateComicImages, downloadComicSvgs, mediaUrl, regenerateComicPanelPrompt, regenerateComicPage, generateCoverPrompt, generateCoverImage } from "../api/client";
 import { toast } from "sonner";
 
 interface ComicPanelItem {
@@ -315,6 +315,10 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
   const [generatingPromptKeys, setGeneratingPromptKeys] = useState<Set<string>>(new Set());
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [regeneratingPages, setRegeneratingPages] = useState<Set<number>>(new Set());
+  const [coverPrompt, setCoverPrompt] = useState(comicStructure.cover?.imagePrompt ?? "");
+  const [coverModel, setCoverModel] = useState("flux");
+  const [coverGeneratingPrompt, setCoverGeneratingPrompt] = useState(false);
+  const [coverGeneratingImage, setCoverGeneratingImage] = useState(false);
 
   const panelKey = (p: { pageNumber: number; panelId: string }) => `${p.pageNumber}-${p.panelId}`;
 
@@ -388,6 +392,35 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
         next.delete(pageNumber);
         return next;
       });
+    }
+  }
+
+  async function handleGenerateCoverPrompt() {
+    setCoverGeneratingPrompt(true);
+    try {
+      const { imagePrompt } = await generateCoverPrompt(projectId);
+      setCoverPrompt(imagePrompt);
+      toast.success("Prompt de couverture genere");
+      onRefresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Echec");
+    } finally {
+      setCoverGeneratingPrompt(false);
+    }
+  }
+
+  async function handleGenerateCoverImage() {
+    if (!coverPrompt.trim()) return;
+    setCoverGeneratingImage(true);
+    const styleTemplate = styleId ? BUILTIN_STYLE_TEMPLATES.find((s) => s.id === styleId) : undefined;
+    try {
+      await generateCoverImage(projectId, coverPrompt, coverModel, styleTemplate?.stylePromptPrefix);
+      toast.success("Couverture en cours de generation");
+      onRefresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Echec");
+    } finally {
+      setCoverGeneratingImage(false);
     }
   }
 
@@ -544,12 +577,96 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
           {downloading ? "..." : "SVGs"}
         </button>
 
-        <button
-          onClick={() => window.open(`http://localhost:3001/api/projects/${projectId}/comic/back-cover`, "_blank")}
-          className="px-3 py-1.5 text-sm border border-amber-700 text-amber-400 hover:text-white hover:bg-amber-600 rounded-lg font-medium transition-colors"
-        >
-          4e de couverture
-        </button>
+      </div>
+
+      {/* Cover */}
+      <div className="mb-8 p-4 bg-gray-900/60 border border-gray-700 rounded-lg">
+        <h4 className="text-sm font-bold text-white mb-3">Premiere de couverture</h4>
+
+        <div className="flex gap-4">
+          {/* Cover image preview */}
+          <div className="w-48 shrink-0">
+            <div className="relative bg-gray-800 aspect-[3/4] rounded-lg overflow-hidden">
+              {comicStructure.cover?.imageStatus === "processing" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                  <div className="w-8 h-8 border-4 border-gray-600 border-t-purple-400 rounded-full animate-spin" />
+                  <span className="text-purple-400 text-xs">Generation...</span>
+                </div>
+              )}
+              {comicStructure.cover?.imageStatus === "completed" && comicStructure.cover.imageUrl && (
+                <img
+                  src={mediaUrl(comicStructure.cover.imageUrl)}
+                  alt="Couverture"
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={() => setZoomedImage(mediaUrl(comicStructure.cover!.imageUrl!))}
+                />
+              )}
+              {(!comicStructure.cover?.imageUrl || comicStructure.cover.imageStatus === "failed") && comicStructure.cover?.imageStatus !== "processing" && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-gray-600 text-sm">Pas d'image</span>
+                </div>
+              )}
+            </div>
+            {comicStructure.cover?.imageStatus === "completed" && comicStructure.cover.imageUrl && (
+              <div className="flex gap-1.5 mt-2">
+                <button
+                  onClick={() => copyImageToClipboard(mediaUrl(comicStructure.cover!.imageUrl!))}
+                  className="flex-1 px-2 py-1 text-[11px] bg-gray-800 hover:bg-gray-700 text-gray-300 rounded transition-colors"
+                >
+                  Copier
+                </button>
+                <button
+                  onClick={() => downloadImage(mediaUrl(comicStructure.cover!.imageUrl!), "cover.png")}
+                  className="flex-1 px-2 py-1 text-[11px] bg-gray-800 hover:bg-gray-700 text-gray-300 rounded transition-colors"
+                >
+                  Telecharger
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Cover controls */}
+          <div className="flex-1 space-y-3">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Prompt de couverture</label>
+              <textarea
+                value={coverPrompt}
+                onChange={(e) => setCoverPrompt(e.target.value)}
+                rows={5}
+                placeholder="Prompt pour l'image de couverture..."
+                className="w-full text-xs text-gray-300 bg-gray-800 border border-gray-700 rounded p-2 resize-y focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleGenerateCoverPrompt}
+                disabled={coverGeneratingPrompt}
+                className="px-3 py-1.5 text-xs bg-yellow-700 hover:bg-yellow-600 disabled:bg-gray-700 text-white rounded transition-colors"
+              >
+                {coverGeneratingPrompt ? "Generation..." : "Generer le prompt"}
+              </button>
+
+              <select
+                value={coverModel}
+                onChange={(e) => setCoverModel(e.target.value)}
+                className="px-2 py-1.5 bg-gray-800 border border-gray-700 text-white rounded text-xs"
+              >
+                {AVAILABLE_IMAGE_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+
+              <button
+                onClick={handleGenerateCoverImage}
+                disabled={coverGeneratingImage || !coverPrompt.trim()}
+                className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded transition-colors"
+              >
+                {coverGeneratingImage ? "Generation..." : "Generer l'image"}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Pages */}
@@ -628,6 +745,75 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
             </div>
           );
         })}
+      </div>
+
+      {/* Back cover (4e de couverture) */}
+      <div className="mt-8 p-4 bg-gray-900/60 border border-gray-700 rounded-lg">
+        <h4 className="text-sm font-bold text-white mb-3">4e de couverture</h4>
+        <div className="flex gap-4 items-start">
+          <div className="w-48 shrink-0 bg-gray-800 aspect-[3/4] rounded-lg overflow-hidden">
+            <iframe
+              src={`http://localhost:3001/api/projects/${projectId}/comic/back-cover`}
+              title="4e de couverture"
+              className="w-full h-full border-0"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-gray-400">Preview de la 4e de couverture (incluse automatiquement dans le ZIP SVGs).</p>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => {
+                  const url = `http://localhost:3001/api/projects/${projectId}/comic/back-cover`;
+                  fetch(url)
+                    .then((r) => r.text())
+                    .then((svgText) => {
+                      const blob = new Blob([svgText], { type: "image/svg+xml" });
+                      const blobUrl = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = blobUrl;
+                      a.download = "back-cover.svg";
+                      a.click();
+                      URL.revokeObjectURL(blobUrl);
+                    });
+                }}
+                className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded transition-colors"
+              >
+                Telecharger SVG
+              </button>
+              <button
+                onClick={() => {
+                  const url = `http://localhost:3001/api/projects/${projectId}/comic/back-cover`;
+                  fetch(url)
+                    .then((r) => r.text())
+                    .then((svgText) => {
+                      // Render SVG to PNG via canvas for clipboard
+                      const img = new Image();
+                      const blob = new Blob([svgText], { type: "image/svg+xml" });
+                      const blobUrl = URL.createObjectURL(blob);
+                      img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = 595 * 2;
+                        canvas.height = 842 * 2;
+                        const ctx = canvas.getContext("2d")!;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        canvas.toBlob((pngBlob) => {
+                          if (pngBlob) {
+                            navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob })]);
+                            toast.success("4e de couverture copiee");
+                          }
+                        }, "image/png");
+                        URL.revokeObjectURL(blobUrl);
+                      };
+                      img.src = blobUrl;
+                    });
+                }}
+                className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded transition-colors"
+              >
+                Copier PNG
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Lightbox */}

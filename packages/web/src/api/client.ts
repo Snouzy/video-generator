@@ -239,6 +239,28 @@ export function regenerateComicPanelPrompt(
   );
 }
 
+export function generateCoverPrompt(projectId: number): Promise<{ imagePrompt: string }> {
+  return fetchApi<{ imagePrompt: string }>(
+    `/api/projects/${projectId}/comic/cover/generate-prompt`,
+    { method: "POST" }
+  );
+}
+
+export function generateCoverImage(
+  projectId: number,
+  imagePrompt: string,
+  model: string,
+  stylePromptPrefix?: string
+): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(
+    `/api/projects/${projectId}/comic/cover/generate-image`,
+    {
+      method: "POST",
+      body: JSON.stringify({ imagePrompt, model, stylePromptPrefix }),
+    }
+  );
+}
+
 export function regenerateComicPage(
   projectId: number,
   pageNumber: number

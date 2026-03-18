@@ -2,7 +2,7 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, ProjectConfig, ComicStructure } from "@video-generator/shared";
 import { BUILTIN_COMIC_LAYOUTS, closestAspectRatio } from "@video-generator/shared";
-import { generateComicStructure, regenerateComicPanelPrompt, regenerateComicPage } from "../services/llm";
+import { generateComicStructure, regenerateComicPanelPrompt, regenerateComicPage, generateCoverPrompt } from "../services/llm";
 import { generateComicPageSVG, generateBackCoverSVG } from "../services/comic-svg";
 import { generateImage, downloadToLocal } from "../services/fal";
 import archiver from "archiver";
@@ -315,6 +315,124 @@ router.post("/:id/comic/regenerate-page", async (req, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
+// POST /api/projects/:id/comic/cover/generate-prompt
+// Generates a cover image prompt from the comic's scenes via LLM
+router.post("/:id/comic/cover/generate-prompt", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: { scenes: { orderBy: { sceneNumber: "asc" } } },
+    });
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" } as ApiResponse<never>);
+      return;
+    }
+
+    const comic = project.comicStructure as unknown as ComicStructure | null;
+    if (!comic) {
+      res.status(400).json({ success: false, error: "No comic structure" } as ApiResponse<never>);
+      return;
+    }
+
+    const config = project.config as unknown as ProjectConfig | null;
+    const lang = config?.textLanguage ?? "French";
+
+    const scenesForLLM = project.scenes.map((s) => ({
+      sceneNumber: s.sceneNumber,
+      title: s.title,
+      narrativeText: s.narrativeText ?? "",
+    }));
+
+    const imagePrompt = await generateCoverPrompt(comic.title, scenesForLLM, lang);
+
+    // Persist
+    comic.cover = { imagePrompt, imageUrl: comic.cover?.imageUrl, imageStatus: comic.cover?.imageStatus };
+    await prisma.project.update({ where: { id }, data: { comicStructure: comic as any } });
+
+    res.json({ success: true, data: { imagePrompt } } as ApiResponse<{ imagePrompt: string }>);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
+// POST /api/projects/:id/comic/cover/generate-image
+// Generates the cover image from a prompt
+router.post("/:id/comic/cover/generate-image", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { imagePrompt, model, stylePromptPrefix } = req.body as {
+      imagePrompt: string;
+      model: string;
+      stylePromptPrefix?: string;
+    };
+
+    if (!imagePrompt || !model) {
+      res.status(400).json({ success: false, error: "imagePrompt and model are required" } as ApiResponse<never>);
+      return;
+    }
+
+    const project = await prisma.project.findUnique({ where: { id } });
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" } as ApiResponse<never>);
+      return;
+    }
+
+    // Mark as processing
+    const comic = project.comicStructure as unknown as ComicStructure | null;
+    if (comic) {
+      comic.cover = { imagePrompt, imageUrl: comic.cover?.imageUrl, imageStatus: "processing" };
+      await prisma.project.update({ where: { id }, data: { comicStructure: comic as any } });
+    }
+
+    res.json({ success: true, data: { message: "Generating cover image" } } as ApiResponse<{ message: string }>);
+
+    // Background generation
+    const config = project.config as unknown as ProjectConfig | null;
+    const lang = config?.textLanguage ?? "French";
+    const prefix = stylePromptPrefix ?? "";
+    const suffix = `. The illustration must fill the entire image edge to edge — no borders, no margins, no panel frames. Portrait orientation (3:4). CRITICAL: All visible text must be in ${lang}`;
+    const fullPrompt = prefix ? `${prefix}, ${imagePrompt}${suffix}` : `${imagePrompt}${suffix}`;
+
+    (async () => {
+      let localUrl: string | null = null;
+      let status: "completed" | "failed" = "failed";
+
+      try {
+        const result = await generateImage(model, fullPrompt, "3:4");
+        if (result.imageUrl) {
+          localUrl = await downloadToLocal(result.imageUrl, "images", `comic-${id}-cover`);
+          status = "completed";
+        }
+      } catch (err) {
+        console.error(`[Comic] Cover generation failed:`, err);
+      }
+
+      try {
+        const fresh = await prisma.project.findUnique({ where: { id } });
+        const freshComic = fresh?.comicStructure as unknown as ComicStructure | null;
+        if (freshComic) {
+          freshComic.cover = {
+            imagePrompt,
+            imageStatus: status,
+            imageUrl: localUrl ? `${localUrl}?v=${Date.now()}` : null,
+          };
+          await prisma.project.update({ where: { id }, data: { comicStructure: freshComic as any } });
+        }
+      } catch (dbErr) {
+        console.error(`[Comic] Failed to update cover in DB:`, dbErr);
+      }
+    })();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+    }
   }
 });
 
