@@ -366,16 +366,19 @@ router.post("/:id/comic/cover/generate-prompt", async (req, res) => {
 router.post("/:id/comic/cover/generate-image", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { imagePrompt, model, stylePromptPrefix } = req.body as {
+    const { imagePrompt, model, stylePromptPrefix, aspectRatio: arParam } = req.body as {
       imagePrompt: string;
       model: string;
       stylePromptPrefix?: string;
+      aspectRatio?: string;
     };
 
     if (!imagePrompt || !model) {
       res.status(400).json({ success: false, error: "imagePrompt and model are required" } as ApiResponse<never>);
       return;
     }
+
+    const ar = arParam ?? "3:4";
 
     const project = await prisma.project.findUnique({ where: { id } });
     if (!project) {
@@ -396,7 +399,7 @@ router.post("/:id/comic/cover/generate-image", async (req, res) => {
     const config = project.config as unknown as ProjectConfig | null;
     const lang = config?.textLanguage ?? "French";
     const prefix = stylePromptPrefix ?? "";
-    const suffix = `. The illustration must fill the entire image edge to edge — no borders, no margins, no panel frames. Portrait orientation (3:4). CRITICAL: All visible text must be in ${lang}`;
+    const suffix = `. The illustration must fill the entire image edge to edge — no borders, no margins, no panel frames. CRITICAL: All visible text must be in ${lang}`;
     const fullPrompt = prefix ? `${prefix}, ${imagePrompt}${suffix}` : `${imagePrompt}${suffix}`;
 
     (async () => {
@@ -404,9 +407,9 @@ router.post("/:id/comic/cover/generate-image", async (req, res) => {
       let status: "completed" | "failed" = "failed";
 
       try {
-        const result = await generateImage(model, fullPrompt, "3:4");
+        const result = await generateImage(model, fullPrompt, ar);
         if (result.imageUrl) {
-          localUrl = await downloadToLocal(result.imageUrl, "images", `comic-${id}-cover`);
+          localUrl = await downloadToLocal(result.imageUrl, "images", `comic-${id}-cover-${ar.replace(":", "x")}`);
           status = "completed";
         }
       } catch (err) {
@@ -481,16 +484,19 @@ router.post("/:id/comic/back-cover/generate-prompt", async (req, res) => {
 router.post("/:id/comic/back-cover/generate-image", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { imagePrompt, model, stylePromptPrefix } = req.body as {
+    const { imagePrompt, model, stylePromptPrefix, aspectRatio: arParam } = req.body as {
       imagePrompt: string;
       model: string;
       stylePromptPrefix?: string;
+      aspectRatio?: string;
     };
 
     if (!imagePrompt || !model) {
       res.status(400).json({ success: false, error: "imagePrompt and model are required" } as ApiResponse<never>);
       return;
     }
+
+    const ar = arParam ?? "3:4";
 
     const project = await prisma.project.findUnique({ where: { id } });
     if (!project) {
@@ -509,7 +515,7 @@ router.post("/:id/comic/back-cover/generate-image", async (req, res) => {
     const config = project.config as unknown as ProjectConfig | null;
     const lang = config?.textLanguage ?? "French";
     const prefix = stylePromptPrefix ?? "";
-    const suffix = `. The illustration must fill the entire image edge to edge — no borders, no margins. Portrait orientation (3:4). CRITICAL: All visible text must be in ${lang} except URLs`;
+    const suffix = `. The illustration must fill the entire image edge to edge — no borders, no margins. CRITICAL: All visible text must be in ${lang} except URLs`;
     const fullPrompt = prefix ? `${prefix}, ${imagePrompt}${suffix}` : `${imagePrompt}${suffix}`;
 
     (async () => {
@@ -517,9 +523,9 @@ router.post("/:id/comic/back-cover/generate-image", async (req, res) => {
       let status: "completed" | "failed" = "failed";
 
       try {
-        const result = await generateImage(model, fullPrompt, "3:4");
+        const result = await generateImage(model, fullPrompt, ar);
         if (result.imageUrl) {
-          localUrl = await downloadToLocal(result.imageUrl, "images", `comic-${id}-back-cover`);
+          localUrl = await downloadToLocal(result.imageUrl, "images", `comic-${id}-back-cover-${ar.replace(":", "x")}`);
           status = "completed";
         }
       } catch (err) {

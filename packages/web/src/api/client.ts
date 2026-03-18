@@ -250,13 +250,14 @@ export function generateCoverImage(
   projectId: number,
   imagePrompt: string,
   model: string,
-  stylePromptPrefix?: string
+  stylePromptPrefix?: string,
+  aspectRatio?: string
 ): Promise<{ message: string }> {
   return fetchApi<{ message: string }>(
     `/api/projects/${projectId}/comic/cover/generate-image`,
     {
       method: "POST",
-      body: JSON.stringify({ imagePrompt, model, stylePromptPrefix }),
+      body: JSON.stringify({ imagePrompt, model, stylePromptPrefix, aspectRatio }),
     }
   );
 }
@@ -272,13 +273,14 @@ export function generateBackCoverImage(
   projectId: number,
   imagePrompt: string,
   model: string,
-  stylePromptPrefix?: string
+  stylePromptPrefix?: string,
+  aspectRatio?: string
 ): Promise<{ message: string }> {
   return fetchApi<{ message: string }>(
     `/api/projects/${projectId}/comic/back-cover/generate-image`,
     {
       method: "POST",
-      body: JSON.stringify({ imagePrompt, model, stylePromptPrefix }),
+      body: JSON.stringify({ imagePrompt, model, stylePromptPrefix, aspectRatio }),
     }
   );
 }

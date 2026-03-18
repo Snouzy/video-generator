@@ -319,10 +319,12 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
   const [coverModel, setCoverModel] = useState("flux");
   const [coverGeneratingPrompt, setCoverGeneratingPrompt] = useState(false);
   const [coverGeneratingImage, setCoverGeneratingImage] = useState(false);
+  const [coverFormat, setCoverFormat] = useState<string>("3:4");
   const [backCoverPrompt, setBackCoverPrompt] = useState(comicStructure.backCover?.imagePrompt ?? "");
   const [backCoverModel, setBackCoverModel] = useState("flux");
   const [backCoverGeneratingPrompt, setBackCoverGeneratingPrompt] = useState(false);
   const [backCoverGeneratingImage, setBackCoverGeneratingImage] = useState(false);
+  const [backCoverFormat, setBackCoverFormat] = useState<string>("3:4");
 
   const panelKey = (p: { pageNumber: number; panelId: string }) => `${p.pageNumber}-${p.panelId}`;
 
@@ -418,7 +420,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
     setCoverGeneratingImage(true);
     const styleTemplate = styleId ? BUILTIN_STYLE_TEMPLATES.find((s) => s.id === styleId) : undefined;
     try {
-      await generateCoverImage(projectId, coverPrompt, coverModel, styleTemplate?.stylePromptPrefix);
+      await generateCoverImage(projectId, coverPrompt, coverModel, styleTemplate?.stylePromptPrefix, coverFormat);
       toast.success("Couverture en cours de generation");
       onRefresh();
     } catch (e) {
@@ -447,7 +449,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
     setBackCoverGeneratingImage(true);
     const styleTemplate = styleId ? BUILTIN_STYLE_TEMPLATES.find((s) => s.id === styleId) : undefined;
     try {
-      await generateBackCoverImage(projectId, backCoverPrompt, backCoverModel, styleTemplate?.stylePromptPrefix);
+      await generateBackCoverImage(projectId, backCoverPrompt, backCoverModel, styleTemplate?.stylePromptPrefix, backCoverFormat);
       toast.success("4e de couverture en cours de generation");
       onRefresh();
     } catch (e) {
@@ -619,7 +621,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
         <div className="flex gap-4">
           {/* Cover image preview */}
           <div className="w-48 shrink-0">
-            <div className="relative bg-gray-800 aspect-[3/4] rounded-lg overflow-hidden">
+            <div className={`relative bg-gray-800 rounded-lg overflow-hidden ${aspectRatioClass(coverFormat)}`}>
               {comicStructure.cover?.imageStatus === "processing" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <div className="w-8 h-8 border-4 border-gray-600 border-t-purple-400 rounded-full animate-spin" />
@@ -688,6 +690,18 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                 {AVAILABLE_IMAGE_MODELS.map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
+              </select>
+
+              <select
+                value={coverFormat}
+                onChange={(e) => setCoverFormat(e.target.value)}
+                className="px-2 py-1.5 bg-gray-800 border border-gray-700 text-white rounded text-xs"
+              >
+                <option value="3:4">3:4 (A4 portrait)</option>
+                <option value="16:9">16:9 (Cover Gumroad)</option>
+                <option value="1:1">1:1 (Thumbnail)</option>
+                <option value="4:3">4:3 (Paysage)</option>
+                <option value="9:16">9:16 (Story)</option>
               </select>
 
               <button
@@ -909,6 +923,18 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                 {AVAILABLE_IMAGE_MODELS.map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
+              </select>
+
+              <select
+                value={backCoverFormat}
+                onChange={(e) => setBackCoverFormat(e.target.value)}
+                className="px-2 py-1.5 bg-gray-800 border border-gray-700 text-white rounded text-xs"
+              >
+                <option value="3:4">3:4 (A4 portrait)</option>
+                <option value="16:9">16:9 (Cover Gumroad)</option>
+                <option value="1:1">1:1 (Thumbnail)</option>
+                <option value="4:3">4:3 (Paysage)</option>
+                <option value="9:16">9:16 (Story)</option>
               </select>
 
               <button
