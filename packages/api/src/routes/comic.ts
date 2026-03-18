@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, ProjectConfig, ComicStructure } from "@video-generator/shared";
-import { BUILTIN_COMIC_LAYOUTS } from "@video-generator/shared";
+import { BUILTIN_COMIC_LAYOUTS, closestAspectRatio } from "@video-generator/shared";
 import { generateComicStructure } from "../services/llm";
 import { generateComicPageSVG } from "../services/comic-svg";
 import { generateImage, downloadToLocal } from "../services/fal";
@@ -53,6 +53,20 @@ router.post("/:id/comic/generate", async (req, res) => {
       config.textLanguage ?? "French"
     );
 
+    // Compute aspectRatio for each panel based on layout dimensions
+    const layoutMap = new Map(BUILTIN_COMIC_LAYOUTS.map((l) => [l.id, l]));
+    for (const page of comicStructure.pages) {
+      const layout = layoutMap.get(page.layoutId);
+      if (!layout) continue;
+      const panelMap = new Map(layout.panels.map((p) => [p.id, p]));
+      for (const panel of page.panels) {
+        const layoutPanel = panelMap.get(panel.panelId);
+        if (layoutPanel) {
+          panel.aspectRatio = closestAspectRatio(layoutPanel.width, layoutPanel.height);
+        }
+      }
+    }
+
     // Persist to database
     await prisma.project.update({
       where: { id },
@@ -72,10 +86,10 @@ router.post("/:id/comic/generate-images", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { panels, model, stylePromptPrefix, aspectRatio } = req.body as {
-      panels: { pageNumber: number; panelId: string; sceneNumber: number; imagePrompt: string }[];
+      panels: { pageNumber: number; panelId: string; sceneNumber: number; imagePrompt: string; aspectRatio?: string }[];
       model: string;
       stylePromptPrefix?: string;
-      aspectRatio?: string;
+      aspectRatio?: string; // fallback if panel has no aspectRatio
     };
 
     if (!panels || panels.length === 0) {
@@ -120,11 +134,12 @@ router.post("/:id/comic/generate-images", async (req, res) => {
     } as ApiResponse<{ message: string; totalPanels: number }>);
 
     // Background: generate images and update status per panel
-    const ar = aspectRatio ?? "4:3";
+    const fallbackAr = aspectRatio ?? "4:3";
     const prefix = stylePromptPrefix ?? "";
 
     (async () => {
       for (const panel of panels) {
+        const ar = panel.aspectRatio ?? fallbackAr;
         const fullPrompt = prefix ? `${prefix}, ${panel.imagePrompt}` : panel.imagePrompt;
         let localUrl: string | null = null;
         let status: "completed" | "failed" = "failed";

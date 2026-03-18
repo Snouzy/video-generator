@@ -706,18 +706,18 @@ export const BUILTIN_COMIC_LAYOUTS: ComicLayout[] = [
   },
   {
     id: "layout:1-large-3-small",
-    name: "1 grande gauche + 3 petites",
-    description: "1 grande case à gauche, 3 empilées à droite — focus + détails",
+    name: "1 grande + 3 petites",
+    description: "1 grande case en haut, 3 petites en bas — intro puis détails",
     panelCount: 4,
     panels: (() => {
-      const leftW = Math.round(W * 0.58);
-      const rightW = W - leftW - G;
-      const ph = (H - 2 * G) / 3;
+      const topH = Math.round(H * 0.55);
+      const botH = H - topH - G;
+      const pw = (W - 2 * G) / 3;
       return [
-        { id: "panel-1", x: M, y: M, width: leftW, height: H },
-        { id: "panel-2", x: M + leftW + G, y: M, width: rightW, height: ph },
-        { id: "panel-3", x: M + leftW + G, y: M + ph + G, width: rightW, height: ph },
-        { id: "panel-4", x: M + leftW + G, y: M + 2 * (ph + G), width: rightW, height: ph },
+        { id: "panel-1", x: M, y: M, width: W, height: topH },
+        { id: "panel-2", x: M, y: M + topH + G, width: pw, height: botH },
+        { id: "panel-3", x: M + pw + G, y: M + topH + G, width: pw, height: botH },
+        { id: "panel-4", x: M + 2 * (pw + G), y: M + topH + G, width: pw, height: botH },
       ];
     })(),
   },
@@ -777,10 +777,33 @@ export interface ComicPagePanel {
   panelId: string;
   sceneNumber: number;
   imagePrompt: string;
+  aspectRatio?: string; // computed from layout panel dimensions
   caption?: ComicCaption;
   bubbles: ComicSpeechBubble[];
   imageUrl?: string | null;
   imageStatus?: "pending" | "processing" | "completed" | "failed";
+}
+
+const SUPPORTED_RATIOS = [
+  { id: "16:9", value: 16 / 9 },
+  { id: "9:16", value: 9 / 16 },
+  { id: "4:3", value: 4 / 3 },
+  { id: "3:4", value: 3 / 4 },
+  { id: "1:1", value: 1 },
+];
+
+export function closestAspectRatio(width: number, height: number): string {
+  const ratio = width / height;
+  let best = SUPPORTED_RATIOS[0];
+  let bestDiff = Math.abs(ratio - best.value);
+  for (const r of SUPPORTED_RATIOS) {
+    const diff = Math.abs(ratio - r.value);
+    if (diff < bestDiff) {
+      best = r;
+      bestDiff = diff;
+    }
+  }
+  return best.id;
 }
 
 export interface ComicPage {

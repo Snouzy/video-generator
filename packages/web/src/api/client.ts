@@ -211,16 +211,15 @@ export function generateComicStructure(projectId: number): Promise<ComicStructur
 
 export function generateComicImages(
   projectId: number,
-  panels: { pageNumber: number; panelId: string; sceneNumber: number; imagePrompt: string }[],
+  panels: { pageNumber: number; panelId: string; sceneNumber: number; imagePrompt: string; aspectRatio?: string }[],
   model: string,
-  stylePromptPrefix?: string,
-  aspectRatio?: string
+  stylePromptPrefix?: string
 ): Promise<{ message: string; totalPanels: number }> {
   return fetchApi<{ message: string; totalPanels: number }>(
     `/api/projects/${projectId}/comic/generate-images`,
     {
       method: "POST",
-      body: JSON.stringify({ panels, model, stylePromptPrefix, aspectRatio }),
+      body: JSON.stringify({ panels, model, stylePromptPrefix }),
     }
   );
 }

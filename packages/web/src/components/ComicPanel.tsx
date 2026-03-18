@@ -9,6 +9,7 @@ interface ComicPanelItem {
   panelId: string;
   sceneNumber: number;
   imagePrompt: string;
+  aspectRatio?: string;
   layoutId: string;
   imageUrl?: string | null;
   imageStatus?: string;
@@ -35,6 +36,17 @@ function downloadImage(url: string, filename: string) {
     });
 }
 
+function aspectRatioClass(ar?: string): string {
+  switch (ar) {
+    case "16:9": return "aspect-[16/9]";
+    case "9:16": return "aspect-[9/16]";
+    case "4:3": return "aspect-[4/3]";
+    case "3:4": return "aspect-[3/4]";
+    case "1:1": return "aspect-square";
+    default: return "aspect-[4/3]";
+  }
+}
+
 function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate }: {
   panel: ComicPagePanel;
   pageNumber: number;
@@ -55,7 +67,7 @@ function PanelCard({ panel, pageNumber, isSelected, onToggle, onRegenerate }: {
       }`}
     >
       {/* Image area */}
-      <div className="relative aspect-[4/3] bg-gray-800">
+      <div className={`relative bg-gray-800 ${aspectRatioClass(panel.aspectRatio)}`}>
         {status === "processing" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div className="w-10 h-10 border-4 border-gray-600 border-t-purple-400 rounded-full animate-spin" />
@@ -170,6 +182,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
       panelId: panel.panelId,
       sceneNumber: panel.sceneNumber,
       imagePrompt: panel.imagePrompt,
+      aspectRatio: panel.aspectRatio,
       layoutId: page.layoutId,
       imageUrl: panel.imageUrl,
       imageStatus: panel.imageStatus,
@@ -179,7 +192,6 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [model, setModel] = useState("flux");
   const [styleId, setStyleId] = useState("");
-  const [aspectRatio, setAspectRatio] = useState("4:3");
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -210,10 +222,9 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
     try {
       await generateComicImages(
         projectId,
-        [{ pageNumber: item.pageNumber, panelId: item.panelId, sceneNumber: item.sceneNumber, imagePrompt: item.imagePrompt }],
+        [{ pageNumber: item.pageNumber, panelId: item.panelId, sceneNumber: item.sceneNumber, imagePrompt: item.imagePrompt, aspectRatio: item.aspectRatio }],
         model,
-        prefix,
-        aspectRatio
+        prefix
       );
       toast.success(`Image p${item.pageNumber}-${item.panelId} en cours de génération`);
       onRefresh();
@@ -236,12 +247,11 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
     try {
       await generateComicImages(
         projectId,
-        panelsToGenerate.map(({ pageNumber, panelId, sceneNumber, imagePrompt }) => ({
-          pageNumber, panelId, sceneNumber, imagePrompt,
+        panelsToGenerate.map(({ pageNumber, panelId, sceneNumber, imagePrompt, aspectRatio: ar }) => ({
+          pageNumber, panelId, sceneNumber, imagePrompt, aspectRatio: ar,
         })),
         model,
-        prefix,
-        aspectRatio
+        prefix
       );
       toast.success(`${panelsToGenerate.length} image(s) en cours de génération`);
       // Refresh project to get "processing" status and trigger polling
@@ -317,14 +327,6 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
           ))}
         </select>
 
-        <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)}
-          className="px-2 py-1 bg-gray-800 border border-gray-700 text-white rounded text-sm">
-          <option value="4:3">4:3</option>
-          <option value="16:9">16:9</option>
-          <option value="3:4">3:4</option>
-          <option value="1:1">1:1</option>
-        </select>
-
         <select value={styleId} onChange={(e) => setStyleId(e.target.value)}
           className="px-2 py-1 bg-gray-800 border border-gray-700 text-white rounded text-sm max-w-[180px]">
           <option value="">Sans style</option>
@@ -387,6 +389,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                     panelId: panel.panelId,
                     sceneNumber: panel.sceneNumber,
                     imagePrompt: panel.imagePrompt,
+                    aspectRatio: panel.aspectRatio,
                     layoutId: page.layoutId,
                     imageUrl: panel.imageUrl,
                     imageStatus: panel.imageStatus,
