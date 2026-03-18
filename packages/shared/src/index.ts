@@ -821,5 +821,6 @@ export interface ComicCover {
 export interface ComicStructure {
   title: string;
   cover?: ComicCover;
+  backCover?: ComicCover;
   pages: ComicPage[];
 }

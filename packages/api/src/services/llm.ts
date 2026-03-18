@@ -376,14 +376,57 @@ Titre de la BD : "${title}"
 Résumé des scènes :
 ${scenes.map((s) => `- Scene ${s.sceneNumber}: ${s.title} — ${s.narrativeText}`).join("\n")}
 
-Le prompt doit être EN ANGLAIS et décrire une illustration de couverture impactante :
+Le prompt doit être EN ANGLAIS et décrire une illustration de couverture impactante, comme les couvertures de Sapiens, Tintin, ou Blacksad :
 - Composition forte, accrocheuse, qui donne envie de lire
 - Personnage(s) principal(aux) mis en avant avec une pose dynamique ou iconique
 - Ambiance visuelle qui capture le thème central de l'histoire
 - Éclairage cinématique, couleurs vibrantes
-- Format portrait (A4), l'illustration remplit tout le cadre bord à bord
-- PAS de texte, PAS de titre, PAS de bordures — uniquement l'illustration. Le titre sera superposé séparément.
-- Les dialogues/bulles visibles doivent être en ${language} s'il y en a.
+- Format portrait (A4), l'illustration remplit tout le cadre bord à bord, pas de bordures ni marges
+- CRITIQUE — TYPOGRAPHIE INTÉGRÉE À L'ILLUSTRATION :
+  - Le titre "${title}" doit apparaître en GROS dans l'image, en haut ou en position proéminente, avec une typographie stylisée, bold, imposante, qui fait partie intégrante de la composition (comme sur Sapiens, Tintin, Astérix). Précise la couleur, le style, et l'effet du texte (ombre portée, relief, dégradé, etc.).
+  - "Une BD de codingbiceps" doit apparaître en plus petit, en bas ou sous le titre, dans un style élégant et lisible.
+- Tout le texte visible (titre, auteur) DOIT être en ${language}.
+
+Retourne UNIQUEMENT le prompt (texte brut, pas de JSON, pas de guillemets).`,
+      },
+    ],
+  });
+
+  return extractText(response.content).trim();
+}
+
+// ---------------------------------------------------------------------------
+// Generate a back cover image prompt
+// ---------------------------------------------------------------------------
+
+export async function generateBackCoverPrompt(
+  title: string,
+  scenes: Array<{ sceneNumber: number; title: string; narrativeText: string }>,
+  language: TextLanguage
+): Promise<string> {
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Tu es un directeur artistique de bande dessinée. Tu dois créer un prompt de génération d'image IA pour la 4e DE COUVERTURE (dos) d'une BD.
+
+Titre de la BD : "${title}"
+
+Résumé des scènes :
+${scenes.map((s) => `- Scene ${s.sceneNumber}: ${s.title} — ${s.narrativeText}`).join("\n")}
+
+Le prompt doit être EN ANGLAIS et décrire une illustration de 4e de couverture élégante :
+- Ambiance plus calme/épilogue que la 1ère de couverture — une scène de conclusion, un détail symbolique, ou une vue d'ensemble
+- Peut montrer un personnage de dos, un paysage, un objet symbolique, une scène d'after
+- Éclairage doux, atmosphérique
+- Format portrait (A4), l'illustration remplit tout le cadre bord à bord, pas de bordures ni marges
+- CRITIQUE — TEXTE INTÉGRÉ À L'ILLUSTRATION :
+  - Le mot "FIN" en typographie stylisée, visible mais pas dominant
+  - "Une BD de codingbiceps" en petit, élégant
+  - Les liens "tiktok.com/@codingbiceps" et "youtube.com/@codingbiceps" intégrés de façon discrète en bas
+- Tout le texte visible DOIT être en ${language} (sauf les URLs).
 
 Retourne UNIQUEMENT le prompt (texte brut, pas de JSON, pas de guillemets).`,
       },
