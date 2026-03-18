@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, ProjectConfig, ComicStructure } from "@video-generator/shared";
 import { BUILTIN_COMIC_LAYOUTS, closestAspectRatio } from "@video-generator/shared";
 import { generateComicStructure, regenerateComicPanelPrompt, regenerateComicPage } from "../services/llm";
-import { generateComicPageSVG } from "../services/comic-svg";
+import { generateComicPageSVG, generateBackCoverSVG } from "../services/comic-svg";
 import { generateImage, downloadToLocal } from "../services/fal";
 import archiver from "archiver";
 
@@ -318,6 +318,37 @@ router.post("/:id/comic/regenerate-page", async (req, res) => {
   }
 });
 
+// GET /api/projects/:id/comic/back-cover
+// Returns the back cover SVG
+router.get("/:id/comic/back-cover", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const project = await prisma.project.findUnique({ where: { id } });
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" } as ApiResponse<never>);
+      return;
+    }
+
+    const comic = project.comicStructure as unknown as ComicStructure | null;
+    const title = comic?.title ?? project.title;
+
+    const svg = generateBackCoverSVG({
+      title,
+      author: "codingbiceps",
+      links: [
+        { label: "TikTok", url: "https://www.tiktok.com/@codingbiceps" },
+        { label: "YouTube", url: "https://www.youtube.com/@codingbiceps" },
+      ],
+    });
+
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.send(svg);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
 // POST /api/projects/:id/comic/download
 // Takes the comic structure and returns a ZIP of SVGs
 router.post("/:id/comic/download", async (req, res) => {
@@ -365,6 +396,18 @@ router.post("/:id/comic/download", async (req, res) => {
     for (const page of svgPages) {
       archive.append(page.content, { name: page.filename });
     }
+
+    // Back cover
+    const backCover = generateBackCoverSVG({
+      title: comicStructure.title,
+      author: "codingbiceps",
+      links: [
+        { label: "TikTok", url: "https://www.tiktok.com/@codingbiceps" },
+        { label: "YouTube", url: "https://www.youtube.com/@codingbiceps" },
+      ],
+    });
+    const lastPageNum = String(comicStructure.pages.length + 1).padStart(3, "0");
+    archive.append(backCover, { name: `page_${lastPageNum}_back-cover.svg` });
 
     await archive.finalize();
   } catch (error) {

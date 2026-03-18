@@ -247,6 +247,77 @@ function renderPanel(
 // Page SVG Generator (main export)
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Back Cover (4e de couverture)
+// ---------------------------------------------------------------------------
+
+export interface BackCoverInfo {
+  title: string;
+  author: string;
+  links: Array<{ label: string; url: string }>;
+  year?: string;
+}
+
+export function generateBackCoverSVG(info: BackCoverInfo): string {
+  const W = COMIC_PAGE_WIDTH;
+  const H = COMIC_PAGE_HEIGHT;
+  const cx = W / 2;
+
+  let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n`;
+  svg += `<svg xmlns="http://www.w3.org/2000/svg"\n`;
+  svg += `     viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">\n`;
+  svg += `  <defs>\n`;
+  svg += `    <style>\n`;
+  svg += `      .bc-bg { fill: #1A1A1A; }\n`;
+  svg += `      .bc-fin { font-family: ${FONT_FAMILY}; font-size: 48px; font-weight: bold; fill: #FFFFFF; letter-spacing: 8px; }\n`;
+  svg += `      .bc-title { font-family: ${FONT_FAMILY}; font-size: 18px; font-weight: bold; fill: #E0E0E0; }\n`;
+  svg += `      .bc-author { font-family: sans-serif; font-size: 14px; fill: #AAAAAA; }\n`;
+  svg += `      .bc-divider { stroke: #444444; stroke-width: 1; }\n`;
+  svg += `      .bc-link-label { font-family: sans-serif; font-size: 13px; font-weight: bold; fill: #FFFFFF; }\n`;
+  svg += `      .bc-link-url { font-family: sans-serif; font-size: 12px; fill: #888888; }\n`;
+  svg += `      .bc-year { font-family: sans-serif; font-size: 11px; fill: #666666; }\n`;
+  svg += `      .bc-icon { fill: #FFFFFF; }\n`;
+  svg += `    </style>\n`;
+  svg += `  </defs>\n\n`;
+
+  // Dark background
+  svg += `  <rect width="${W}" height="${H}" class="bc-bg"/>\n\n`;
+
+  // Decorative line top
+  svg += `  <line x1="${cx - 80}" y1="200" x2="${cx + 80}" y2="200" class="bc-divider"/>\n`;
+
+  // "FIN"
+  svg += `  <text x="${cx}" y="280" text-anchor="middle" class="bc-fin">FIN</text>\n\n`;
+
+  // Decorative line
+  svg += `  <line x1="${cx - 80}" y1="310" x2="${cx + 80}" y2="310" class="bc-divider"/>\n\n`;
+
+  // Title
+  svg += `  <text x="${cx}" y="380" text-anchor="middle" class="bc-title">${escapeXml(info.title)}</text>\n`;
+
+  // Author
+  svg += `  <text x="${cx}" y="415" text-anchor="middle" class="bc-author">Une BD de ${escapeXml(info.author)}</text>\n\n`;
+
+  // Links
+  let linkY = 490;
+  for (const link of info.links) {
+    svg += `  <text x="${cx}" y="${linkY}" text-anchor="middle" class="bc-link-label">${escapeXml(link.label)}</text>\n`;
+    svg += `  <text x="${cx}" y="${linkY + 18}" text-anchor="middle" class="bc-link-url">${escapeXml(link.url)}</text>\n`;
+    linkY += 55;
+  }
+
+  // Year
+  const year = info.year ?? new Date().getFullYear().toString();
+  svg += `\n  <text x="${cx}" y="${H - 40}" text-anchor="middle" class="bc-year">© ${escapeXml(info.author)} — ${year}</text>\n`;
+
+  svg += `</svg>\n`;
+  return svg;
+}
+
+// ---------------------------------------------------------------------------
+// Page SVG Generator (main export)
+// ---------------------------------------------------------------------------
+
 export function generateComicPageSVG(
   page: ComicPage,
   layout: ComicLayout

@@ -543,6 +543,13 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
           </svg>
           {downloading ? "..." : "SVGs"}
         </button>
+
+        <button
+          onClick={() => window.open(`http://localhost:3001/api/projects/${projectId}/comic/back-cover`, "_blank")}
+          className="px-3 py-1.5 text-sm border border-amber-700 text-amber-400 hover:text-white hover:bg-amber-600 rounded-lg font-medium transition-colors"
+        >
+          4e de couverture
+        </button>
       </div>
 
       {/* Pages */}
