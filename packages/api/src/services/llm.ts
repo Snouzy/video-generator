@@ -289,3 +289,67 @@ Retourne UNIQUEMENT le prompt (texte brut, pas de JSON, pas de guillemets).`,
 
   return extractText(response.content).trim();
 }
+
+// ---------------------------------------------------------------------------
+// Regenerate a single comic page (new layout + new prompts for its scenes)
+// ---------------------------------------------------------------------------
+
+export async function regenerateComicPage(
+  scenes: Array<{ sceneNumber: number; title: string; narrativeText: string }>,
+  layouts: ComicLayout[],
+  language: TextLanguage
+): Promise<{ layoutId: string; panels: Array<{ panelId: string; sceneNumber: number; imagePrompt: string; caption: { text: string; position: "top" | "bottom" }; bubbles: [] }> }> {
+  const layoutSummary = layouts
+    .filter((l) => l.panelCount >= scenes.length)
+    .map((l) => ({
+      id: l.id,
+      name: l.name,
+      description: l.description,
+      panelCount: l.panelCount,
+      panelIds: l.panels.map((p) => p.id),
+    }));
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: `Tu es un éditeur de bande dessinée. Tu dois ré-organiser ${scenes.length} scène(s) sur UNE SEULE page de BD en choisissant la meilleure mise en page.
+
+Règles :
+- Choisis la mise en page la plus adaptée au rythme narratif des scènes.
+- Chaque case contient exactement UNE scène. Utilise les panelIds dans l'ordre.
+- Pour chaque case, génère :
+  - Un "imagePrompt" EN ANGLAIS décrivant le contenu visuel. CRITIQUE : l'illustration remplit toute l'image bord à bord, PAS de bordures, cadres, cases adjacentes, marges. Les dialogues/bulles visibles doivent être en ${language}.
+  - Une "caption" en ${language} (voix-off narrateur, 1-2 phrases max, style Sapiens).
+  - "bubbles": toujours []
+
+Mises en page disponibles :
+${JSON.stringify(layoutSummary, null, 2)}
+
+Scènes :
+${JSON.stringify(scenes, null, 2)}
+
+Retourne UNIQUEMENT un objet JSON :
+{
+  "layoutId": "layout:...",
+  "panels": [
+    {
+      "panelId": "panel-1",
+      "sceneNumber": 1,
+      "imagePrompt": "...",
+      "caption": { "text": "...", "position": "top" },
+      "bubbles": []
+    }
+  ]
+}`,
+      },
+    ],
+  });
+
+  const text = extractText(response.content).trim();
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonStr = jsonMatch ? jsonMatch[1].trim() : text;
+  return JSON.parse(jsonStr);
+}

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import type { ApiResponse, ProjectConfig, ComicStructure } from "@video-generator/shared";
 import { BUILTIN_COMIC_LAYOUTS, closestAspectRatio } from "@video-generator/shared";
-import { generateComicStructure, regenerateComicPanelPrompt } from "../services/llm";
+import { generateComicStructure, regenerateComicPanelPrompt, regenerateComicPage } from "../services/llm";
 import { generateComicPageSVG } from "../services/comic-svg";
 import { generateImage, downloadToLocal } from "../services/fal";
 import archiver from "archiver";
@@ -234,6 +234,84 @@ router.post("/:id/comic/regenerate-panel-prompt", async (req, res) => {
     }
 
     res.json({ success: true, data: { imagePrompt } } as ApiResponse<{ imagePrompt: string }>);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ success: false, error: message } as ApiResponse<never>);
+  }
+});
+
+// POST /api/projects/:id/comic/regenerate-page
+// Regenerates layout + prompts for a single page, keeping its scenes
+router.post("/:id/comic/regenerate-page", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { pageNumber } = req.body as { pageNumber: number };
+
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: { scenes: { orderBy: { sceneNumber: "asc" } } },
+    });
+    if (!project) {
+      res.status(404).json({ success: false, error: "Project not found" } as ApiResponse<never>);
+      return;
+    }
+
+    const comic = project.comicStructure as unknown as ComicStructure | null;
+    if (!comic) {
+      res.status(400).json({ success: false, error: "No comic structure" } as ApiResponse<never>);
+      return;
+    }
+
+    const pageIndex = comic.pages.findIndex((p) => p.pageNumber === pageNumber);
+    if (pageIndex === -1) {
+      res.status(404).json({ success: false, error: `Page ${pageNumber} not found` } as ApiResponse<never>);
+      return;
+    }
+
+    const oldPage = comic.pages[pageIndex];
+    const sceneNumbers = oldPage.panels.map((p) => p.sceneNumber);
+
+    // Build scene data from DB scenes
+    const sceneMap = new Map(project.scenes.map((s) => [s.sceneNumber, s]));
+    const scenesForLLM = sceneNumbers.map((num) => {
+      const s = sceneMap.get(num);
+      return {
+        sceneNumber: num,
+        title: s?.title ?? `Scene ${num}`,
+        narrativeText: s?.narrativeText ?? "",
+      };
+    });
+
+    const config = project.config as unknown as ProjectConfig | null;
+    const lang = config?.textLanguage ?? "French";
+
+    const newPage = await regenerateComicPage(scenesForLLM, BUILTIN_COMIC_LAYOUTS, lang);
+
+    // Compute aspect ratios for the new layout
+    const layout = BUILTIN_COMIC_LAYOUTS.find((l) => l.id === newPage.layoutId);
+    if (layout) {
+      const panelMap = new Map(layout.panels.map((p) => [p.id, p]));
+      for (const panel of newPage.panels) {
+        const layoutPanel = panelMap.get(panel.panelId);
+        if (layoutPanel) {
+          (panel as any).aspectRatio = closestAspectRatio(layoutPanel.width, layoutPanel.height);
+        }
+      }
+    }
+
+    // Replace the page in the structure
+    comic.pages[pageIndex] = {
+      pageNumber,
+      layoutId: newPage.layoutId,
+      panels: newPage.panels as any,
+    };
+
+    await prisma.project.update({
+      where: { id },
+      data: { comicStructure: comic as any },
+    });
+
+    res.json({ success: true, data: comic } as ApiResponse<ComicStructure>);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ success: false, error: message } as ApiResponse<never>);

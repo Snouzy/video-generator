@@ -239,6 +239,19 @@ export function regenerateComicPanelPrompt(
   );
 }
 
+export function regenerateComicPage(
+  projectId: number,
+  pageNumber: number
+): Promise<ComicStructure> {
+  return fetchApi<ComicStructure>(
+    `/api/projects/${projectId}/comic/regenerate-page`,
+    {
+      method: "POST",
+      body: JSON.stringify({ pageNumber }),
+    }
+  );
+}
+
 export async function downloadComicSvgs(projectId: number, comicStructure: ComicStructure): Promise<void> {
   const res = await fetch(`${API_BASE}/api/projects/${projectId}/comic/download`, {
     method: "POST",

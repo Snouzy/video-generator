@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ComicStructure, ComicPagePanel } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
-import { generateComicImages, downloadComicSvgs, mediaUrl, regenerateComicPanelPrompt } from "../api/client";
+import { generateComicImages, downloadComicSvgs, mediaUrl, regenerateComicPanelPrompt, regenerateComicPage } from "../api/client";
 import { toast } from "sonner";
 
 interface ComicPanelItem {
@@ -314,6 +314,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
   const [narrativeOverrides, setNarrativeOverrides] = useState<Record<string, string>>({});
   const [generatingPromptKeys, setGeneratingPromptKeys] = useState<Set<string>>(new Set());
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [regeneratingPages, setRegeneratingPages] = useState<Set<number>>(new Set());
 
   const panelKey = (p: { pageNumber: number; panelId: string }) => `${p.pageNumber}-${p.panelId}`;
 
@@ -368,6 +369,23 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
       setGeneratingPromptKeys((prev) => {
         const next = new Set(prev);
         next.delete(key);
+        return next;
+      });
+    }
+  }
+
+  async function handleRegeneratePage(pageNumber: number) {
+    setRegeneratingPages((prev) => new Set(prev).add(pageNumber));
+    try {
+      await regenerateComicPage(projectId, pageNumber);
+      toast.success(`Page ${pageNumber} regeneree`);
+      onRefresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Echec de la regeneration de la page");
+    } finally {
+      setRegeneratingPages((prev) => {
+        const next = new Set(prev);
+        next.delete(pageNumber);
         return next;
       });
     }
@@ -555,6 +573,13 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                     {pageProcessing} generating
                   </span>
                 )}
+                <button
+                  onClick={() => handleRegeneratePage(page.pageNumber)}
+                  disabled={regeneratingPages.has(page.pageNumber)}
+                  className="ml-auto px-2 py-0.5 text-xs border border-gray-600 text-gray-400 hover:text-white hover:border-gray-400 disabled:opacity-30 rounded transition-colors"
+                >
+                  {regeneratingPages.has(page.pageNumber) ? "Regeneration..." : "Regenerer cette page"}
+                </button>
               </div>
 
               {/* Panel cards grid */}
