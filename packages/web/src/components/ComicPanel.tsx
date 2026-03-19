@@ -698,10 +698,10 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                 className="px-2 py-1.5 bg-gray-800 border border-gray-700 text-white rounded text-xs"
               >
                 <option value="3:4">3:4 (A4 portrait)</option>
-                <option value="16:9">16:9 (Cover Gumroad)</option>
-                <option value="1:1">1:1 (Thumbnail)</option>
+                <option value="16:9">16:9 (Banniere YT / Cover Gumroad)</option>
+                <option value="1:1">1:1 (Thumbnail Gumroad)</option>
                 <option value="4:3">4:3 (Paysage)</option>
-                <option value="9:16">9:16 (Story)</option>
+                <option value="9:16">9:16 (Story TikTok/IG)</option>
               </select>
 
               <button
@@ -931,10 +931,10 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                 className="px-2 py-1.5 bg-gray-800 border border-gray-700 text-white rounded text-xs"
               >
                 <option value="3:4">3:4 (A4 portrait)</option>
-                <option value="16:9">16:9 (Cover Gumroad)</option>
-                <option value="1:1">1:1 (Thumbnail)</option>
+                <option value="16:9">16:9 (Banniere YT / Cover Gumroad)</option>
+                <option value="1:1">1:1 (Thumbnail Gumroad)</option>
                 <option value="4:3">4:3 (Paysage)</option>
-                <option value="9:16">9:16 (Story)</option>
+                <option value="9:16">9:16 (Story TikTok/IG)</option>
               </select>
 
               <button
