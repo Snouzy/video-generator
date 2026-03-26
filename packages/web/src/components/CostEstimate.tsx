@@ -15,11 +15,21 @@ interface CostEstimateProps {
   generateAudio?: boolean;
 }
 
+const USD_TO_EUR = 0.92;
+
 function formatCost(amount: number): string {
   if (amount === 0) return "$0.00";
   if (amount < 0.01) return `$${amount.toFixed(4)}`;
   if (amount < 1) return `$${amount.toFixed(3)}`;
   return `$${amount.toFixed(2)}`;
+}
+
+function formatEur(amount: number): string {
+  const eur = amount * USD_TO_EUR;
+  if (eur === 0) return "0,00€";
+  if (eur < 0.01) return `${eur.toFixed(4)}€`;
+  if (eur < 1) return `${eur.toFixed(3)}€`;
+  return `${eur.toFixed(2)}€`;
 }
 
 function getModelLabel(modelId: string): string {
@@ -75,7 +85,7 @@ export default function CostEstimate({
                     ({formatCost(item.unitCost)} × {item.quantity})
                   </span>
                 </span>
-                <span>{formatCost(item.subtotal)}</span>
+                <span>{formatCost(item.subtotal)} <span className="text-gray-600">({formatEur(item.subtotal)})</span></span>
               </div>
             ))}
           </div>
@@ -91,7 +101,7 @@ export default function CostEstimate({
                     ({formatCost(item.unitCost)} × {item.quantity})
                   </span>
                 </span>
-                <span>{formatCost(item.subtotal)}</span>
+                <span>{formatCost(item.subtotal)} <span className="text-gray-600">({formatEur(item.subtotal)})</span></span>
               </div>
             ))}
           </div>
@@ -100,18 +110,18 @@ export default function CostEstimate({
           {imageItems.length > 0 && (
             <div className="flex justify-between text-gray-400">
               <span>Total images</span>
-              <span>{formatCost(cost.imageCost)}</span>
+              <span>{formatCost(cost.imageCost)} <span className="text-gray-600">({formatEur(cost.imageCost)})</span></span>
             </div>
           )}
           {clipItems.length > 0 && (
             <div className="flex justify-between text-gray-400">
               <span>Total clips</span>
-              <span>{formatCost(cost.clipCost)}</span>
+              <span>{formatCost(cost.clipCost)} <span className="text-gray-600">({formatEur(cost.clipCost)})</span></span>
             </div>
           )}
           <div className="flex justify-between text-gray-300 font-medium">
             <span>Total</span>
-            <span>{formatCost(cost.totalCost)}</span>
+            <span>{formatCost(cost.totalCost)} <span className="text-green-400/70">({formatEur(cost.totalCost)})</span></span>
           </div>
         </div>
       </div>

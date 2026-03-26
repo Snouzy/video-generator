@@ -230,6 +230,22 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
     isBuiltin: true,
   },
   {
+    id: "builtin:whiteboard",
+    name: "Whiteboard / Excalidraw",
+    description: "Style tableau blanc avec traits dessinés à la main, post-its, flèches, formes simples façon Miro/Excalidraw",
+    sourceId: "builtin:whiteboard",
+    stylePromptPrefix: "Hand-drawn whiteboard sketch style, rough imperfect lines like Excalidraw or Miro, clean white background, simple geometric shapes with hand-drawn wobbly outlines, sticky notes in pastel yellow pink blue and green, arrows and connectors between elements, marker pen aesthetic, minimal flat colors, diagram and brainstorm visual language",
+    llmSystemInstructions: `- CRITICAL: Every scene MUST look like a collaborative whiteboard session — think Miro board, Excalidraw canvas, or a real office whiteboard photographed straight-on. The white background is essential and must dominate.
+- Use hand-drawn, slightly wobbly lines for ALL shapes and connectors — nothing should look computer-perfect. Lines should have slight variations in thickness like a marker pen. Think of the Excalidraw hand-drawn style: imperfect rectangles, rough circles, sketchy arrows.
+- Include typical whiteboard elements as visual building blocks: sticky notes (pastel yellow, pink, blue, green, orange) with short handwritten text, rectangles and rounded boxes for concepts, arrows and curved connectors showing relationships, dotted lines for groupings, simple icons (lightbulbs, checkmarks, crosses, stars, question marks).
+- Characters should be represented as simple stick figures or basic doodle-style people — NOT detailed or realistic. Think whiteboard doodles: circle head, line body, simple limbs, minimal facial features (dot eyes, line mouth). But give them personality through posture, gestures, and simple accessories (a tie for business, a cap for casual).
+- Use a limited color palette: mostly black marker lines on white, with pastel accent colors ONLY on sticky notes, highlights, and important elements. Occasional red for emphasis, green for positive, blue for information.
+- The composition should feel like a zoomed-in section of a larger whiteboard: some elements may be slightly cut off at edges, there might be faint erased marks, a slight shadow from the marker. Include visual hierarchy through size — important concepts are bigger.
+- Text elements on the whiteboard should look handwritten in a casual, slightly messy style — like someone quickly jotting during a brainstorm. Keep text short: labels, keywords, short phrases. NOT paragraphs.
+- Add subtle whiteboard authenticity: slight marker smudges, a barely visible grid or dot pattern on the background, maybe a corner of a different colored marker visible, slight shadows under sticky notes suggesting they're physically stuck on.`,
+    isBuiltin: true,
+  },
+  {
     id: "builtin:isometric",
     name: "Isométrique / Low Poly",
     description: "Personnages low-poly mignons dans des dioramas isométriques, couleurs pastels, style miniature",
@@ -256,6 +272,21 @@ export const AVAILABLE_IMAGE_MODELS: ModelDefinition[] = [
   { id: "nano-banana-2", label: "Nano Banana 2" },
   { id: "flux", label: "Flux Schnell" },
   { id: "gemini-flash", label: "Gemini Flash" },
+  { id: "flux-2-klein-4b", label: "Flux 2 Klein 4B" },
+  { id: "flux-2-klein-9b", label: "Flux 2 Klein 9B" },
+  { id: "qwen-image-2", label: "Qwen Image 2" },
+  { id: "qwen-image-2-pro", label: "Qwen Image 2 Pro" },
+  { id: "qwen-image-max", label: "Qwen Image Max" },
+  { id: "seedream-v5-lite", label: "Seedream v5 Lite" },
+  { id: "recraft-v4", label: "Recraft V4" },
+  { id: "recraft-v4-pro", label: "Recraft V4 Pro" },
+  { id: "recraft-v4-vector", label: "Recraft V4 Vector (SVG)" },
+  { id: "kling-image-v3", label: "Kling Image v3" },
+  { id: "kling-image-o3", label: "Kling Image O3" },
+  { id: "grok-image", label: "Grok Imagine" },
+  { id: "hunyuan-v3", label: "Hunyuan v3 Instruct" },
+  { id: "z-image-lora", label: "Z-Image LoRA" },
+  { id: "gpt-image-1.5", label: "GPT Image 1.5" },
 ];
 
 export const IMAGE_MODEL_RESOLUTIONS: Record<string, { id: string; label: string }[]> = {
@@ -268,6 +299,15 @@ export const IMAGE_MODEL_RESOLUTIONS: Record<string, { id: string; label: string
     { id: "0.5K", label: "0.5K" },
     { id: "1K", label: "1K" },
     { id: "2K", label: "2K (1.5x cost)" },
+    { id: "4K", label: "4K (2x cost)" },
+  ],
+  "kling-image-v3": [
+    { id: "1K", label: "1K" },
+    { id: "2K", label: "2K" },
+  ],
+  "kling-image-o3": [
+    { id: "1K", label: "1K" },
+    { id: "2K", label: "2K" },
     { id: "4K", label: "4K (2x cost)" },
   ],
 };
@@ -299,6 +339,27 @@ export const IMAGE_MODEL_PRICING: Record<string, ImageModelPricing> = {
   },
   "flux": { basePrice: 0.003 },
   "gemini-flash": { basePrice: 0.039 },
+  "flux-2-klein-4b": { basePrice: 0.01 },
+  "flux-2-klein-9b": { basePrice: 0.012 },
+  "qwen-image-2": { basePrice: 0.035 },
+  "qwen-image-2-pro": { basePrice: 0.075 },
+  "qwen-image-max": { basePrice: 0.075 },
+  "seedream-v5-lite": { basePrice: 0.035 },
+  "recraft-v4": { basePrice: 0.04 },
+  "recraft-v4-pro": { basePrice: 0.25 },
+  "recraft-v4-vector": { basePrice: 0.30 },
+  "kling-image-v3": {
+    basePrice: 0.028,
+    resolutionPricing: { "1K": 0.028, "2K": 0.028 },
+  },
+  "kling-image-o3": {
+    basePrice: 0.028,
+    resolutionPricing: { "1K": 0.028, "2K": 0.028, "4K": 0.056 },
+  },
+  "grok-image": { basePrice: 0.02 },
+  "hunyuan-v3": { basePrice: 0.09 },
+  "z-image-lora": { basePrice: 0.012 },
+  "gpt-image-1.5": { basePrice: 0.034 },
 };
 
 export const CLIP_MODEL_PRICING: Record<string, ClipModelPricing> = {
@@ -308,6 +369,19 @@ export const CLIP_MODEL_PRICING: Record<string, ClipModelPricing> = {
   "kling-o3-pro": { type: "per_second", basePrice: 0.224, audioPricePerSecond: 0.28 },
   "minimax": { type: "flat", basePrice: 0.50 },
   "veo3.1": { type: "per_second", basePrice: 0.20, audioPricePerSecond: 0.40 },
+  "goal-force": { type: "flat", basePrice: 0.25 },
+  "ltx-2.3-fast": { type: "per_second", basePrice: 0.04 },
+  "ltx-2.3": { type: "per_second", basePrice: 0.06 },
+  "cosmos-2.5": { type: "flat", basePrice: 0.20 },
+  "heygen-avatar4": { type: "per_second", basePrice: 0.10 },
+  "lucy-i2v": { type: "per_second", basePrice: 0.08 },
+  "vidu-q3-turbo": { type: "per_second", basePrice: 0.035 },
+  "vidu-q3": { type: "per_second", basePrice: 0.07 },
+  "kling-o3-ref": { type: "per_second", basePrice: 0.084, audioPricePerSecond: 0.112 },
+  "kling-v3-std": { type: "per_second", basePrice: 0.084, audioPricePerSecond: 0.126 },
+  "kling-v3-pro": { type: "per_second", basePrice: 0.112, audioPricePerSecond: 0.168 },
+  "grok-video": { type: "per_second", basePrice: 0.07 },
+  "seedance-1.5": { type: "per_second", basePrice: 0.052, audioPricePerSecond: 0.052 },
 };
 
 // ---------------------------------------------------------------------------
@@ -429,6 +503,19 @@ export const AVAILABLE_CLIP_MODELS: ModelDefinition[] = [
   { id: "kling-o3-pro", label: "Kling O3 Pro" },
   { id: "minimax", label: "Minimax" },
   { id: "veo3.1", label: "Veo 3.1" },
+  { id: "goal-force", label: "Goal Force" },
+  { id: "ltx-2.3-fast", label: "LTX 2.3 Fast" },
+  { id: "ltx-2.3", label: "LTX 2.3" },
+  { id: "cosmos-2.5", label: "Cosmos Predict 2.5" },
+  { id: "heygen-avatar4", label: "HeyGen Avatar4" },
+  { id: "lucy-i2v", label: "Lucy I2V (Decart)" },
+  { id: "vidu-q3-turbo", label: "Vidu Q3 Turbo" },
+  { id: "vidu-q3", label: "Vidu Q3" },
+  { id: "kling-o3-ref", label: "Kling O3 Ref-to-Video" },
+  { id: "kling-v3-std", label: "Kling v3 Standard" },
+  { id: "kling-v3-pro", label: "Kling v3 Pro" },
+  { id: "grok-video", label: "Grok Imagine Video" },
+  { id: "seedance-1.5", label: "Seedance v1.5 Pro" },
 ];
 
 export type TextLanguage = "French" | "English" | "Spanish";

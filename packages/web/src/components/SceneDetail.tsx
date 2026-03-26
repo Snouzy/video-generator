@@ -227,7 +227,7 @@ export default function SceneDetail({
             <ModelSelector
               label="Image Models"
               availableModels={AVAILABLE_IMAGE_MODELS}
-              selectedModels={scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? []}
+              selectedModels={scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? ["grok-image"]}
               onChange={(models) =>
                 onSetGenerationOverride({ ...scene.generationOverride, imageModels: models })
               }
@@ -322,7 +322,7 @@ export default function SceneDetail({
                     <option value="3:4">3:4</option>
                   </select>
                 </div>
-                {(scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? [])
+                {(scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? ["grok-image"])
                   .filter((m) => IMAGE_MODEL_RESOLUTIONS[m])
                   .map((modelId) => {
                     const modelDef = AVAILABLE_IMAGE_MODELS.find((m) => m.id === modelId);
@@ -427,7 +427,7 @@ export default function SceneDetail({
             </div>
 
             <CostEstimate
-              imageModels={scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? []}
+              imageModels={scene.generationOverride?.imageModels ?? projectConfig?.imageModels ?? ["grok-image"]}
               imagesPerScene={scene.generationOverride?.imagesPerScene ?? projectConfig?.imagesPerScene ?? 1}
               imageResolutions={scene.generationOverride?.imageParams?.resolutions}
               animationModels={scene.generationOverride?.animationModels ?? projectConfig?.animationModels ?? []}

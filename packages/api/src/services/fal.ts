@@ -18,6 +18,21 @@ const IMAGE_MODEL_IDS: Record<string, string> = {
   "nano-banana-pro": "fal-ai/nano-banana-pro", // 0.15$ per image
   "nano-banana-2": "fal-ai/nano-banana-2",
   "gemini-flash": "fal-ai/gemini-3.1-flash-image-preview",
+  "flux-2-klein-4b": "fal-ai/flux-2/klein/4b/base/lora",
+  "flux-2-klein-9b": "fal-ai/flux-2/klein/9b/base/lora",
+  "qwen-image-2": "fal-ai/qwen-image-2/text-to-image",
+  "qwen-image-2-pro": "fal-ai/qwen-image-2/pro/text-to-image",
+  "qwen-image-max": "fal-ai/qwen-image-max/text-to-image",
+  "seedream-v5-lite": "fal-ai/bytedance/seedream/v5/lite/text-to-image",
+  "recraft-v4": "fal-ai/recraft/v4/text-to-image",
+  "recraft-v4-pro": "fal-ai/recraft/v4/pro/text-to-image",
+  "recraft-v4-vector": "fal-ai/recraft/v4/pro/text-to-vector",
+  "kling-image-v3": "fal-ai/kling-image/v3/text-to-image",
+  "kling-image-o3": "fal-ai/kling-image/o3/text-to-image",
+  "grok-image": "xai/grok-imagine-image",
+  "hunyuan-v3": "fal-ai/hunyuan-image/v3/instruct/text-to-image",
+  "z-image-lora": "fal-ai/z-image/base/lora",
+  "gpt-image-1.5": "fal-ai/gpt-image-1.5",
 };
 
 const CLIP_MODEL_IDS: Record<string, string> = {
@@ -26,7 +41,20 @@ const CLIP_MODEL_IDS: Record<string, string> = {
   minimax: "fal-ai/minimax/video-01/image-to-video",
   "kling-v2.6-pro": "fal-ai/kling-video/v2.6/pro/image-to-video",
   "kling-o3-pro": "fal-ai/kling-video/o3/pro/image-to-video",
-  "veo3.1": "fal-ai/veo3.1/image-to-video", // For every second of video you generate you will be charged $0.20 without audio or $0.40 with audio for 720p or 1080p. At 4k, you will be charged $0.40 per second without audio, or $0.60 with. For example, a 5 second video at 1080p with audio on will cost $2.00.
+  "veo3.1": "fal-ai/veo3.1/image-to-video",
+  "goal-force": "fal-ai/goal-force",
+  "ltx-2.3-fast": "fal-ai/ltx-2.3/image-to-video/fast",
+  "ltx-2.3": "fal-ai/ltx-2.3/image-to-video",
+  "cosmos-2.5": "fal-ai/cosmos-predict-2.5/image-to-video",
+  "heygen-avatar4": "fal-ai/heygen/avatar4/image-to-video",
+  "lucy-i2v": "decart/lucy-i2v",
+  "vidu-q3-turbo": "fal-ai/vidu/q3/image-to-video/turbo",
+  "vidu-q3": "fal-ai/vidu/q3/image-to-video",
+  "kling-o3-ref": "fal-ai/kling-video/o3/standard/reference-to-video",
+  "kling-v3-std": "fal-ai/kling-video/v3/standard/image-to-video",
+  "kling-v3-pro": "fal-ai/kling-video/v3/pro/image-to-video",
+  "grok-video": "xai/grok-imagine-video/image-to-video",
+  "seedance-1.5": "fal-ai/bytedance/seedance/v1.5/pro/image-to-video",
 };
 
 const FORMAT_TO_IMAGE_SIZE: Record<string, string> = {
@@ -126,7 +154,44 @@ export async function generateImage(
       num_images: 1,
       output_format: "png",
     };
+  } else if (model === "kling-image-v3" || model === "kling-image-o3") {
+    input = {
+      prompt,
+      aspect_ratio: aspectRatio,
+      num_images: 1,
+      output_format: "png",
+    };
+    if (resolution) {
+      input.resolution = resolution;
+    }
+  } else if (model === "grok-image") {
+    input = {
+      prompt,
+      aspect_ratio: aspectRatio,
+      num_images: 1,
+      output_format: "png",
+    };
+  } else if (model === "gpt-image-1.5") {
+    // GPT Image uses specific size strings
+    const sizeMap: Record<string, string> = {
+      "16:9": "1536x1024",
+      "9:16": "1024x1536",
+      "4:3": "1536x1024",
+      "3:4": "1024x1536",
+      "1:1": "1024x1024",
+    };
+    input = {
+      prompt,
+      image_size: sizeMap[aspectRatio] ?? "1024x1024",
+      num_images: 1,
+    };
+  } else if (model === "recraft-v4-vector") {
+    input = {
+      prompt,
+      image_size: FORMAT_TO_IMAGE_SIZE[aspectRatio] ?? "square_hd",
+    };
   } else {
+    // Default: uses image_size presets (flux, recraft, qwen, seedream, hunyuan, z-image, etc.)
     input = {
       prompt,
       image_size: FORMAT_TO_IMAGE_SIZE[aspectRatio] ?? "landscape_16_9",
@@ -162,6 +227,19 @@ const CLIP_DEFAULTS: Record<string, { duration: number; generateAudio: boolean }
   "kling-o3-pro":   { duration: 5,  generateAudio: false },
   minimax:          { duration: 5,  generateAudio: false },
   "veo3.1":         { duration: 4,  generateAudio: true },
+  "goal-force":     { duration: 5,  generateAudio: false },
+  "ltx-2.3-fast":   { duration: 6,  generateAudio: false },
+  "ltx-2.3":        { duration: 6,  generateAudio: false },
+  "cosmos-2.5":     { duration: 5,  generateAudio: false },
+  "heygen-avatar4": { duration: 5,  generateAudio: false },
+  "lucy-i2v":       { duration: 5,  generateAudio: false },
+  "vidu-q3-turbo":  { duration: 5,  generateAudio: true },
+  "vidu-q3":        { duration: 5,  generateAudio: true },
+  "kling-o3-ref":   { duration: 5,  generateAudio: false },
+  "kling-v3-std":   { duration: 5,  generateAudio: false },
+  "kling-v3-pro":   { duration: 5,  generateAudio: false },
+  "grok-video":     { duration: 6,  generateAudio: false },
+  "seedance-1.5":   { duration: 5,  generateAudio: true },
 };
 
 export async function generateClip(
@@ -221,8 +299,77 @@ export async function generateClip(
       duration: `${duration}s`,
       generate_audio: generateAudio,
     };
+  } else if (model === "ltx-2.3-fast" || model === "ltx-2.3") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      duration,
+      aspect_ratio: ["16:9", "9:16"].includes(ar) ? ar : "16:9",
+    };
+  } else if (model === "cosmos-2.5") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+    };
+  } else if (model === "heygen-avatar4") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      aspect_ratio: ar,
+      resolution: "720p",
+    };
+  } else if (model === "lucy-i2v") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      aspect_ratio: ["16:9", "9:16"].includes(ar) ? ar : "16:9",
+    };
+  } else if (model === "vidu-q3-turbo" || model === "vidu-q3") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      duration,
+      resolution: "720p",
+      audio: generateAudio,
+    };
+  } else if (model === "kling-o3-ref") {
+    input = {
+      start_image_url: resolvedImageUrl,
+      prompt,
+      duration: String(duration),
+      generate_audio: generateAudio,
+    };
+  } else if (model === "kling-v3-std" || model === "kling-v3-pro") {
+    input = {
+      start_image_url: resolvedImageUrl,
+      prompt,
+      duration: String(duration),
+      generate_audio: generateAudio,
+    };
+  } else if (model === "grok-video") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      duration,
+      resolution: "720p",
+      aspect_ratio: ar,
+    };
+  } else if (model === "seedance-1.5") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+      duration,
+      resolution: "720p",
+      aspect_ratio: ar,
+      generate_audio: generateAudio,
+    };
+  } else if (model === "goal-force") {
+    input = {
+      image_url: resolvedImageUrl,
+      prompt,
+    };
   } else {
-    // minimax — no aspect_ratio support
+    // minimax and others — no aspect_ratio support
     input = {
       image_url: resolvedImageUrl,
       prompt,
