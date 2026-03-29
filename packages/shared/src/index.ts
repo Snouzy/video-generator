@@ -259,6 +259,22 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
 - Include charming details that enhance the characters' world: tiny trees, miniature vehicles, small pets next to characters, steam rising from a cup they hold. Tilt-shift blur at edges reinforces the miniature diorama feeling.`,
     isBuiltin: true,
   },
+  {
+    id: "builtin:broll-ultra",
+    name: "B-Roll Ultra Réaliste",
+    description: "Plans d'ambiance cinématiques ultra réalistes, objets et marques reconnaissables, zéro personnage",
+    sourceId: "builtin:broll-ultra",
+    stylePromptPrefix: "Ultra photorealistic cinematic B-roll footage, shot on RED V-RAPTOR 8K, anamorphic lens, shallow depth of field, natural available lighting, no people no faces no hands, atmospheric environmental shot, film grain, professional color grading",
+    llmSystemInstructions: `- CRITICAL: AUCUN être humain, aucun visage, aucune main, aucun personnage ne doit apparaître. Le B-Roll est exclusivement composé de plans d'ambiance, d'objets, d'environnements et de détails.
+- Les objets et environnements DOIVENT être RECONNAISSABLES et RÉELS — pas génériques. Utiliser des marques, logos, interfaces et produits que tout le monde connaît : un MacBook Pro ouvert sur une page ChatGPT, un iPhone posé sur une table avec des notifications, un écran Bloomberg Terminal, une canette Red Bull à côté d'un clavier mécanique, un café Starbucks sur un bureau, des AirPods dans leur boîtier, un écran avec du code sur VS Code, un dashboard Google Analytics, une Tesla garée, un logo Netflix sur un écran de salon, des sneakers Nike posées au sol. Ces détails reconnaissables rendent le plan immédiatement crédible et relatable.
+- Chaque prompt doit décrire un PLAN CINÉMATIQUE précis comme un directeur photo : angle (plongée, contre-plongée, ras du sol, overhead), profondeur de champ (shallow focus sur un objet au premier plan, arrière-plan en bokeh), éclairage (golden hour, néons, lumière naturelle traversant une fenêtre, clair-obscur, écran luisant dans le noir).
+- Les plans doivent être CONTEXTUELS au sujet de la vidéo — pas génériques. Si la vidéo parle de tech, montrer des détails d'écrans avec des interfaces reconnaissables, câbles USB-C, setup gaming RGB. Si c'est de la finance, un écran TradingView, des graphiques en chandelier, un Wall Street Journal ouvert. Chaque plan doit servir le récit.
+- Varier les ÉCHELLES DE PLAN : macro extrême (texture d'un clavier Cherry MX, gouttes de condensation sur une canette, connecteur Lightning), plan moyen (un bureau home office complet, une vitrine de magasin), plan large (skyline reconnaissable comme Manhattan/La Défense, vue aérienne d'une ville la nuit).
+- Spécifier des paramètres caméra réalistes : focale (24mm grand angle paysages, 50mm plans moyens, 85mm détails, 100mm macro textures), ouverture (f/1.4 bokeh crémeux, f/8 netteté), capteur full-frame.
+- Inclure des éléments atmosphériques vivants : particules de poussière dans un rayon de lumière, vapeur de café, reflets sur des surfaces en verre, LEDs clignotantes, lumière d'écran projetée sur un mur dans le noir, fumée subtile.
+- Color grading cinématique cohérent : orange/teal look, désaturé sophistiqué, ou haut contraste selon l'ambiance. Jamais saturé ou "Instagram filter".`,
+    isBuiltin: true,
+  },
 ];
 
 export interface ModelDefinition {

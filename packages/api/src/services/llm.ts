@@ -86,9 +86,10 @@ ${scriptContent}`,
 
   // Extract JSON from the response (handle markdown code blocks)
   let jsonStr = text.trim();
-  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) {
-    jsonStr = jsonMatch[1].trim();
+  const arrStart = jsonStr.indexOf('[');
+  const arrEnd = jsonStr.lastIndexOf(']');
+  if (arrStart !== -1 && arrEnd > arrStart) {
+    jsonStr = jsonStr.substring(arrStart, arrEnd + 1);
   }
 
   const scenes: SceneSplit[] = JSON.parse(jsonStr);
@@ -187,13 +188,7 @@ export async function generateComicStructure(
     panelIds: l.panels.map(p => p.id),
   }));
 
-  const response = await getClient().messages.create({
-    model: MODEL,
-    max_tokens: 16384,
-    messages: [
-      {
-        role: "user",
-        content: `Tu es un éditeur de bande dessinée. Ton travail est d'organiser des scènes en pages de BD avec des légendes narratives, dans le style de l'adaptation graphique de « Sapiens ».
+  const userPrompt = `Tu es un éditeur de bande dessinée. Ton travail est d'organiser des scènes en pages de BD avec des légendes narratives, dans le style de l'adaptation graphique de « Sapiens ».
 
 Tu reçois :
 1. Une liste de scènes (chacune a un sceneNumber, title, narrativeText)
@@ -206,12 +201,12 @@ Ta mission :
 - Les échanges de dialogue fonctionnent bien avec "layout:2-horizontal" ou "layout:3-horizontal".
 - Chaque case contient exactement UNE scène. Chaque scène doit apparaître exactement une fois.
 - Pour chaque case, génère :
-  - Un "imagePrompt" : un prompt détaillé de génération d'image IA décrivant le contenu visuel de la scène, EN ANGLAIS. Sois vivant et précis : personnages, décor, éclairage, angle de caméra, composition, ambiance. CRITIQUE : L'image doit représenter UNE SEULE scène remplissant toute l'image. PAS de bordures de cases, PAS de cases adjacentes visibles, PAS de mise en page multi-cases, PAS de cadres ou gouttières sur les bords. L'illustration occupe 100% de l'image. Les bulles de dialogue et le texte sont OK si le style le demande. Ajoute toujours à la fin : "Single panel illustration filling the entire image, no panel borders, no adjacent panels, no page layout visible."
-  - Une "caption" (voix-off du narrateur) adaptée du narrativeText. Courte (1-2 phrases max), dans le style de Sapiens : factuel, légèrement ironique, engageant. Position "top" ou "bottom".
-  - "bubbles" doit TOUJOURS être un tableau vide []. NE génère AUCUNE bulle de dialogue.
+  - Un "imagePrompt" CONCIS (2-3 phrases max, ~40 mots) EN ANGLAIS décrivant la scène : personnages, décor, éclairage, ambiance. NE PAS ajouter d'instructions techniques sur les bordures ou le cadrage — c'est géré automatiquement.
+  - Une "caption" (voix-off du narrateur) adaptée du narrativeText. Courte (1-2 phrases max), style Sapiens : factuel, légèrement ironique. Position "top" ou "bottom".
+  - "bubbles" : TOUJOURS un tableau vide [].
 
 TOUT le texte (captions) DOIT être en ${language}.
-Les "imagePrompt" DOIVENT être en anglais SAUF le texte des dialogues/bulles/onomatopées qui doit être en ${language}. Exemple : "... Two men arguing in an office. Speech bubble from the left man: «On a un accord, messieurs !». Speech bubble from the right man: «L'avenir est à nous !» ..."
+Les "imagePrompt" DOIVENT être en anglais SAUF le texte de dialogues/onomatopées qui doit être en ${language}.
 
 Mises en page disponibles :
 ${JSON.stringify(layoutSummary, null, 2)}
@@ -219,34 +214,26 @@ ${JSON.stringify(layoutSummary, null, 2)}
 Scènes :
 ${JSON.stringify(scenes.map(s => ({ sceneNumber: s.sceneNumber, title: s.title, narrativeText: s.narrativeText })), null, 2)}
 
-Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte (pas d'autre texte) :
-{
-  "title": "Titre de la BD",
-  "pages": [
-    {
-      "pageNumber": 1,
-      "layoutId": "layout:...",
-      "panels": [
-        {
-          "panelId": "panel-1",
-          "sceneNumber": 1,
-          "imagePrompt": "A detailed visual description of the scene for AI image generation, in English...",
-          "caption": { "text": "Texte du narrateur en ${language}...", "position": "top" },
-          "bubbles": []
-        }
-      ]
-    }
-  ]
-}`,
-      },
-    ],
+Retourne UNIQUEMENT du JSON compact valide (pas de markdown, pas de code fences, pas d'autre texte).
+Structure : {"title":"...","pages":[{"pageNumber":1,"layoutId":"layout:...","panels":[{"panelId":"panel-1","sceneNumber":1,"imagePrompt":"...","caption":{"text":"...","position":"top"},"bubbles":[]}]}]}`;
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 16384,
+    messages: [{ role: "user", content: userPrompt }],
   });
 
-  const text = extractText(response.content);
-  let jsonStr = text.trim();
-  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) {
-    jsonStr = jsonMatch[1].trim();
+  if (response.stop_reason === "max_tokens") {
+    throw new Error("Comic structure too large for a single LLM call. Try reducing the number of scenes.");
+  }
+
+  let jsonStr = extractText(response.content).trim();
+
+  // Strip markdown code fences or any wrapper – just extract the JSON object
+  const start = jsonStr.indexOf('{');
+  const end = jsonStr.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    jsonStr = jsonStr.substring(start, end + 1);
   }
 
   const structure: ComicStructure = JSON.parse(jsonStr);
@@ -349,8 +336,12 @@ Retourne UNIQUEMENT un objet JSON :
   });
 
   const text = extractText(response.content).trim();
-  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const jsonStr = jsonMatch ? jsonMatch[1].trim() : text;
+  let jsonStr = text;
+  const start = jsonStr.indexOf('{');
+  const end = jsonStr.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    jsonStr = jsonStr.substring(start, end + 1);
+  }
   return JSON.parse(jsonStr);
 }
 
