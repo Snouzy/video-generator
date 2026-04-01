@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
-import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride, TextLanguage, ComicStructure } from "@video-generator/shared";
+import type { Project, Scene, GeneratedImage, GeneratedClip, ElevenLabsVoice, StyleTemplateValue, SceneGenerationOverride, TextLanguage, ComicStructure, BackgroundMode } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, AVAILABLE_CLIP_MODELS, AVAILABLE_TEXT_LANGUAGES } from "@video-generator/shared";
 import {
   getProject,
@@ -398,30 +398,27 @@ export default function ProjectView() {
     }
   }
 
-  async function handleRegenerateScenePrompt() {
-    if (!currentScene) return;
-    const sceneId = currentScene.id;
-    const sceneNumber = currentScene.sceneNumber;
-    const sceneTitle = currentScene.title;
-    setActionLoading("regen-scene-prompt");
-    setRegeneratingSceneIds((prev) => new Set(prev).add(sceneId));
+  async function handleRegenerateScenePrompt(sceneId?: number) {
+    const targetId = sceneId ?? currentScene?.id;
+    if (!targetId) return;
+    const target = scenes.find((s) => s.id === targetId);
+    if (!target) return;
+    setRegeneratingSceneIds((prev) => new Set(prev).add(targetId));
     try {
-      const scene = scenes.find((s) => s.id === sceneId);
-      await updateSceneStyleOverride(sceneId, scene?.styleOverride ?? null);
-      await regenerateScenePrompt(sceneId);
+      await updateSceneStyleOverride(targetId, target.styleOverride ?? null);
+      await regenerateScenePrompt(targetId);
       await loadProject();
-      toast.success(`Scene ${sceneNumber} — "${sceneTitle}"`, { description: "Prompt regenerated" });
+      toast.success(`Scene ${target.sceneNumber} — "${target.title}"`, { description: "Prompt regenerated" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to regenerate scene prompt";
       setError(msg);
-      toast.error(`Scene ${sceneNumber} — "${sceneTitle}"`, { description: msg });
+      toast.error(`Scene ${target.sceneNumber} — "${target.title}"`, { description: msg });
     } finally {
       setRegeneratingSceneIds((prev) => {
         const next = new Set(prev);
-        next.delete(sceneId);
+        next.delete(targetId);
         return next;
       });
-      setActionLoading(null);
     }
   }
 
@@ -639,6 +636,34 @@ export default function ProjectView() {
             />
           </div>
 
+          {(projectStyle?.sourceId === "builtin:fitcoach" || project.config?.styleTemplate?.sourceId === "builtin:fitcoach") && (
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                Background Mode
+              </label>
+              <div className="flex gap-2">
+                {([undefined, "light", "dark"] as const).map((mode) => (
+                  <button
+                    key={mode ?? "auto"}
+                    onClick={() =>
+                      updateProjectConfig(projectId, { backgroundMode: (mode ?? null) as any }).then(loadProject)
+                    }
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors border ${
+                      (project.config?.backgroundMode ?? undefined) === mode
+                        ? "bg-blue-600 border-blue-500 text-white"
+                        : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                    }`}
+                  >
+                    {mode === undefined ? "Auto" : mode === "light" ? "Light" : "Dark"}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-gray-500">
+                Force le fond clair ou sombre pour les slides Instagram.
+              </p>
+            </div>
+          )}
+
           <div className="border-t border-gray-700 pt-4 space-y-3">
             <h3 className="text-sm font-semibold text-gray-300">Models & Quantities</h3>
 
@@ -731,9 +756,9 @@ export default function ProjectView() {
               scene={currentScene}
               onSetStyleOverride={handleSetSceneStyle}
               onSaveStyleOverride={handleSaveSceneStyleOverride}
-              onRegeneratePrompt={handleRegenerateScenePrompt}
+              onRegeneratePrompt={() => handleRegenerateScenePrompt()}
               onClearStyleOverride={handleClearSceneStyleOverride}
-              styleLoading={actionLoading === "save-scene-style" || actionLoading === "regen-scene-prompt"}
+              styleLoading={actionLoading === "save-scene-style" || regeneratingSceneIds.has(currentScene.id)}
               onSetGenerationOverride={handleSetGenerationOverride}
               onClearGenerationOverride={handleClearGenerationOverride}
               onUpdateNarrativeText={handleUpdateNarrativeText}

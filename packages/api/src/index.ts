@@ -15,7 +15,7 @@ import comicRouter from "./routes/comic";
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { VideoFormat, ElevenLabsVoice, TextLanguage, StyleTemplateValue } from "@video-generator/shared";
+import type { VideoFormat, ElevenLabsVoice, TextLanguage, StyleTemplateValue, BackgroundMode } from "@video-generator/shared";
 import { AVAILABLE_TEXT_LANGUAGES, BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
 import { createProject, getVoices } from "../api/client";
 
@@ -9,6 +9,7 @@ export default function ProjectCreate() {
   const [scriptContent, setScriptContent] = useState("");
   const [format, setFormat] = useState<VideoFormat>("16:9");
   const [textLanguage, setTextLanguage] = useState<TextLanguage>("French");
+  const [backgroundMode, setBackgroundMode] = useState<BackgroundMode | undefined>(undefined);
   const [styleTemplate, setStyleTemplate] = useState<StyleTemplateValue>({
     sourceId: BUILTIN_STYLE_TEMPLATES[0].sourceId,
     stylePromptPrefix: BUILTIN_STYLE_TEMPLATES[0].stylePromptPrefix,
@@ -55,6 +56,7 @@ export default function ProjectCreate() {
           textLanguage,
           stylePromptPrefix: styleTemplate.stylePromptPrefix,
           styleTemplate,
+          ...(backgroundMode && { backgroundMode }),
         },
       });
       navigate(`/projects/${project.id}`);
@@ -233,6 +235,52 @@ export default function ProjectCreate() {
               {BUILTIN_STYLE_TEMPLATES.find((t) => t.sourceId === styleTemplate.sourceId)?.description}
             </p>
           </div>
+
+          {styleTemplate.sourceId === "builtin:fitcoach" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Background Mode
+              </label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setBackgroundMode(undefined)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                    !backgroundMode
+                      ? "bg-blue-600 border-blue-500 text-white"
+                      : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                  }`}
+                >
+                  Auto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBackgroundMode("light")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                    backgroundMode === "light"
+                      ? "bg-blue-600 border-blue-500 text-white"
+                      : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                  }`}
+                >
+                  Light
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBackgroundMode("dark")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                    backgroundMode === "dark"
+                      ? "bg-blue-600 border-blue-500 text-white"
+                      : "bg-slate-900 border-gray-700 text-gray-400 hover:border-gray-500"
+                  }`}
+                >
+                  Dark
+                </button>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500">
+                Force le fond clair ou sombre pour les slides Instagram. "Auto" laisse le modèle choisir.
+              </p>
+            </div>
+          )}
 
           <div>
             <label

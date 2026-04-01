@@ -119,6 +119,9 @@ router.post("/clips/:id/regenerate", async (req, res) => {
           data: { status: "failed" },
         });
         console.error(`Clip regeneration failed for clip ${id}:`, err);
+        if (err && typeof err === "object" && "body" in err) {
+          console.error(`fal.ai error details:`, JSON.stringify((err as any).body, null, 2));
+        }
       }
     })();
   } catch (error) {

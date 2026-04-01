@@ -133,7 +133,7 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
 - Color palette is strictly: bright orange (#FF5722) for accents, highlights, and key text; black (#1A1A1A) for headlines and the avatar's clothing; white for contrast text; light gray grid/notebook paper background for light slides, or dark charcoal (#1A1A1A) grid background for dark slides.
 - Include graphic design elements typical of social media content: arrows, hand-drawn circles, emoji, icons, "NEW" badges, calendar elements, comparison layouts (VS), numbered lists, checkmarks.
 - The avatar should have expressive poses matching the content: pointing, shrugging, celebrating, thinking, presenting. He should feel like a brand mascot guiding the viewer through the content.
-- Backgrounds alternate between: light mode (white/light gray with subtle grid lines like notebook paper, with a faint repeating 'FD' watermark pattern) and dark mode (dark charcoal #1A1A1A with subtle grid lines).
+- Background: black mode (black/light gray with subtle grid lines like notebook paper, with a faint repeating 'FD' watermark pattern) and dark mode (dark charcoal #1A1A1A with subtle grid lines).
 - Think of the overall aesthetic as a fitness influencer's polished Instagram content — professional, energetic, bold, with strong visual hierarchy. Every image should feel like it could be swiped through in a carousel.`,
     isBuiltin: true,
   },
@@ -257,6 +257,24 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
 - Place characters in self-contained isometric dioramas — floating tile platforms they inhabit like game boards. The environment should be built around the characters: a tiny office with a desk they sit at, a miniature café where they order coffee, a small street corner where they wait.
 - Use a soft pastel palette: muted pinks, light blues, warm yellows, sage greens. Characters should use slightly more saturated colors than their environment so they stand out as the focal point.
 - Include charming details that enhance the characters' world: tiny trees, miniature vehicles, small pets next to characters, steam rising from a cup they hold. Tilt-shift blur at edges reinforces the miniature diorama feeling.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:excalidraw",
+    name: "Excalidraw Export",
+    description: "Diagrammes et schémas identiques à un export Excalidraw : traits rough.js, police Virgil, fond blanc pur, zéro personnage",
+    sourceId: "builtin:excalidraw",
+    stylePromptPrefix: "Technical diagram that looks exactly like an Excalidraw canvas export, pure white background, hand-drawn wobbly imperfect lines made with rough.js library, Virgil handwriting font for all text labels, crosshatch pattern fills inside shapes, no people no faces no hands, clean minimal vector diagram aesthetic, flat muted colors from Excalidraw default palette",
+    llmSystemInstructions: `- CRITICAL: AUCUN être humain, aucun visage, aucune main, aucun personnage. Ce style est un B-roll de type diagramme technique. Chaque image doit ressembler à un VRAI EXPORT PNG d'Excalidraw — quiconque regarde doit penser que c'est un vrai fichier .excalidraw exporté.
+- FOND OBLIGATOIRE : blanc pur (#FFFFFF), aucune texture, aucun grain, aucune ombre portée sur le canvas. C'est un canvas numérique, pas du papier.
+- TRAITS : toutes les lignes doivent avoir le style rough.js signature d'Excalidraw — légèrement ondulées, imparfaites, comme dessinées à main levée mais avec une régularité numérique. Les traits ne sont PAS parfaitement droits mais PAS non plus gribouillés. Épaisseur de trait constante (~2px), couleur de trait noire ou gris foncé (#1e1e1e).
+- FORMES : rectangles aux coins légèrement arrondis avec wobble, ellipses imparfaites, losanges (diamants), lignes et flèches. Les flèches ont des pointes simples en V ouvert. Les connecteurs entre formes sont des lignes droites ou coudées avec des pointes de flèches.
+- REMPLISSAGE : les formes remplies utilisent le motif "crosshatch" iconique d'Excalidraw — des lignes diagonales parallèles espacées régulièrement (~45°) à l'intérieur des formes, PAS un aplat de couleur uni. Alterner entre crosshatch et "solid" selon l'importance de l'élément.
+- COULEURS : utiliser UNIQUEMENT la palette par défaut d'Excalidraw : bleu (#1971c2), rouge (#e03131), vert (#2f9e44), orange (#f08c00), violet (#9c36b5), rose (#c2255c), gris (#868e96). Les couleurs sont utilisées avec parcimonie — la majorité du diagramme reste en noir sur blanc, avec 2-3 couleurs d'accent maximum.
+- TEXTE : tout le texte doit avoir l'apparence de la police "Virgil" d'Excalidraw — une écriture manuscrite numérique propre, légèrement irrégulière, PAS une police serif ou sans-serif classique. Le texte est toujours court : labels, titres, annotations de 1-5 mots.
+- TYPES DE DIAGRAMMES à varier selon le sujet : flowcharts (décisions en losanges, process en rectangles), architecture systems (boxes connectées par des flèches), mind maps (nœud central + branches), séquence diagrams simplifiés, comparaisons côte à côte, listes avec checkboxes, timelines horizontales, matrices 2x2.
+- COMPOSITION : le diagramme doit être centré sur le canvas avec de l'espace négatif autour (comme un vrai export Excalidraw avec du padding). Les éléments sont organisés avec un alignement approximatif mais lisible — pas pixel-perfect, mais pas chaotique non plus. C'est le sweet spot d'Excalidraw : organisé mais humain.
+- NE PAS inclure : d'interface utilisateur Excalidraw (toolbar, sidebar), de curseur, de sélection bleue, de grille de fond. Seulement le contenu du canvas comme un export "Scene only".`,
     isBuiltin: true,
   },
   {
@@ -442,6 +460,30 @@ export const BUILTIN_ANIMATION_TEMPLATES: AnimationTemplate[] = [
     description: "Personnage qui parle face caméra, gestes naturels des mains",
     prompt: "Character talking directly to camera with natural head movements, hand gestures while speaking, occasional nods, and expressive facial animations. Mouth moves in sync with speech rhythm. Slight body sway. Background is static. The feel is a YouTube video or podcast recording.",
   },
+  {
+    id: "diagram-draw",
+    name: "Diagram / Draw-in",
+    description: "Éléments du diagramme qui apparaissent progressivement, comme dessinés en temps réel",
+    prompt: "Elements of the diagram appear progressively as if being drawn in real-time by an invisible hand. Lines extend from start to end, shapes form stroke by stroke, text fades in after its box is complete, arrows animate along their path. The drawing order follows a logical flow: main structure first, then details, then labels. Smooth and steady pace, no camera movement. The background stays pure white. The feel is a whiteboard explainer or Excalidraw recording playback.",
+  },
+  {
+    id: "zoom-focus",
+    name: "Zoom Focus / Spotlight",
+    description: "Zoom progressif sur une zone clé de l'image, puis dézoom lent",
+    prompt: "Slow deliberate camera zoom toward the most important element in the scene — a key number, a highlighted area, a central figure, or a critical diagram node. The zoom is smooth and cinematic, reaching roughly 1.5x magnification over 60% of the duration, holds briefly, then gently pulls back to reveal the full image. No rotation, no shake. The rest of the scene stays static. The effect guides the viewer's eye like an editor's cut without any actual cut.",
+  },
+  {
+    id: "text-reveal",
+    name: "Typewriter / Text Reveal",
+    description: "Le texte apparaît mot par mot ou ligne par ligne, le reste de l'image déjà visible",
+    prompt: "The image structure (shapes, lines, backgrounds, icons) is fully visible from the start. Only the text elements animate: labels, titles, annotations, and captions appear word by word or line by line in reading order (top to bottom, left to right). Each text block materializes with a subtle fade-in or typewriter effect. No camera movement, no shape animation. The pacing matches a natural reading speed. The feel is a presentation slide building its bullet points.",
+  },
+  {
+    id: "ambient-drift",
+    name: "Drift ambient",
+    description: "Micro-mouvement lent et organique, donne vie à une image statique sans direction précise",
+    prompt: "Extremely subtle, slow, organic movement that makes a static image feel alive. Imperceptible camera drift — a gentle floating motion with no clear direction, combining micro-zoom (less than 5% scale change), very slight horizontal or vertical drift, and barely noticeable rotation (under 0.5 degrees). Atmospheric micro-details may shift: faint light flicker, soft particle drift, subtle shadow play. No abrupt motion, no clear start or end point. The effect is continuous and hypnotic, like a living wallpaper. Prevents the dead slideshow feel.",
+  },
 ];
 
 export interface CostBreakdownItem {
@@ -542,6 +584,8 @@ export const AVAILABLE_TEXT_LANGUAGES: { id: TextLanguage; label: string }[] = [
   { id: "Spanish", label: "Espanol" },
 ];
 
+export type BackgroundMode = "light" | "dark";
+
 export interface ProjectConfig {
   imagesPerScene: number;
   clipsPerScene: number;
@@ -554,6 +598,7 @@ export interface ProjectConfig {
   voiceId: string;
   ttsModel: string;
   textLanguage: TextLanguage;
+  backgroundMode?: BackgroundMode;
 }
 
 export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {

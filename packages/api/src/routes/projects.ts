@@ -38,6 +38,18 @@ function getEffectiveStyle(
   const lang = scene.generationOverride?.textLanguage || projectConfig.textLanguage || "French";
   instructions += `\n- ALL text, typography, headlines, labels, and captions visible in the image MUST be written in ${lang}. Never use any other language for visible text.`;
 
+  // Apply background mode for fitcoach template
+  const templateSourceId = scene.styleOverride?.sourceId ?? projectConfig.styleTemplate?.sourceId;
+  if (templateSourceId === "builtin:fitcoach" && projectConfig.backgroundMode) {
+    if (projectConfig.backgroundMode === "dark") {
+      prefix = prefix.replace("light gray grid/notebook paper background", "pure black (#000000) background");
+      instructions += `\n- BACKGROUND: Use ONLY a pure black (#000000) background for ALL slides. Do NOT use light, white, gray, or dark charcoal backgrounds.`;
+    } else {
+      prefix = prefix.replace("dark charcoal (#1A1A1A) grid background", "light gray grid/notebook paper background");
+      instructions += `\n- BACKGROUND: Use ONLY light gray grid/notebook paper background with subtle grid lines for ALL slides. Do NOT use dark backgrounds.`;
+    }
+  }
+
   return { stylePromptPrefix: prefix, llmSystemInstructions: instructions };
 }
 
@@ -344,6 +356,9 @@ router.post("/:id/generate-all-images", async (req, res) => {
               data: { status: "failed" },
             });
             console.error(`Image ${record.id} failed:`, err);
+            if (err && typeof err === "object" && "body" in err) {
+              console.error(`fal.ai error details:`, JSON.stringify((err as any).body, null, 2));
+            }
           }
         })
       );
@@ -474,6 +489,9 @@ router.post("/:id/generate-all-clips", async (req, res) => {
               data: { status: "failed" },
             });
             console.error(`Clip ${record.clipId} failed:`, err);
+            if (err && typeof err === "object" && "body" in err) {
+              console.error(`fal.ai error details:`, JSON.stringify((err as any).body, null, 2));
+            }
           }
         })
       );

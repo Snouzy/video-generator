@@ -11,7 +11,7 @@ import type {
   SceneGenerationOverride,
 } from "@video-generator/shared";
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = "http://localhost:3002";
 
 /** Resolve a media URL — local paths get prefixed with API_BASE */
 export function mediaUrl(url: string | null | undefined): string {

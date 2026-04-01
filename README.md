@@ -34,7 +34,7 @@ pnpm db:generate
 pnpm dev
 ```
 
-L'API tourne sur `http://localhost:3001` et le front sur `http://localhost:5173`.
+L'API tourne sur `http://localhost:3002` et le front sur `http://localhost:5173`.
 
 ## Scripts
 

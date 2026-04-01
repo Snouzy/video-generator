@@ -817,7 +817,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                 />
               ) : comicStructure.backCover?.imageStatus !== "processing" && (
                 <iframe
-                  src={`http://localhost:3001/api/projects/${projectId}/comic/back-cover`}
+                  src={`http://localhost:3002/api/projects/${projectId}/comic/back-cover`}
                   title="4e de couverture SVG"
                   className="w-full h-full border-0"
                 />
@@ -843,7 +843,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                 <>
                   <button
                     onClick={() => {
-                      fetch(`http://localhost:3001/api/projects/${projectId}/comic/back-cover`)
+                      fetch(`http://localhost:3002/api/projects/${projectId}/comic/back-cover`)
                         .then((r) => r.text())
                         .then((svgText) => {
                           const blob = new Blob([svgText], { type: "image/svg+xml" });
@@ -861,7 +861,7 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                   </button>
                   <button
                     onClick={() => {
-                      fetch(`http://localhost:3001/api/projects/${projectId}/comic/back-cover`)
+                      fetch(`http://localhost:3002/api/projects/${projectId}/comic/back-cover`)
                         .then((r) => r.text())
                         .then((svgText) => {
                           const img = new Image();

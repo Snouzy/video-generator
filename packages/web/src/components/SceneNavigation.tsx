@@ -142,7 +142,7 @@ export default function SceneNavigation({
         {actionLoading === "generate-all-clips" ? "Generating..." : "All Clips"}
       </button>
       <a
-        href={`http://localhost:3001/api/projects/${projectId}/export-images`}
+        href={`http://localhost:3002/api/projects/${projectId}/export-images`}
         className="px-3 py-1.5 text-sm border border-cyan-700 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-600 transition-colors flex items-center gap-1.5"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@ export default function SceneNavigation({
         Export Images
       </a>
       <a
-        href={`http://localhost:3001/api/projects/${projectId}/export-clips`}
+        href={`http://localhost:3002/api/projects/${projectId}/export-clips`}
         className="px-3 py-1.5 text-sm border border-cyan-700 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-600 transition-colors flex items-center gap-1.5"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

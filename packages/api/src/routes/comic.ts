@@ -158,6 +158,9 @@ router.post("/:id/comic/generate-images", async (req, res) => {
           }
         } catch (err) {
           console.error(`[Comic] Failed: page ${panel.pageNumber} ${panel.panelId}:`, err);
+          if (err && typeof err === "object" && "body" in err) {
+            console.error(`fal.ai error details:`, JSON.stringify((err as any).body, null, 2));
+          }
         }
 
         // Update this panel's status in the persisted structure
@@ -414,6 +417,9 @@ router.post("/:id/comic/cover/generate-image", async (req, res) => {
         }
       } catch (err) {
         console.error(`[Comic] Cover generation failed:`, err);
+        if (err && typeof err === "object" && "body" in err) {
+          console.error(`fal.ai error details:`, JSON.stringify((err as any).body, null, 2));
+        }
       }
 
       try {
@@ -530,6 +536,9 @@ router.post("/:id/comic/back-cover/generate-image", async (req, res) => {
         }
       } catch (err) {
         console.error(`[Comic] Back cover generation failed:`, err);
+        if (err && typeof err === "object" && "body" in err) {
+          console.error(`fal.ai error details:`, JSON.stringify((err as any).body, null, 2));
+        }
       }
 
       try {

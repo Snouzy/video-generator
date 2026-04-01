@@ -114,6 +114,9 @@ router.post("/images/:id/regenerate", async (req, res) => {
           data: { status: "failed" },
         });
         console.error(`Image regeneration failed for image ${id}:`, err);
+        if (err && typeof err === "object" && "body" in err) {
+          console.error(`fal.ai error details:`, JSON.stringify((err as any).body, null, 2));
+        }
       }
     })();
   } catch (error) {
