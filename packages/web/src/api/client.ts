@@ -321,6 +321,40 @@ export async function downloadComicSvgs(projectId: number, comicStructure: Comic
   URL.revokeObjectURL(url);
 }
 
+export async function exportComicPageSvg(projectId: number, pageNumber: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/projects/${projectId}/comic/page/${pageNumber}/svg`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error((err as any).error || "Export failed");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `page_${String(pageNumber).padStart(3, "0")}.svg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export async function exportComicSvg(projectId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/projects/${projectId}/comic/svg`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error((err as any).error || "Export failed");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `comic.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export function updateSceneGenerationOverride(
   sceneId: number,
   generationOverride: SceneGenerationOverride | null
@@ -329,4 +363,55 @@ export function updateSceneGenerationOverride(
     method: "PATCH",
     body: JSON.stringify({ generationOverride }),
   });
+}
+
+export function renderComicPages(projectId: number): Promise<{
+  title: string;
+  totalPages: number;
+  pages: Array<{ pageNumber: number; publicUrl: string | null }>;
+}> {
+  return fetchApi(`/api/projects/${projectId}/comic/render-pages`, { method: "POST" });
+}
+
+export function renderComicStructurePages(projectId: number): Promise<{
+  title: string;
+  totalPages: number;
+  pages: Array<{
+    pageNumber: number;
+    structureUrl: string | null;
+    panels: Array<{
+      panelId: string;
+      artworkUrl: string | null;
+      canvaX: number;
+      canvaY: number;
+      canvaWidth: number;
+      canvaHeight: number;
+    }>;
+  }>;
+}> {
+  return fetchApi(`/api/projects/${projectId}/comic/render-structure-pages`, { method: "POST" });
+}
+
+export async function exportComicToCanva(projectId: number): Promise<{
+  title: string;
+  pages: Array<{
+    pageNumber: number;
+    panels: Array<{
+      panelId: string;
+      publicUrl: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      caption: string | null;
+    }>;
+  }>;
+}> {
+  const res = await fetch(`${API_BASE}/api/projects/${projectId}/comic/canva-export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || "API error");
+  return json.data;
 }

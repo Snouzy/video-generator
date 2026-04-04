@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
+    "@aws-sdk/client-s3": "^3.1024.0",
     "@fal-ai/client": "^1",
     "@prisma/client": "^6",
+    "@resvg/resvg-js": "^2.6.2",
     "@video-generator/remotion": "workspace:*",
     "@video-generator/shared": "workspace:*",
     "archiver": "^7.0.1",

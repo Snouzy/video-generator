@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ComicStructure, ComicPagePanel } from "@video-generator/shared";
 import { AVAILABLE_IMAGE_MODELS, BUILTIN_STYLE_TEMPLATES } from "@video-generator/shared";
-import { generateComicImages, downloadComicSvgs, mediaUrl, regenerateComicPanelPrompt, regenerateComicPage, generateCoverPrompt, generateCoverImage, generateBackCoverPrompt, generateBackCoverImage } from "../api/client";
+import { generateComicImages, downloadComicSvgs, mediaUrl, regenerateComicPanelPrompt, regenerateComicPage, generateCoverPrompt, generateCoverImage, generateBackCoverPrompt, generateBackCoverImage, exportComicPageSvg, exportComicSvg, exportComicToCanva } from "../api/client";
 import { toast } from "sonner";
 
 interface ComicPanelItem {
@@ -325,6 +325,8 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
   const [backCoverGeneratingPrompt, setBackCoverGeneratingPrompt] = useState(false);
   const [backCoverGeneratingImage, setBackCoverGeneratingImage] = useState(false);
   const [backCoverFormat, setBackCoverFormat] = useState<string>("3:4");
+  const [exportingSvg, setExportingSvg] = useState(false);
+  const [exportingCanva, setExportingCanva] = useState(false);
 
   const panelKey = (p: { pageNumber: number; panelId: string }) => `${p.pageNumber}-${p.panelId}`;
 
@@ -381,6 +383,30 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
         next.delete(key);
         return next;
       });
+    }
+  }
+
+  async function handleExportSvg() {
+    setExportingSvg(true);
+    try {
+      await exportComicSvg(projectId);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export SVG failed");
+    } finally {
+      setExportingSvg(false);
+    }
+  }
+
+  async function handleExportCanva() {
+    setExportingCanva(true);
+    try {
+      const data = await exportComicToCanva(projectId);
+      toast.success(`${data.pages.reduce((acc, p) => acc + p.panels.length, 0)} images uploadees sur R2`);
+      console.log("CANVA_EXPORT_DATA", JSON.stringify(data));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export Canva failed");
+    } finally {
+      setExportingCanva(false);
     }
   }
 
@@ -612,6 +638,14 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
           {downloading ? "..." : "SVGs"}
         </button>
 
+        <button onClick={handleExportCanva} disabled={exportingCanva || completedCount === 0}
+          className="px-3 py-1.5 text-sm border border-purple-700 text-purple-400 hover:text-white hover:bg-purple-600 disabled:opacity-30 rounded-lg font-medium transition-colors flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          {exportingCanva ? "Upload..." : "Canva"}
+        </button>
+
       </div>
 
       {/* Cover */}
@@ -744,6 +778,13 @@ export default function ComicPanel({ projectId, comicStructure, onRegenerate, on
                     {pageProcessing} generating
                   </span>
                 )}
+                <button
+                  onClick={handleExportSvg}
+                  disabled={exportingSvg || !comicStructure.pages.some(pg => pg.panels.some(p => p.imageStatus === "completed"))}
+                  className="px-2 py-0.5 text-xs border border-teal-700 text-teal-400 hover:text-white hover:bg-teal-700 disabled:opacity-30 rounded transition-colors"
+                >
+                  {exportingSvg ? "Export..." : "Export SVG"}
+                </button>
                 <button
                   onClick={() => handleRegeneratePage(page.pageNumber)}
                   disabled={regeneratingPages.has(page.pageNumber)}

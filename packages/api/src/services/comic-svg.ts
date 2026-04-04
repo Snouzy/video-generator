@@ -2,10 +2,21 @@ import type {
   ComicPage,
   ComicLayout,
   ComicPanel,
+  ComicPagePanel,
   ComicSpeechBubble,
   ComicCaption,
 } from "@video-generator/shared";
 import { COMIC_PAGE_WIDTH, COMIC_PAGE_HEIGHT } from "@video-generator/shared";
+
+// ---------------------------------------------------------------------------
+// Interfaces
+// ---------------------------------------------------------------------------
+
+export interface PanelImageSource {
+  src: string;        // relative path or base64 data URI
+  width?: number;     // natural image width in pixels
+  height?: number;    // natural image height in pixels
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -217,21 +228,85 @@ function renderBubble(
 // Panel Renderer
 // ---------------------------------------------------------------------------
 
+function computeCaptionHeight(panel: ComicPanel, caption: ComicCaption): number {
+  const maxWidth = panel.width - 2 * CAPTION_PADDING_X;
+  const lines = wrapText(caption.text, maxWidth, CAPTION_FONT_SIZE);
+  const lineH = CAPTION_FONT_SIZE * LINE_HEIGHT_FACTOR;
+  return CAPTION_HEIGHT_BASE + (lines.length - 1) * lineH;
+}
+
 function renderPanel(
   panel: ComicPanel,
-  pagePanel: { sceneNumber: number; caption?: ComicCaption; bubbles: ComicSpeechBubble[] }
+  pagePanel: ComicPagePanel,
+  imageSource?: PanelImageSource,
+  idPrefix: string = "",
+  structureOnly: boolean = false
 ): string {
-  let svg = `  <g id="${panel.id}" class="panel">\n`;
+  let svg = `  <g id="${idPrefix}${panel.id}" class="panel">\n`;
 
-  // Gray placeholder
-  svg += `    <rect x="${panel.x}" y="${panel.y}" width="${panel.width}" height="${panel.height}" class="panel-bg"/>\n`;
+  if (!structureOnly) {
+    if (imageSource) {
+      // Compute image area: shrink to avoid overlapping caption
+      let imgY = panel.y;
+      let imgH = panel.height;
 
-  // Scene number label (centered)
-  const labelX = panel.x + panel.width / 2;
-  const labelY = panel.y + panel.height / 2;
-  svg += `    <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="central" class="scene-label">Scène ${pagePanel.sceneNumber}</text>\n`;
+      if (pagePanel.caption?.text) {
+        const captionH = computeCaptionHeight(panel, pagePanel.caption);
+        const offset = captionH + 8; // 4px panel padding + 4px gap
+        if (pagePanel.caption.position === "bottom") {
+          imgH = panel.height - offset;
+        } else {
+          // top (default)
+          imgY = panel.y + offset;
+          imgH = panel.height - offset;
+        }
+      }
 
-  // Panel border (on top of bg)
+      // Manual slice behavior with dimensions
+      if (imageSource.width && imageSource.height) {
+        const scaleX = panel.width / imageSource.width;
+        const scaleY = imgH / imageSource.height;
+        const scale = Math.max(scaleX, scaleY); // slice: fill the area
+        const displayW = imageSource.width * scale;
+        const displayH = imageSource.height * scale;
+
+        // Horizontal: always center
+        const displayX = panel.x + (panel.width - displayW) / 2;
+
+        // Vertical alignment based on caption position
+        let displayY: number;
+        if (!pagePanel.caption?.text) {
+          displayY = imgY + (imgH - displayH) / 2;       // center (no caption)
+        } else if (pagePanel.caption.position === "bottom") {
+          displayY = imgY + imgH - displayH;              // align bottom
+        } else {
+          displayY = imgY;                                // align top (top caption)
+        }
+
+        const clipId = `${idPrefix}${panel.id}-clip`;
+        svg += `    <defs><clipPath id="${clipId}"><rect x="${panel.x}" y="${imgY}" width="${panel.width}" height="${imgH}"/></clipPath></defs>\n`;
+        svg += `    <image href="${imageSource.src}" xlink:href="${imageSource.src}" x="${displayX}" y="${displayY}" width="${displayW}" height="${displayH}" preserveAspectRatio="none" clip-path="url(#${clipId})"/>\n`;
+      } else {
+        // Fallback: clip + preserveAspectRatio align+slice
+        const align = pagePanel.caption?.text
+          ? (pagePanel.caption.position === "bottom" ? "xMidYMax" : "xMidYMin")
+          : "xMidYMid";
+        const clipId = `${idPrefix}${panel.id}-clip`;
+        svg += `    <defs><clipPath id="${clipId}"><rect x="${panel.x}" y="${imgY}" width="${panel.width}" height="${imgH}"/></clipPath></defs>\n`;
+        svg += `    <image href="${imageSource.src}" xlink:href="${imageSource.src}" x="${panel.x}" y="${imgY}" width="${panel.width}" height="${imgH}" preserveAspectRatio="${align} slice" clip-path="url(#${clipId})"/>\n`;
+      }
+    } else {
+      // Gray placeholder
+      svg += `    <rect x="${panel.x}" y="${panel.y}" width="${panel.width}" height="${panel.height}" class="panel-bg"/>\n`;
+
+      // Scene number label (centered)
+      const labelX = panel.x + panel.width / 2;
+      const labelY = panel.y + panel.height / 2;
+      svg += `    <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="central" class="scene-label">Scène ${pagePanel.sceneNumber}</text>\n`;
+    }
+  }
+
+  // Panel border (on top of bg, always rendered)
   svg += `    <rect x="${panel.x}" y="${panel.y}" width="${panel.width}" height="${panel.height}" class="panel-border"/>\n`;
 
   // Caption
@@ -239,7 +314,66 @@ function renderPanel(
     svg += renderCaption(panel, pagePanel.caption);
   }
 
+  // Speech bubbles
+  if (pagePanel.bubbles?.length) {
+    for (let i = 0; i < pagePanel.bubbles.length; i++) {
+      svg += renderBubble(panel, pagePanel.bubbles[i], i);
+    }
+  }
+
   svg += `  </g>\n`;
+  return svg;
+}
+
+// ---------------------------------------------------------------------------
+// Build Page Content (internal helper for multi-page support)
+// ---------------------------------------------------------------------------
+
+function buildComicPageContent(
+  page: ComicPage,
+  layout: ComicLayout,
+  panelImages?: Map<string, PanelImageSource>,
+  idPrefix: string = "",
+  structureOnly: boolean = false
+): string {
+  let svg = `  <defs>\n`;
+  svg += `    <style>\n`;
+  svg += `      .panel-border { stroke: #000000; stroke-width: 3; fill: none; }\n`;
+  svg += `      .panel-bg { fill: #E8E8E8; }\n`;
+  svg += `      .caption-bg { fill: #FFF9C4; stroke: #000000; stroke-width: 1; }\n`;
+  svg += `      .caption-text { font-family: ${FONT_FAMILY}; font-size: ${CAPTION_FONT_SIZE}px; font-style: italic; fill: #1A1A1A; }\n`;
+  svg += `      .bubble-bg { fill: #FFFFFF; stroke: #000000; stroke-width: 2; }\n`;
+  svg += `      .bubble-text { font-family: ${FONT_FAMILY}; font-size: ${BUBBLE_FONT_SIZE}px; font-weight: bold; fill: #000000; }\n`;
+  svg += `      .bubble-character { font-family: sans-serif; font-size: 9px; fill: #666666; }\n`;
+  svg += `      .scene-label { font-family: sans-serif; font-size: 16px; fill: #999999; font-weight: bold; }\n`;
+  svg += `      .page-number { font-family: sans-serif; font-size: 12px; fill: #666666; }\n`;
+  svg += `    </style>\n`;
+  svg += `  </defs>\n\n`;
+
+  const W = COMIC_PAGE_WIDTH;
+  const H = COMIC_PAGE_HEIGHT;
+
+  // White page background (skipped in structure-only mode — stays transparent)
+  if (!structureOnly) {
+    svg += `  <rect width="${W}" height="${H}" fill="#FFFFFF"/>\n\n`;
+  }
+
+  // Render each panel
+  const panelMap = new Map(layout.panels.map(p => [p.id, p]));
+
+  for (const pagePanel of page.panels) {
+    const layoutPanel = panelMap.get(pagePanel.panelId);
+    if (!layoutPanel) continue;
+    const imageSource = structureOnly ? undefined : panelImages?.get(pagePanel.panelId);
+    svg += renderPanel(layoutPanel, pagePanel, imageSource, idPrefix, structureOnly);
+    svg += "\n";
+  }
+
+  // Page number (bottom center, only in full mode)
+  if (!structureOnly) {
+    svg += `  <text x="${W / 2}" y="${H - 6}" text-anchor="middle" class="page-number">${page.pageNumber}</text>\n`;
+  }
+
   return svg;
 }
 
@@ -320,43 +454,58 @@ export function generateBackCoverSVG(info: BackCoverInfo): string {
 
 export function generateComicPageSVG(
   page: ComicPage,
-  layout: ComicLayout
+  layout: ComicLayout,
+  panelImages?: Map<string, PanelImageSource>,
+  options?: { structureOnly?: boolean }
 ): string {
   const W = COMIC_PAGE_WIDTH;
   const H = COMIC_PAGE_HEIGHT;
+  const structureOnly = options?.structureOnly ?? false;
+  const content = buildComicPageContent(page, layout, panelImages, "", structureOnly);
 
   let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n`;
   svg += `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"\n`;
   svg += `     viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">\n`;
-  svg += `  <defs>\n`;
-  svg += `    <style>\n`;
-  svg += `      .panel-border { stroke: #000000; stroke-width: 3; fill: none; }\n`;
-  svg += `      .panel-bg { fill: #E8E8E8; }\n`;
-  svg += `      .caption-bg { fill: #FFF9C4; stroke: #000000; stroke-width: 1; rx: 4; opacity: 0.92; }\n`;
-  svg += `      .caption-text { font-family: ${FONT_FAMILY}; font-size: ${CAPTION_FONT_SIZE}px; font-style: italic; fill: #1A1A1A; }\n`;
-  svg += `      .bubble-bg { fill: #FFFFFF; stroke: #000000; stroke-width: 2; }\n`;
-  svg += `      .bubble-text { font-family: ${FONT_FAMILY}; font-size: ${BUBBLE_FONT_SIZE}px; font-weight: bold; fill: #000000; }\n`;
-  svg += `      .bubble-character { font-family: sans-serif; font-size: 9px; fill: #666666; }\n`;
-  svg += `      .scene-label { font-family: sans-serif; font-size: 16px; fill: #999999; font-weight: bold; }\n\
-      .page-number { font-family: sans-serif; font-size: 12px; fill: #666666; }\n`;
-  svg += `    </style>\n`;
-  svg += `  </defs>\n\n`;
+  svg += content;
+  svg += `</svg>\n`;
+  return svg;
+}
 
-  // White page background
-  svg += `  <rect width="${W}" height="${H}" fill="#FFFFFF"/>\n\n`;
+// ---------------------------------------------------------------------------
+// Full Comic Multi-Page SVG Export
+// ---------------------------------------------------------------------------
 
-  // Render each panel
-  const panelMap = new Map(layout.panels.map(p => [p.id, p]));
+export function generateFullComicSVG(
+  pages: ComicPage[],
+  layoutMap: Map<string, ComicLayout>,
+  allPanelImages: Map<number, Map<string, PanelImageSource>>
+): string {
+  const W = COMIC_PAGE_WIDTH;
+  const H = COMIC_PAGE_HEIGHT;
+  const GUTTER = 20;
+  const totalH = pages.length * H + Math.max(0, pages.length - 1) * GUTTER;
 
-  for (const pagePanel of page.panels) {
-    const layoutPanel = panelMap.get(pagePanel.panelId);
-    if (!layoutPanel) continue;
-    svg += renderPanel(layoutPanel, pagePanel);
-    svg += "\n";
+  let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n`;
+  svg += `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"\n`;
+  svg += `     viewBox="0 0 ${W} ${totalH}" width="${W}" height="${totalH}">\n`;
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    const layout = layoutMap.get(page.layoutId);
+    if (!layout) continue;
+
+    const yOffset = i * (H + GUTTER);
+    const panelImages = allPanelImages.get(page.pageNumber);
+    const idPrefix = `p${page.pageNumber}-`;
+
+    const content = buildComicPageContent(page, layout, panelImages, idPrefix);
+
+    // Use nested <svg> instead of <g transform> so each page has its own
+    // coordinate space — clipPath coordinates are unambiguous for Illustrator
+    svg += `  <svg x="0" y="${yOffset}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n`;
+    svg += content;
+    svg += `  </svg>\n\n`;
   }
-
-  // Page number (bottom center)
-  svg += `  <text x="${W / 2}" y="${H - 6}" text-anchor="middle" class="page-number">${page.pageNumber}</text>\n`;
 
   svg += `</svg>\n`;
   return svg;
