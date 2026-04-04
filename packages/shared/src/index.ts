@@ -21,7 +21,7 @@ export type GenerationStatus = "pending" | "processing" | "completed" | "failed"
 
 export type ProjectStatus = "draft" | "splitting" | "scenes_ready" | "generating_narration" | "narration_ready" | "generating_images" | "images_ready" | "generating_clips" | "clips_ready" | "rendering" | "rendered" | "completed";
 
-export type VideoFormat = "16:9" | "9:16" | "4:3" | "3:4";
+export type VideoFormat = "16:9" | "9:16" | "4:5" | "5:4" | "4:3" | "3:4";
 
 // --- Style Templates ---
 
@@ -173,7 +173,7 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
     name: "BD avec Bulles",
     description: "Bande dessinée franco-belge avec bulles de dialogue, phylactères expressifs, onomatopées",
     sourceId: "builtin:comic-bubbles",
-    stylePromptPrefix: "Franco-Belgian comic book style single panel illustration, expressive stylized characters with clean bold ink outlines, flat color fills, dynamic poses, vivid saturated colors, thick black contour lines, hand-drawn aesthetic, detailed semi-realistic backgrounds, with prominent speech bubbles and dialogue balloons. The illustration must fill the entire image edge to edge — no panel borders, no adjacent panels, no page layout, no visible frames or gutters, no white or black borders, no margins. The artwork bleeds to all four edges with zero padding",
+    stylePromptPrefix: "Franco-Belgian comic book style single panel illustration, expressive stylized characters with clean bold ink outlines, flat color fills, dynamic poses, vivid saturated colors, thick black contour lines, hand-drawn aesthetic, detailed semi-realistic backgrounds, with prominent speech bubbles and dialogue balloons. CRITICAL: NO white margins anywhere NEITHER ON THE LEFT SIDE NOR ON THE RIGHT SIDE NOR ON THE TOP SIDE NOR ON THE BOTTOM SIDE — the colored illustration must bleed to the left edge, right edge, top and bottom with zero padding. Do not leave any white or light-colored empty space at the sides of the image",
     llmSystemInstructions: `- CRITIQUE : chaque scène DOIT mettre en avant des personnages expressifs AVEC des bulles de dialogue (phylactères) bien visibles EN FRANÇAIS. Les bulles sont un élément visuel central de ce style. Chaque personnage qui parle ou pense DOIT avoir une bulle visible reliée à lui.
 - Les bulles DOIVENT être de style BD classique : formes arrondies blanches ou claires avec une queue pointée vers la bouche du personnage. Différents styles selon le contexte : bulles ovales lisses pour la parole normale, en forme de nuage pour les pensées, dentelées/piquantes pour les cris ou la colère, ondulées pour les chuchotements.
 - Inclure un texte COURT dans les bulles qui capture le dialogue ou la réaction clé de la scène. Le texte doit être en lettrage BD gras, 3-8 mots maximum par bulle. CRITIQUE : le texte des bulles et onomatopées DOIT être dans la langue du récit (PAS en anglais). Plusieurs bulles par personnage sont possibles pour les échanges.
@@ -935,6 +935,8 @@ export interface ComicPagePanel {
 const SUPPORTED_RATIOS = [
   { id: "16:9", value: 16 / 9 },
   { id: "9:16", value: 9 / 16 },
+  { id: "4:5", value: 4 / 5 },
+  { id: "5:4", value: 5 / 4 },
   { id: "4:3", value: 4 / 3 },
   { id: "3:4", value: 3 / 4 },
   { id: "1:1", value: 1 },

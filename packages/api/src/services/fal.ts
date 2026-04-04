@@ -165,9 +165,14 @@ export async function generateImage(
       input.resolution = resolution;
     }
   } else if (model === "grok-image") {
+    // Grok supports: 2:1, 20:9, 19.5:9, 16:9, 4:3, 3:2, 1:1, 2:3, 3:4, 9:16, 9:19.5, 9:20, 1:2
+    const grokRatioMap: Record<string, string> = {
+      "4:5": "3:4",
+      "5:4": "4:3",
+    };
     input = {
       prompt,
-      aspect_ratio: aspectRatio,
+      aspect_ratio: grokRatioMap[aspectRatio] ?? aspectRatio,
       num_images: 1,
       output_format: "png",
     };

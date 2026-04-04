@@ -318,6 +318,7 @@ export default function SceneDetail({
                   >
                     <option value="16:9">16:9</option>
                     <option value="9:16">9:16</option>
+                    <option value="4:5">4:5 Insta</option>
                     <option value="4:3">4:3</option>
                     <option value="3:4">3:4</option>
                   </select>
@@ -391,6 +392,7 @@ export default function SceneDetail({
                   >
                     <option value="16:9">16:9</option>
                     <option value="9:16">9:16</option>
+                    <option value="4:5">4:5 Insta</option>
                     <option value="4:3">4:3</option>
                     <option value="3:4">3:4</option>
                   </select>

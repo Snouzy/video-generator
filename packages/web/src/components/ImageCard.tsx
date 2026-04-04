@@ -35,7 +35,7 @@ export default function ImageCard({
   isSelected,
   format = "16:9",
 }: ImageCardProps) {
-  const aspectClass = format === "9:16" ? "aspect-[9/16]" : format === "4:3" ? "aspect-[4/3]" : format === "3:4" ? "aspect-[3/4]" : "aspect-video";
+  const aspectClass = format === "9:16" ? "aspect-[9/16]" : format === "4:5" ? "aspect-[4/5]" : format === "5:4" ? "aspect-[5/4]" : format === "4:3" ? "aspect-[4/3]" : format === "3:4" ? "aspect-[3/4]" : "aspect-video";
   if (image.status === "processing" || image.status === "pending") {
     return (
       <div className={`relative rounded-lg overflow-hidden border border-gray-700 bg-gray-800 ${aspectClass} flex items-center justify-center`}>
