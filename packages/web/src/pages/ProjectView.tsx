@@ -98,8 +98,13 @@ export default function ProjectView() {
   // Load persisted comic structure (use JSON string to detect deep changes)
   const comicJson = JSON.stringify(project?.comicStructure ?? null);
   useEffect(() => {
-    const parsed = JSON.parse(comicJson);
-    setComicStructure(parsed);
+    try {
+      const parsed = JSON.parse(comicJson);
+      setComicStructure(parsed);
+    } catch {
+      // comicJson is always produced by JSON.stringify — this only fires if
+      // comicStructure somehow contained a non-serialisable value upstream
+    }
   }, [comicJson]);
 
   // Sync config state from project

@@ -293,6 +293,50 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
 - Color grading cinématique cohérent : orange/teal look, désaturé sophistiqué, ou haut contraste selon l'ambiance. Jamais saturé ou "Instagram filter".`,
     isBuiltin: true,
   },
+  {
+    id: "builtin:google-earth",
+    name: "Google Earth Zoom",
+    description: "Vue satellite qui zoome sur un lieu réel — style Google Earth, de l'orbite jusqu'à la rue",
+    sourceId: "builtin:google-earth",
+    stylePromptPrefix: "Photorealistic view of Earth from space, the full globe visible against black starfield, thin blue atmospheric halo along the horizon, continents and oceans clearly recognizable, no people no faces, Google Earth satellite imagery style, glowing pinpoint of light marking the target location on the surface",
+    llmSystemInstructions: `- CRITIQUE : AUCUN être humain, aucun personnage, aucun visage. L'image est une VUE DE LA TERRE DEPUIS L'ESPACE — le globe entier visible, fond noir, étoiles en arrière-plan. C'est le point de départ du zoom, pas une vue aérienne rapprochée.
+- L'image DOIT montrer la planète Terre entière ou quasi-entière dans le cadre : continents reconnaissables, masses océaniques bleues, nuages blancs tourbillonnants, atmosphère translucide bleutée sur les bords du globe. Style photo NASA/ISS ultra-réaliste.
+- Sur la surface du globe, un POINT LUMINEUX discret marque le lieu cible de la scène : petit halo lumineux ou dot blanc brillant, comme une épingle Google Earth vue de l'espace. Il doit être localisé avec précision sur le bon continent/pays. Exemples : Silicon Valley → point sur la côte Pacifique de l'Amérique du Nord, Paris → point sur l'Europe de l'Ouest, Tokyo → archipel japonais.
+- ORIENTATION du globe : faire pivoter la Terre pour que le lieu cible soit clairement visible, pas caché derrière la courbure. Le point lumineux doit être dans la moitié visible du globe, idéalement légèrement décentré vers le spectateur.
+- QUALITÉ : photo spatiale pro style NASA Blue Marble ou ISS window shot. Éclairage solaire rasant (terminator line visible si possible), ombres des nuages sur les océans, reflets solaires sur les mers. Fond spatial profond avec quelques étoiles distantes très discrètes.
+- NE PAS générer une vue aérienne de ville, une carte topographique, ou une image satellite rapprochée. L'image est TOUJOURS la Terre vue de l'espace, globe entier.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:big-word",
+    name: "Mot en Plein Écran",
+    description: "Un seul mot géant centré sur fond uni, typographie impactante style kinetic typography",
+    sourceId: "builtin:big-word",
+    stylePromptPrefix: "Minimalist full-bleed typographic poster, single bold word centered on solid color background, massive display typeface, no people no illustrations no decorations, pure graphic design",
+    llmSystemInstructions: `- CRITIQUE : chaque image ne contient QU'UN SEUL MOT. Un seul. Pas une phrase, pas un slogan — juste UN MOT qui capture l'essence de la scène. Choisis le mot le plus fort, le plus évocateur, celui qui concentre toute l'émotion ou l'idée clé. Exemples : "RÉVOLUTION", "CONNEXION", "POUVOIR", "VITESSE", "RUPTURE".
+- Le mot doit être en MAJUSCULES, typographie ultra-bold, taille maximale — il doit occuper 60-80% de la largeur de l'image. Fonte sans-serif impactante (Helvetica Neue Black, Futura Bold, Impact, DIN Condensed) OU serif dramatique (Playfair Display Black, Bodoni Bold).
+- FOND UNI : choisir une couleur de fond forte qui amplifie l'émotion du mot. Noir (#000000) pour la puissance/mystère, blanc (#FFFFFF) pour la clarté/vide, rouge vif pour l'urgence/passion, bleu profond pour la technologie/confiance, jaune éclatant pour l'énergie/attention, vert saturé pour la croissance/nature. La couleur du texte doit contraster au maximum avec le fond.
+- COMPOSITION : le mot est centré horizontalement et verticalement sur le fond uni. Rien d'autre — pas d'icône, pas de sous-titre, pas de ligne décorative, pas de logo. Le fond peut avoir une légère texture subtile (grain de film, papier) mais pas de gradient visible.
+- COULEUR DU TEXTE : blanc sur fond sombre, noir sur fond clair, ou couleur complémentaire forte. Jamais une couleur qui réduit le contraste.
+- Optionnel : une fine ligne ou un cadre minimal (1-2px) peut encadrer le mot pour l'ancrer, style affiche constructiviste.
+- Le résultat doit ressembler à une affiche typographique internationale, un titre de film en cinémascope, ou un slide d'ouverture de conférence TED.`,
+    isBuiltin: true,
+  },
+  {
+    id: "builtin:bic-paper",
+    name: "Cahier d'écolier / Stylo Bic",
+    description: "Texte et schémas écrits au stylo bic bleu sur papier A4 quadrillé, style cahier d'école réaliste",
+    sourceId: "builtin:bic-paper",
+    stylePromptPrefix: "Photorealistic handwritten notes on A4 French school graph paper (papier quadrillé Séyès), blue ballpoint pen ink, authentic school notebook aesthetic, slight paper texture, realistic ink variation",
+    llmSystemInstructions: `- CRITIQUE : tout le contenu visuel doit ressembler à une vraie page de cahier d'écolier français photographiée. Le papier, l'encre, les irrégularités — tout doit être photoréaliste, pas illustré.
+- PAPIER : papier A4 quadrillé type Séyès (petits carreaux 5mm × 5mm, lignes bleu très clair sur fond blanc légèrement crème/ivoire). Une marge verticale rouge à gauche (~3cm). Les trous de perforation sont visibles sur le bord gauche. Le papier a une légère texture, pas parfaitement lisse. Lumière naturelle rasante qui crée de légères ombres dans les creux du papier.
+- ENCRE : stylo bic bleu classique (bleu roi #0047AB légèrement désaturé). L'encre a une légère variation de pression : plus épaisse quand la vitesse d'écriture ralentit, plus fine dans les lignes droites rapides. Très léger reflet de l'encre fraîche par endroits. PAS de noir, PAS d'autres couleurs sauf une éventuelle annotation au crayon à papier (gris très clair, trace effaçable).
+- ÉCRITURE : écriture cursive d'adulte (pas d'enfant), appliquée mais naturelle — pas trop calligraphiée, pas trop brouillon. Légère inclinaison droite typique (~10-15°). Les mots importants peuvent être SOULIGNÉS au bic bleu (trait droit à la règle ou à main levée). Les titres peuvent être en majuscules d'imprimerie.
+- SCHÉMAS : si la scène inclut un concept visuel, ajouter un croquis au bic bleu dans la marge ou en bas de page — fleches, encadrés, diagrammes simples dessinés à main levée. Traits imparfaits, pas vectoriels. Chiffres et formules si pertinent.
+- DÉTAILS D'AUTHENTICITÉ : une légère pression du stylo visible en relief au verso imaginaire, quelques ratures ou corrections (un mot barré d'un trait horizontal propre), marge respectée avec soin. L'angle de vue est légèrement de biais (pas parfaitement plat) comme si on photographiait sa feuille posée sur un bureau.
+- LANGUE : tout le texte écrit sur la feuille DOIT être dans la langue de la narration.`,
+    isBuiltin: true,
+  },
 ];
 
 export interface ModelDefinition {
@@ -483,6 +527,18 @@ export const BUILTIN_ANIMATION_TEMPLATES: AnimationTemplate[] = [
     name: "Drift ambient",
     description: "Micro-mouvement lent et organique, donne vie à une image statique sans direction précise",
     prompt: "Extremely subtle, slow, organic movement that makes a static image feel alive. Imperceptible camera drift — a gentle floating motion with no clear direction, combining micro-zoom (less than 5% scale change), very slight horizontal or vertical drift, and barely noticeable rotation (under 0.5 degrees). Atmospheric micro-details may shift: faint light flicker, soft particle drift, subtle shadow play. No abrupt motion, no clear start or end point. The effect is continuous and hypnotic, like a living wallpaper. Prevents the dead slideshow feel.",
+  },
+  {
+    id: "handwriting",
+    name: "Écriture Manuscrite",
+    description: "Le mot ou texte se trace lettre par lettre comme écrit à la main, encre sur papier",
+    prompt: "The text or word in the image is written progressively by an invisible hand, stroke by stroke, as if a fountain pen or marker is tracing the letters in real time. The ink flows smoothly along each letterform — thick downstrokes, thin upstrokes, ink pooling slightly at the start of each letter. The rest of the image background is already fully visible and static. The writing speed is calm and deliberate, like a calligrapher working carefully. After the last stroke, the pen lifts and there is a brief pause to let the completed word settle. No camera movement.",
+  },
+  {
+    id: "google-earth-zoom",
+    name: "Google Earth Zoom",
+    description: "Descente vertigineuse depuis l'orbite jusqu'au sol, style Google Earth fly-through",
+    prompt: "Google Earth fly-to animation starting from full Earth view in space. The entire planet is visible against a black starfield. A glowing pinpoint on the surface marks the destination. The camera begins its descent: Earth slowly rotates and grows, filling more and more of the frame. The atmosphere thickens, continental shapes sharpen, then regional geography appears, then city grid, then streets and individual buildings rush up to fill the screen. The speed starts slow — majestic, cosmic — then accelerates as the target approaches, ending in a low aerial view of the destination with crisp ground detail. One single uninterrupted plunge from orbit to street level. No cuts.",
   },
 ];
 
