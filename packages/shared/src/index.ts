@@ -169,6 +169,24 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
     isBuiltin: true,
   },
   {
+    id: "builtin:niche-carousel",
+    name: "Carrousel Niches / Instagram",
+    description: "Slides Instagram carrousel, typo ultra-bold, badges colorés, illustrations 3D thématiques, mode clair ou sombre",
+    sourceId: "builtin:niche-carousel",
+    stylePromptPrefix: "Modern Instagram carousel slide design, ultra-bold heavy sans-serif uppercase typography as the dominant visual element, bright red-orange (#FF5722) rounded rectangle banners behind key words, yellow (#FFD600) highlighted badge labels, orange circle bullet point icons, stylized 3D character illustration or 3D thematic icon matching the topic, clean graphic layout, social media infographic aesthetic, square 1:1 format",
+    llmSystemInstructions: `- CRITICAL: Each image MUST look like a single slide from a polished Instagram carousel. The composition is dominated by BOLD TYPOGRAPHY — massive uppercase sans-serif headlines that take up 30-50% of the image area. Text IS the design, not an afterthought.
+  - BACKGROUND — TWO MODES depending on project backgroundMode setting:
+    - DARK MODE (default): pure black (#0A0A0A) background with a subtle thin gray grid pattern (~40px spacing, ~10% opacity). Text is white. The red-orange banners and yellow badges pop against the dark background. 3D illustrations use vibrant colors that contrast with the dark backdrop.
+    - LIGHT MODE: clean white (#FFFFFF) or very light gray (#F5F5F5) background with a subtle thin light gray grid pattern (~40px spacing, ~15% opacity). Main text is black (#1A1A1A). Red-orange (#FF5722) banners keep the same vivid color. Yellow (#FFD600) badges remain bright. Bullet point icons stay orange. 3D illustrations may use slightly softer tones to harmonize with the light background. The overall feel shifts from "bold nighttime energy" to "clean daytime professionalism" while keeping the same layout and typographic hierarchy.
+  - TYPOGRAPHY HIERARCHY: (1) Main keyword/title in ultra-bold uppercase (white in dark mode, black in light mode), very large, often split across 2 lines. (2) A secondary keyword or phrase inside a bright red-orange (#FF5722) rounded rectangle banner, slightly rotated (-3° to -5°) for dynamism — this is the most eye-catching element. (3) A short yellow (#FFD600) highlighted badge/label for demographic info (age range like "28-40 ANS", or a category tag like "SPORTIFS BLESSÉS"). (4) A subtitle in italic (white in dark mode, dark gray in light mode), medium weight, 1-2 lines describing the audience's pain point or desire. (5) Three short bullet points (white in dark mode, black in light mode), each preceded by an orange (#FF5722) filled circle with a white play/arrow icon inside.
+  - 3D ILLUSTRATION: Include ONE stylized 3D character or 3D thematic object/icon that visually represents the niche. Characters are cartoon-style, friendly, slightly exaggerated proportions — NOT photorealistic. They should wear context-appropriate clothing and hold relevant props. Examples: a muscular coach with a water bottle, a person with crutches for injury recovery, an elderly person with dumbbells for seniors, a baby bottle icon for post-partum, a laptop with warning sign for sedentary workers. The illustration is placed to one side or overlapping the text, creating depth.
+  - SLIDE NUMBERING: If this is part of a series, include a hand-drawn style number (1, 2, 3...) inside a circle (white with sketchy outline in dark mode, black with sketchy outline in light mode), positioned in the top-left corner.
+  - COLOR PALETTE is strict: background follows mode (black or white), text follows mode (white or black), red-orange (#FF5722) for banners and bullet icons in BOTH modes, yellow (#FFD600) for badges/labels in BOTH modes. The accent colors remain identical regardless of mode — only the background and text colors flip.
+  - The overall feel is energetic, bold, scroll-stopping — designed for Instagram discovery. Every slide should be instantly readable in 2 seconds: the big word grabs attention, the banner gives context, the bullets deliver value.
+  - LANGUAGE: All text in the image MUST be in the language of the narrative (typically French). Headlines, badges, bullet points — everything in the target language.`,
+    isBuiltin: true,
+  },
+  {
     id: "builtin:comic-bubbles",
     name: "BD avec Bulles",
     description: "Bande dessinée franco-belge avec bulles de dialogue, phylactères expressifs, onomatopées",
@@ -333,7 +351,7 @@ export const BUILTIN_STYLE_TEMPLATES: StyleTemplate[] = [
 - ENCRE : stylo bic bleu classique (bleu roi #0047AB légèrement désaturé). L'encre a une légère variation de pression : plus épaisse quand la vitesse d'écriture ralentit, plus fine dans les lignes droites rapides. Très léger reflet de l'encre fraîche par endroits. PAS de noir, PAS d'autres couleurs sauf une éventuelle annotation au crayon à papier (gris très clair, trace effaçable).
 - ÉCRITURE : écriture cursive d'adulte (pas d'enfant), appliquée mais naturelle — pas trop calligraphiée, pas trop brouillon. Légère inclinaison droite typique (~10-15°). Les mots importants peuvent être SOULIGNÉS au bic bleu (trait droit à la règle ou à main levée). Les titres peuvent être en majuscules d'imprimerie.
 - SCHÉMAS : si la scène inclut un concept visuel, ajouter un croquis au bic bleu dans la marge ou en bas de page — fleches, encadrés, diagrammes simples dessinés à main levée. Traits imparfaits, pas vectoriels. Chiffres et formules si pertinent.
-- DÉTAILS D'AUTHENTICITÉ : une légère pression du stylo visible en relief au verso imaginaire, quelques ratures ou corrections (un mot barré d'un trait horizontal propre), marge respectée avec soin. L'angle de vue est légèrement de biais (pas parfaitement plat) comme si on photographiait sa feuille posée sur un bureau.
+- DÉTAILS D'AUTHENTICITÉ : une légère pression du stylo visible en relief au verso imaginaire, quelques ratures ou corrections (un mot barré d'un trait horizontal propre), date "${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}" écrite au bic en haut à droite de la feuille, marge respectée avec soin. L'angle de vue est légèrement de biais (pas parfaitement plat) comme si on photographiait sa feuille posée sur un bureau.
 - LANGUE : tout le texte écrit sur la feuille DOIT être dans la langue de la narration.`,
     isBuiltin: true,
   },
